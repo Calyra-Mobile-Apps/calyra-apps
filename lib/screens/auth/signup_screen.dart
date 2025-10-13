@@ -1,11 +1,12 @@
 // Lokasi file: lib/screens/auth/signup_screen.dart
 
 import 'package:calyra/screens/auth/login_screen.dart';
+import 'package:calyra/services/auth_service.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Import untuk firebase_auth dan cloud_firestore sudah dihapus
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,35 +25,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  // --- FUNGSI BARU UNTUK MENERJEMAHKAN ERROR ---
   String getErrorMessage(String errorCode) {
+    // Fungsi ini tidak perlu diubah, sudah bagus
     switch (errorCode) {
-      case "ERROR_EMAIL_ALREADY_IN_USE":
-      case "account-exists-with-different-credential":
       case "email-already-in-use":
         return "The email address is already in use by another account.";
-      case "ERROR_WRONG_PASSWORD":
-      case "wrong-password":
-        return "Wrong password. Please try again.";
-      case "ERROR_USER_NOT_FOUND":
-      case "user-not-found":
-        return "No user found with this email.";
-      case "ERROR_USER_DISABLED":
-      case "user-disabled":
-        return "This user has been disabled.";
-      case "ERROR_TOO_MANY_REQUESTS":
-      case "operation-not-allowed":
-        return "Too many requests. Please try again later.";
-      case "ERROR_INVALID_EMAIL":
       case "invalid-email":
         return "The email address is badly formatted.";
+      case "weak-password":
+        return "Password should be at least 6 characters.";
       case "network-request-failed":
         return "Network error. Please check your internet connection.";
       default:
+        // Menangkap pesan error langsung dari Firebase jika tidak dikenal
+        if (errorCode.isNotEmpty) {
+          return errorCode;
+        }
         return "An undefined error occurred. Please try again.";
     }
   }
-  // -------------------------------------------
 
   Future<void> signUpUser() async {
     if (_formKey.currentState!.validate()) {
@@ -62,20 +53,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      try {
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+      // BUAT INSTANCE DARI AUTHSERVICE
+      final authService = AuthService();
 
-        await FirebaseFirestore.instance.collection('Users').doc(userCredential.user!.uid).set({
-          'name': _nameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'created_at': Timestamp.now(),
-        });
+      // PANGGIL FUNGSI signUp DARI AUTHSERVICE
+      String? result = await authService.signUpWithEmailAndPassword(
+        _nameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
-        if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context); // Hentikan loading
 
+      if (result == "Success") {
+        // Jika berhasil
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Registration successful! Please sign in.")),
@@ -83,11 +74,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
         }
-      } on FirebaseAuthException catch (e) {
-        if (mounted) Navigator.pop(context);
-        
-        // Gunakan fungsi penerjemah error kita
-        String errorMessage = getErrorMessage(e.code);
+      } else {
+        // Jika gagal, tampilkan pesan error yang dikembalikan oleh AuthService
+        String errorMessage = getErrorMessage(result ?? "An undefined error occurred.");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sign up failed: $errorMessage')),
         );
@@ -106,6 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Bagian Widget build() ini tidak perlu diubah sama sekali.
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(

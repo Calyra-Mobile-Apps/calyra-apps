@@ -2,10 +2,13 @@
 
 import 'package:calyra/screens/auth/forgot_password_screen.dart';
 import 'package:calyra/screens/auth/signup_screen.dart';
+import 'package:calyra/screens/main_screen.dart';
+import 'package:calyra/services/auth_service.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+// Import untuk firebase_auth sudah dihapus
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +22,26 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
+  String getErrorMessage(String errorCode) {
+    switch (errorCode) {
+      case "invalid-credential":
+      case "wrong-password":
+      case "user-not-found":
+        return "Incorrect email or password. Please try again.";
+      case "user-disabled":
+        return "This user account has been disabled.";
+      case "invalid-email":
+        return "The email address is badly formatted.";
+      case "network-request-failed":
+        return "Network error. Please check your internet connection.";
+      default:
+        if (errorCode.isNotEmpty) {
+          return errorCode;
+        }
+        return "An undefined error occurred. Please try again.";
+    }
+  }
+
   Future<void> signInUser() async {
     showDialog(
       context: context,
@@ -26,19 +49,29 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      Navigator.pop(context);
-      // TODO: Arahkan ke Halaman Home setelah ini
+    final authService = AuthService();
+    String? result = await authService.signInWithEmailAndPassword(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
 
-    } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal masuk: ${e.message}')),
-      );
+    if (mounted) Navigator.pop(context); // Hentikan loading
+
+    if (result == "Success") {
+      // Arahkan ke Halaman Home/Main setelah berhasil login
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } else {
+      // Jika gagal, tampilkan pesan error
+      String errorMessage = getErrorMessage(result ?? "An undefined error occurred.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: $errorMessage')),
+        );
+      }
     }
   }
 
@@ -51,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Bagian build tidak perlu diubah
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
