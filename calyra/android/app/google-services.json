@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "766260042781",
+    "project_id": "calyra-d143b",
+    "storage_bucket": "calyra-d143b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:766260042781:android:80b32edc611558db67faf4",
+        "android_client_info": {
+          "package_name": "com.example.calyra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8Gtuhl8b62e627c4CmOp1Y-sgJW4bfw8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
