@@ -2,7 +2,7 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -17,6 +17,9 @@ import 'package:flutter/foundation.dart'
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+      if (kIsWeb) {
+        return web;
+      }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
@@ -49,5 +52,15 @@ class DefaultFirebaseOptions {
     projectId: 'calyra-d143b',
     storageBucket: 'calyra-d143b.firebasestorage.app',
     iosBundleId: 'com.example.calyra',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: "AIzaSyCK32BDTjtSreNvTIfDezMyKDwfk0kYzns",
+    authDomain: "calyra-d143b.firebaseapp.com",
+    projectId: "calyra-d143b",
+    storageBucket: "calyra-d143b.firebasestorage.app",
+    messagingSenderId: "766260042781",
+    appId: "1:766260042781:web:dbd28e661390030067faf4",
+    measurementId: "G-5P01QNP82L"
   );
 }
