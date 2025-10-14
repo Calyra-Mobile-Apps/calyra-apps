@@ -1,6 +1,8 @@
+import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -16,16 +18,22 @@ class CalyraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Calyra',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        fontFamily: 'Times New Roman',
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<QuizProvider>(
+          create: (_) => QuizProvider(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Calyra',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          scaffoldBackgroundColor: Colors.white,
+          fontFamily: 'Times New Roman',
+          useMaterial3: true,
+        ),
+        home: const SplashScreen(),
       ),
-      // Halaman pertama yang akan ditampilkan saat aplikasi dibuka
-      home: const SplashScreen(),
     );
   }
 }

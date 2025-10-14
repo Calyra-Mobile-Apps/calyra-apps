@@ -1,9 +1,12 @@
 // Lokasi file: lib/screens/quiz/take_selfie_screen.dart
 
-import 'dart:typed_data'; // Import untuk Uint8List
+import 'dart:typed_data';
+
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/home/home_screen.dart';
 import 'package:calyra/screens/quiz/undertone_quiz_screen.dart';
+import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -17,29 +20,108 @@ class TakeSelfieScreen extends StatefulWidget {
 }
 
 class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
-  // Ubah dari File? menjadi Uint8List?
   Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
+  CameraController? _cameraController;
+  Future<void>? _initializeCameraFuture;
+  String? _cameraError;
 
-  Future<void> _takePicture() async {
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      _initializeCamera();
+    }
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (!mounted) return;
+
+      if (cameras.isEmpty) {
+        setState(() {
+          _cameraError = 'No camera device found.';
+        });
+        return;
+      }
+
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      final controller = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
+
+      final initFuture = controller.initialize();
+      setState(() {
+        _cameraController = controller;
+        _initializeCameraFuture = initFuture;
+        _cameraError = null;
+      });
+
+      await initFuture;
+      if (!mounted) return;
+      setState(() {});
+    } catch (e) {
+      await _cameraController?.dispose();
+      if (!mounted) return;
+      setState(() {
+        _cameraController = null;
+        _initializeCameraFuture = null;
+        _cameraError = 'Failed to initialise camera: $e';
+      });
+    }
+  }
+
+  Future<void> _captureWebImage() async {
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    try {
+      final picture = await controller.takePicture();
+      final bytes = await picture.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _imageBytes = bytes;
+      });
+      context.read<QuizProvider>().setSelfieBytes(bytes);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _cameraError = 'Failed to capture image: $e';
+      });
+    }
+  }
+
+  Future<void> _captureMobileImage() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.camera,
       preferredCameraDevice: CameraDevice.front,
-      // Batasi ukuran gambar agar tidak terlalu besar untuk web
       maxWidth: 800,
       imageQuality: 80,
     );
 
     if (pickedFile != null) {
-      // Baca file gambar sebagai bytes
       final bytes = await pickedFile.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _imageBytes = bytes;
       });
-      // Simpan bytes ke provider
-      if (mounted) {
-        context.read<QuizProvider>().setSelfieBytes(bytes);
-      }
+      context.read<QuizProvider>().setSelfieBytes(bytes);
     }
   }
 
@@ -73,20 +155,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                 ],
               ),
               
-              GestureDetector(
-                onTap: _takePicture,
-                child: Container(
-                  width: 240,
-                  height: 240,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.grey[200],
-                    // Tampilkan gambar dari bytes menggunakan MemoryImage
-                    image: _imageBytes != null ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover) : null,
-                  ),
-                  child: _imageBytes == null ? Center(child: Icon(Icons.camera_alt, size: 80, color: Colors.grey[400])) : null,
-                ),
-              ),
+              _buildCaptureArea(),
 
               Column(
                 children: [
@@ -95,6 +164,32 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                   _buildInstruction(Icons.face_retouching_natural_outlined, 'Show full face'),
                 ],
               ),
+
+              if (kIsWeb)
+                Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: _cameraController == null ? null : _captureWebImage,
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Capture'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                    ),
+                    if (_cameraError != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _cameraError!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                      ),
+                    ],
+                  ],
+                ),
               
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,5 +238,84 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
       ),
     );
   }
-}
 
+  Widget _buildCaptureArea() {
+    final preview = Container(
+      width: 240,
+      height: 240,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey[200],
+        image: _imageBytes != null
+            ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
+            : null,
+      ),
+      child: _imageBytes == null
+          ? Center(child: Icon(Icons.camera_alt, size: 80, color: Colors.grey[400]))
+          : null,
+    );
+
+    if (!kIsWeb) {
+      return GestureDetector(
+        onTap: _captureMobileImage,
+        child: preview,
+      );
+    }
+
+    if (_imageBytes != null) {
+      return preview;
+    }
+
+    if (_cameraError != null) {
+      return Container(
+        width: 240,
+        height: 240,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey[100],
+        ),
+        alignment: Alignment.center,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            _cameraError!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+          ),
+        ),
+      );
+    }
+
+    final controller = _cameraController;
+    final initFuture = _initializeCameraFuture;
+
+    if (controller == null || initFuture == null) {
+      return const SizedBox(
+        width: 240,
+        height: 240,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return FutureBuilder<void>(
+      future: initFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox(
+            width: 240,
+            height: 240,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return SizedBox(
+          width: 240,
+          height: 240,
+          child: ClipOval(
+            child: CameraPreview(controller),
+          ),
+        );
+      },
+    );
+  }
+}
