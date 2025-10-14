@@ -132,95 +132,109 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  const Text('Take Selfie', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text('Snap your face to discover your perfect color season', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[600])),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.calendar_today, size: 16, color: Colors.grey[700]),
-                      const SizedBox(width: 8),
-                      Text(formattedDate, style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ],
-              ),
-              
-              _buildCaptureArea(),
-
-              Column(
-                children: [
-                  _buildInstruction(Icons.wb_sunny_outlined, 'Ensure good lighting'),
-                  _buildInstruction(Icons.center_focus_strong_outlined, 'Face the camera straight'),
-                  _buildInstruction(Icons.face_retouching_natural_outlined, 'Show full face'),
-                ],
-              ),
-
-              if (kIsWeb)
-                Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      onPressed: _cameraController == null ? null : _captureWebImage,
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Capture'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
+                    Column(
+                      children: [
+                        const Text('Take Selfie', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text('Snap your face to discover your perfect color season', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.calendar_today, size: 16, color: Colors.grey[700]),
+                            const SizedBox(width: 8),
+                            Text(formattedDate, style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ],
                     ),
-                    if (_cameraError != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _cameraError!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+
+                    _buildCaptureArea(),
+
+                    Column(
+                      children: [
+                        _buildInstruction(Icons.wb_sunny_outlined, 'Ensure good lighting'),
+                        _buildInstruction(Icons.center_focus_strong_outlined, 'Face the camera straight'),
+                        _buildInstruction(Icons.face_retouching_natural_outlined, 'Show full face'),
+                      ],
+                    ),
+
+                    if (kIsWeb)
+                      Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            onPressed: _cameraController == null ? null : _captureWebImage,
+                            icon: const Icon(Icons.camera_alt),
+                            label: const Text('Capture'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            ),
+                          ),
+                          if (_cameraError != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _cameraError!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
+
+                    if (kIsWeb) const SizedBox(height: 12),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _imageBytes == null
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const UndertoneQuizScreen()),
+                                  );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                          ),
+                          child: const Text('Next', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () {
+                            context.read<QuizProvider>().resetQuiz();
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => const MainScreen()),
+                              (route) => false,
+                            );
+                          },
+                          child: Text('Skip', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ElevatedButton(
-                    onPressed: _imageBytes == null ? null : () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const UndertoneQuizScreen()));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    child: const Text('Next', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      context.read<QuizProvider>().resetQuiz();
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const MainScreen()),
-                        (route) => false,
-                      );
-                    },
-                    child: Text('Skip', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-                  ),
-                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

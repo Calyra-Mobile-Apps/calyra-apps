@@ -1,5 +1,13 @@
 // Lokasi file: lib/screens/home/home_screen.dart
 
+import 'dart:math';
+
+import 'package:calyra/data/brand_data.dart';
+import 'package:calyra/data/season_category_data.dart';
+import 'package:calyra/models/brand_info.dart';
+import 'package:calyra/models/season_category.dart';
+import 'package:calyra/screens/brand/brand_catalog_screen.dart';
+import 'package:calyra/screens/home/category_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -16,24 +24,23 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Header
                 _buildHeader(),
                 const SizedBox(height: 24),
-
-                // 2. Search Bar
                 _buildSearchBar(),
                 const SizedBox(height: 24),
-
-                // 3. Seasonal Picks
-                _buildSectionTitle('Seasonal Picks', 'Discover makeup based on your seasonal color'),
+                _buildSectionTitle(
+                  'Seasonal Picks',
+                  'Discover makeup based on your seasonal color',
+                ),
                 const SizedBox(height: 16),
-                _buildSeasonalPicks(),
+                _buildSeasonalPicks(context),
                 const SizedBox(height: 24),
-
-                // 4. Brand Makeup
-                _buildSectionTitle('Brand Makeup', 'Explore trusted brands for styles that suit you best'),
+                _buildSectionTitle(
+                  'Brand Makeup',
+                  'Explore trusted brands for styles that suit you best',
+                ),
                 const SizedBox(height: 16),
-                _buildBrandMakeup(),
+                _buildBrandMakeup(context),
               ],
             ),
           ),
@@ -42,7 +49,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Widget untuk Header
   Widget _buildHeader() {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +73,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Widget untuk Search Bar
   Widget _buildSearchBar() {
     return TextField(
       decoration: InputDecoration(
@@ -83,7 +88,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Widget untuk Judul Section (Seasonal Picks & Brand Makeup)
   Widget _buildSectionTitle(String title, String subtitle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,121 +111,226 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Widget untuk Seasonal Picks
-  Widget _buildSeasonalPicks() {
+  Widget _buildSeasonalPicks(BuildContext context) {
     return SizedBox(
-      height: 90,
-      child: ListView(
+      height: 120,
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        children: const [
-          _SeasonalCard(icon: Icons.wb_sunny_outlined, label: 'Summer'),
-          _SeasonalCard(icon: Icons.park_outlined, label: 'Autumn'),
-          _SeasonalCard(icon: Icons.filter_vintage_outlined, label: 'Spring'),
-          _SeasonalCard(icon: Icons.ac_unit_outlined, label: 'Winter'),
-        ],
-      ),
-    );
-  }
-
-  // Widget untuk Brand Makeup
-  Widget _buildBrandMakeup() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 0.8,
-      children: const [
-        // Gunakan placeholder gambar jika aset belum ada
-        _BrandCard(brandName: 'Wardah', imageUrl: 'https://placehold.co/300x400/E9A4A1/FFFFFF?text=Wardah'),
-        _BrandCard(brandName: 'Emina', imageUrl: 'https://placehold.co/300x400/D4B4C3/FFFFFF?text=Emina'),
-        _BrandCard(brandName: 'Make Over', imageUrl: 'https://placehold.co/300x400/C8A995/FFFFFF?text=Make+Over'),
-        _BrandCard(brandName: 'Somethinc', imageUrl: 'https://placehold.co/300x400/A2B4C1/FFFFFF?text=Somethinc'),
-      ],
-    );
-  }
-}
-
-// Widget internal untuk kartu Seasonal
-class _SeasonalCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _SeasonalCard({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 80,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 32, color: Colors.black54),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-}
-
-// Widget internal untuk kartu Brand
-class _BrandCard extends StatelessWidget {
-  final String brandName;
-  final String imageUrl;
-
-  const _BrandCard({required this.brandName, required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 3,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            // Error handling jika gambar gagal dimuat
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey.shade200,
-                child: Center(child: Text(brandName, style: const TextStyle(color: Colors.black54, fontSize: 18, fontWeight: FontWeight.bold))),
+        itemCount: seasonCategories.length,
+        itemBuilder: (context, index) {
+          final SeasonCategory category = seasonCategories[index];
+          return _SeasonalCard(
+            category: category,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CategoryDetailScreen(category: category),
+                ),
               );
             },
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
-                begin: Alignment.bottomCenter,
-                end: Alignment.center,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBrandMakeup(BuildContext context) {
+    return GridView.builder(
+      itemCount: featuredBrands.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.8,
+      ),
+      itemBuilder: (context, index) {
+        final BrandInfo brand = featuredBrands[index];
+        return _BrandCard(
+          brandName: brand.name,
+          imageUrl: brand.imageUrl,
+              logoPath: brand.homeLogoPath ?? brand.logoPath,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => BrandCatalogScreen(
+                      brandLogoPath: brand.logoPath,
+                  products: brand.products,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SeasonalCard extends StatelessWidget {
+  const _SeasonalCard({required this.category, required this.onTap});
+
+  final SeasonCategory category;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: SizedBox(
+            width: 112,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 48,
+                    width: 48,
+                    child: Image.asset(
+                      category.iconPath,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Color(0xFF0D1B2A),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          Positioned(
-            bottom: 15,
-            left: 15,
+        ),
+      ),
+    );
+  }
+}
+
+class _BrandCard extends StatelessWidget {
+  const _BrandCard({
+    required this.brandName,
+    required this.imageUrl,
+    required this.logoPath,
+    required this.onTap,
+  });
+
+  final String brandName;
+  final String imageUrl;
+  final String logoPath;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 3,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _BackgroundImage(
+              imageUrl: imageUrl,
+              fallbackLabel: brandName,
+            ),
+            const _GrainOverlay(),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Image.asset(
+                  logoPath,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BackgroundImage extends StatelessWidget {
+  const _BackgroundImage({required this.imageUrl, required this.fallbackLabel});
+
+  final String imageUrl;
+  final String fallbackLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(
+        Colors.black.withValues(alpha: 0.25),
+        BlendMode.darken,
+      ),
+      child: Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey.shade300,
+            alignment: Alignment.center,
             child: Text(
-              brandName,
+              fallbackLabel,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
+                color: Colors.black54,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
+}
+
+class _GrainOverlay extends StatelessWidget {
+  const _GrainOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _GrainPainter(),
+      ),
+    );
+  }
+}
+
+class _GrainPainter extends CustomPainter {
+  static const int _particleCount = 1200;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = Random(1337);
+    final paint = Paint();
+    for (var i = 0; i < _particleCount; i++) {
+      final opacity = 0.015 + random.nextDouble() * 0.03;
+      final radius = 0.4 + random.nextDouble() * 0.6;
+  paint.color = Colors.white.withValues(alpha: opacity);
+      final offset = Offset(
+        random.nextDouble() * size.width,
+        random.nextDouble() * size.height,
+      );
+      canvas.drawCircle(offset, radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
