@@ -15,8 +15,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // Daftar halaman diubah menjadi final (bukan static const)
-  // agar state-nya terjaga dengan baik saat digunakan di IndexedStack.
   final List<Widget> _pages = <Widget>[
     const HomeScreen(),
     const TakeSelfieScreen(),
@@ -37,29 +35,123 @@ class _MainScreenState extends State<MainScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt_outlined),
-            activeIcon: Icon(Icons.camera_alt),
-            label: 'Analysis',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF1B263B),
-        onTap: _onItemTapped,
+      // MENGGANTI BottomNavigationBar standar dengan Custom Widget
+      bottomNavigationBar: _CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
       ),
     );
   }
 }
 
+// Custom Bottom Navigation Bar Widget
+class _CustomBottomNavBar extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onItemSelected;
+
+  const _CustomBottomNavBar({
+    required this.selectedIndex,
+    required this.onItemSelected,
+  });
+
+  // Data untuk navigasi (label, icon, index)
+  final List<Map<String, dynamic>> items = const [
+    {'label': 'Home', 'icon': Icons.home_outlined, 'activeIcon': Icons.home},
+    // Mengubah label menjadi 'Face Scan' sesuai gambar terbaru
+    {
+      'label': 'Face Scan',
+      'icon': Icons.sentiment_satisfied_outlined,
+      'activeIcon': Icons.sentiment_satisfied
+    },
+    {
+      'label': 'Profile',
+      'icon': Icons.person_outline,
+      'activeIcon': Icons.person
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    // Ukuran Ikon standar
+    const double iconSize = 24.0;
+    // Padding Lingkaran standar (seharusnya: iconSize + padding * 2 = 48)
+    const double circlePadding = 12.0;
+
+    return Container(
+      // 1. Floating Effect & Ukuran: Memberikan margin agar 'menggantung'
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            spreadRadius: 1,
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        // Menggunakan MainAxisAlignment.spaceEvenly atau Center
+        // agar tombol-tombol non-aktif (lingkaran) tetap memiliki ruang
+        // dan tombol aktif (pill) bisa mengambil ruang yang dibutuhkan.
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(items.length, (index) {
+          final isSelected = index == selectedIndex;
+          final item = items[index];
+
+          return GestureDetector(
+            onTap: () => onItemSelected(index),
+            // Mengganti Padding luar dan Expanded dengan SizedBox.expand
+            // untuk mengontrol lebar item aktif.
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+
+              // 2. Kontrol Bentuk & Lebar Adaptif
+              // Lebar ditentukan oleh isSelected:
+              // - Jika terpilih: Padding horizontal lebih besar, menjadi bentuk pill.
+              // - Jika tidak terpilih: Padding sama sisi, menjadi lingkaran.
+              padding: isSelected
+                  ? const EdgeInsets.symmetric(horizontal: 20, vertical: 12)
+                  : const EdgeInsets.all(circlePadding),
+
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(30),
+              ),
+
+              child: Row(
+                mainAxisSize: MainAxisSize
+                    .min, // Memastikan lebar pill hanya seukuran konten
+                children: [
+                  Icon(
+                    isSelected ? item['activeIcon'] : item['icon'],
+                    color: Colors.white,
+                    size: iconSize,
+                  ),
+
+                  // 3. Teks hanya muncul jika selected
+                  if (isSelected) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      item['label'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
