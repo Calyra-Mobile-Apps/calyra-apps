@@ -3,6 +3,7 @@
 import 'package:calyra/controllers/auth_controller.dart';
 import 'package:calyra/models/service_response.dart';
 import 'package:calyra/screens/auth/login_screen.dart';
+import 'package:calyra/screens/quiz/take_selfie_screen.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 content: Text('Registration successful! Please sign in.')),
           );
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            MaterialPageRoute(builder: (context) => const TakeSelfieScreen()),
             (route) => false,
           );
         } else {
