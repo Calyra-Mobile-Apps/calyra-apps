@@ -50,30 +50,27 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     final analysisService = AnalysisService();
     final firestoreService = FirestoreService();
 
-    // 2. Ambil semua jawaban dari provider
-    final answers = quizProvider.answers;
+    // 2. Dapatkan hasil analisis menggunakan sesi kuis
+    final AnalysisResult result =
+        analysisService.analyze(quizProvider.session);
 
-    // 3. Dapatkan hasil analisis (misal: "Warm Autumn") dari service
-    final String resultString = analysisService.getAnalysisResult(answers);
+    // 3. Simpan hasil ke Firestore untuk riwayat
+    final saveResponse = await firestoreService.saveAnalysisResult(result);
 
-    // 4. Buat objek AnalysisResult yang lengkap
-    final result = AnalysisResult(
-      seasonResult: resultString,
-      undertone: answers['undertone'] ?? 'unknown',
-      skintone: answers['skintone'] ?? 'unknown',
-      analysisDate: DateTime.now(),
-    );
+    if (!mounted) return;
 
-    // 5. Simpan hasil ke Firestore untuk riwayat
-    await firestoreService.saveAnalysisResult(result);
+    if (!saveResponse.isSuccess && saveResponse.message != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(saveResponse.message!)));
+    }
 
-    // 6. Perbarui state UI untuk menampilkan hasil
+    // 4. Perbarui state UI untuk menampilkan hasil
     setState(() {
       _analysisResult = result;
       _isLoading = false;
     });
 
-    // 7. Bersihkan data kuis sementara (foto & jawaban) dari memori
+    // 5. Bersihkan data kuis sementara (foto & jawaban) dari memori
     quizProvider.resetQuiz();
   }
 
@@ -232,7 +229,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                  colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
                   begin: Alignment.bottomCenter,
                   end: Alignment.center,
                 ),

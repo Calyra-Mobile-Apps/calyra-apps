@@ -1,6 +1,7 @@
 // Lokasi file: lib/screens/quiz/skintone_quiz_screen.dart
 
 import 'dart:typed_data';
+import 'package:calyra/models/quiz/quiz_keys.dart';
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/quiz/seasonal_quiz_screen.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ class SkintoneQuizScreen extends StatelessWidget {
 
   void _onOptionSelected(BuildContext context, String answer) {
     // 1. Simpan jawaban ke provider
-    context.read<QuizProvider>().addAnswer('skintone', answer);
+  context.read<QuizProvider>().addAnswer(QuizKeys.skintone, answer);
 
     // 2. Navigasi ke halaman kuis berikutnya
     Navigator.push(
@@ -90,7 +91,10 @@ class SkintoneQuizScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final color = skintoneOptions[index];
                     return GestureDetector(
-                      onTap: () => _onOptionSelected(context, color.value.toRadixString(16)),
+                      onTap: () => _onOptionSelected(
+                        context,
+                        color.toARGB32().toRadixString(16),
+                      ),
                       child: Container(
                         decoration: BoxDecoration(
                           color: color,

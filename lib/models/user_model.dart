@@ -24,4 +24,25 @@ class UserModel {
       createdAt: data['created_at'] ?? Timestamp.now(),
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'email': email,
+      'created_at': createdAt,
+    };
+  }
+
+  UserModel copyWith({
+    String? name,
+    String? email,
+    Timestamp? createdAt,
+  }) {
+    return UserModel(
+      uid: uid,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

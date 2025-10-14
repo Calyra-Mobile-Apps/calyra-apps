@@ -1,9 +1,11 @@
 // Lokasi file: lib/screens/profile/profile_screen.dart
 
 // import 'package:calyra/screens/analysis/analysis_history_screen.dart';
-import 'package:calyra/services/auth_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:calyra/controllers/auth_controller.dart';
+import 'package:calyra/models/service_response.dart';
+import 'package:calyra/models/user_model.dart';
+import 'package:calyra/screens/auth/login_screen.dart';
+import 'package:calyra/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -14,35 +16,40 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  String userName = 'Calyra User';
+  final AuthController _authController = AuthController();
+  final FirestoreService _firestoreService = FirestoreService();
+
+  String _userName = 'Calyra User';
+  String _userEmail = 'email@example.com';
 
   @override
   void initState() {
     super.initState();
-    _fetchUserName();
+    _initialiseUser();
   }
 
-  // Fungsi untuk mengambil nama dari Firestore
-  Future<void> _fetchUserName() async {
-    if (user != null) {
-      try {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('Users').doc(user!.uid).get();
-        if (userDoc.exists && userDoc.data() != null) {
-          setState(() {
-            userName = (userDoc.data() as Map<String, dynamic>)['name'] ?? 'Calyra User';
-          });
-        }
-      } catch (e) {
-        // Biarkan nama default jika terjadi error
-      }
+  Future<void> _initialiseUser() async {
+    final user = _authController.currentUser;
+    if (user == null) return;
+
+    setState(() {
+      _userEmail = user.email ?? _userEmail;
+    });
+
+    final ServiceResponse<UserModel> response =
+        await _firestoreService.getUserData(user.uid);
+
+    if (!mounted) return;
+
+    if (response.isSuccess && response.data != null) {
+      setState(() {
+        _userName = response.data!.name;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final AuthService authService = AuthService();
-
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
@@ -73,12 +80,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        userName,
+                        _userName,
                         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        user?.email ?? 'email@example.com',
+                        _userEmail,
                         style: const TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       const SizedBox(height: 16),
@@ -130,6 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 text: 'Logout',
                 textColor: Colors.red,
                 onTap: () async {
+                  final navigator = Navigator.of(context);
                   await showDialog(
                     context: context,
                     builder: (BuildContext dialogContext) {
@@ -143,9 +151,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           TextButton(
                             child: const Text('Log Out', style: TextStyle(color: Colors.red)),
-                            onPressed: () {
+                            onPressed: () async {
                               Navigator.of(dialogContext).pop();
-                              authService.signOut();
+                              await _authController.signOut();
+                              navigator.pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                                (route) => false,
+                              );
                             },
                           ),
                         ],

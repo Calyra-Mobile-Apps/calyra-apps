@@ -1,7 +1,8 @@
 // Lokasi file: lib/screens/auth/forgot_password_screen.dart
 
+import 'package:calyra/controllers/auth_controller.dart';
+import 'package:calyra/models/service_response.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
+  final AuthController _authController = AuthController();
 
   @override
   void dispose() {
@@ -20,29 +22,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> passwordReset() async {
+  Future<void> _passwordReset() async {
+    _showLoading();
+
+    final ServiceResponse<void> response =
+        await _authController.sendPasswordReset(_emailController.text.trim());
+
+    if (mounted) {
+      Navigator.pop(context);
+
+      if (response.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Link reset password telah dikirim ke email Anda.')),
+        );
+        Navigator.pop(context);
+      } else {
+        final message = response.message ?? 'Terjadi kesalahan, silakan coba lagi.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $message')),
+        );
+      }
+    }
+  }
+
+  void _showLoading() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-        email: _emailController.text.trim(),
-      );
-
-      Navigator.pop(context); // Hentikan loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Link reset password telah dikirim ke email Anda.")),
-      );
-      Navigator.pop(context); // Kembali ke halaman login
-    } on FirebaseAuthException catch (e) {
-      Navigator.pop(context); // Hentikan loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Terjadi kesalahan: ${e.message}")),
-      );
-    }
   }
 
   @override
@@ -82,7 +90,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 40),
 
             ElevatedButton(
-              onPressed: passwordReset,
+              onPressed: _passwordReset,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1B263B),
                 foregroundColor: Colors.white,

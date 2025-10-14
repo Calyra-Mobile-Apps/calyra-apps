@@ -1,6 +1,7 @@
 // Lokasi file: lib/screens/quiz/seasonal_color_quiz_screen.dart
 
 import 'dart:typed_data';
+import 'package:calyra/models/quiz/quiz_keys.dart';
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/quiz/quiz_result_screen.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class SeasonalColorQuizScreen extends StatelessWidget {
   void _onOptionSelected(BuildContext context, String answer) {
     final quizProvider = context.read<QuizProvider>();
     // 1. Simpan jawaban terakhir
-    quizProvider.addAnswer('seasonal_color', answer);
+  quizProvider.addAnswer(QuizKeys.seasonalColor, answer);
 
     // 2. Navigasi ke halaman hasil (kita akan buat ini selanjutnya)
     Navigator.push(
@@ -37,7 +38,8 @@ class SeasonalColorQuizScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final quizProvider = context.watch<QuizProvider>();
     final Uint8List? selfieBytes = quizProvider.selfieImageBytes;
-    final String undertone = quizProvider.answers['undertone'] ?? 'warm'; // Default ke 'warm' jika tidak ada
+  final String undertone =
+    quizProvider.answers[QuizKeys.undertone] ?? 'warm';
 
     // Tentukan palet mana yang akan ditampilkan berdasarkan jawaban undertone
     final palettesToShow = undertone == 'warm' ? warmPalettes : coolPalettes;
@@ -74,13 +76,13 @@ class SeasonalColorQuizScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Tampilkan palet berdasarkan undertone
-              ...palettesToShow.entries.map((entry) {
-                return _buildPaletteOption(
+              ...palettesToShow.entries.map(
+                (entry) => _buildPaletteOption(
                   context: context,
                   palettes: entry.value,
                   onTap: () => _onOptionSelected(context, entry.key),
-                );
-              }).toList(),
+                ),
+              ),
             ],
           ),
         ),

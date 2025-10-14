@@ -1,29 +1,35 @@
 // Lokasi file: lib/services/analysis_service.dart
 
-class AnalysisService {
-  // Fungsi ini mengambil semua jawaban dan mengembalikan hasil berupa String
-  String getAnalysisResult(Map<String, String> answers) {
-    // Ambil jawaban dari map
-    final String undertone = answers['undertone'] ?? '';
-    final String skintone = answers['skintone'] ?? '';
-    final String seasonalColor = answers['seasonal_color'] ?? '';
+import 'package:calyra/models/analysis_result.dart';
+import 'package:calyra/models/quiz/quiz_keys.dart';
+import 'package:calyra/models/quiz_session.dart';
 
-    // Logika penentuan hasil berdasarkan jawaban
+class AnalysisService {
+  AnalysisResult analyze(QuizSession session, {DateTime? analysisDate}) {
+    final answers = session.answers;
+    final undertone = answers[QuizKeys.undertone] ?? 'neutral';
+    final skintone = answers[QuizKeys.skintone] ?? 'unknown';
+    final seasonalColor = answers[QuizKeys.seasonalColor] ?? '';
+
+    final seasonResult = _resolveSeason(undertone, seasonalColor);
+
+    return AnalysisResult(
+      seasonResult: seasonResult,
+      undertone: undertone,
+      skintone: skintone,
+      analysisDate: analysisDate ?? DateTime.now(),
+    );
+  }
+
+  String _resolveSeason(String undertone, String seasonalColor) {
     if (undertone == 'warm') {
-      if (seasonalColor == 'bright_warm') {
-        return 'Warm Spring';
-      } else {
-        return 'Warm Autumn';
-      }
-    } else if (undertone == 'cool') {
-      if (seasonalColor == 'soft_cool') {
-        return 'Cool Summer';
-      } else {
-        return 'Cool Winter';
-      }
+      return seasonalColor == 'bright_warm' ? 'Warm Spring' : 'Warm Autumn';
     }
 
-    // Fallback jika ada jawaban yang tidak terduga
+    if (undertone == 'cool') {
+      return seasonalColor == 'soft_cool' ? 'Cool Summer' : 'Cool Winter';
+    }
+
     return 'Neutral';
   }
 }

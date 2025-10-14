@@ -1,10 +1,12 @@
 // Lokasi file: lib/screens/auth/signup_screen.dart
 
+import 'package:calyra/controllers/auth_controller.dart';
+import 'package:calyra/models/service_response.dart';
 import 'package:calyra/screens/auth/login_screen.dart';
-import 'package:calyra/services/auth_service.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Import untuk firebase_auth dan cloud_firestore sudah dihapus
 
@@ -25,63 +27,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  String getErrorMessage(String errorCode) {
-    // Fungsi ini tidak perlu diubah, sudah bagus
-    switch (errorCode) {
-      case "email-already-in-use":
-        return "The email address is already in use by another account.";
-      case "invalid-email":
-        return "The email address is badly formatted.";
-      case "weak-password":
-        return "Password should be at least 6 characters.";
-      case "network-request-failed":
-        return "Network error. Please check your internet connection.";
-      default:
-        // Menangkap pesan error langsung dari Firebase jika tidak dikenal
-        if (errorCode.isNotEmpty) {
-          return errorCode;
-        }
-        return "An undefined error occurred. Please try again.";
-    }
-  }
+  final AuthController _authController = AuthController();
 
-  Future<void> signUpUser() async {
+  Future<void> _signUpUser() async {
     if (_formKey.currentState!.validate()) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
+      _showLoading();
 
-      // BUAT INSTANCE DARI AUTHSERVICE
-      final authService = AuthService();
-
-      // PANGGIL FUNGSI signUp DARI AUTHSERVICE
-      String? result = await authService.signUpWithEmailAndPassword(
+      final ServiceResponse<User?> response = await _authController.signUp(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      if (mounted) Navigator.pop(context); // Hentikan loading
+      if (mounted) {
+        Navigator.pop(context);
 
-      if (result == "Success") {
-        // Jika berhasil
-        if (mounted) {
+        if (response.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Registration successful! Please sign in.")),
+            const SnackBar(content: Text('Registration successful! Please sign in.')),
           );
           Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        } else {
+          final message = response.message ?? 'An undefined error occurred. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign up failed: $message')),
+          );
         }
-      } else {
-        // Jika gagal, tampilkan pesan error yang dikembalikan oleh AuthService
-        String errorMessage = getErrorMessage(result ?? "An undefined error occurred.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign up failed: $errorMessage')),
-        );
       }
     }
+  }
+
+  void _showLoading() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
   }
 
   @override
@@ -180,7 +164,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 30),
 
                 ElevatedButton(
-                  onPressed: signUpUser,
+                  onPressed: _signUpUser,
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B263B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                   child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),

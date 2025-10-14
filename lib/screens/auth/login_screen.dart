@@ -1,12 +1,14 @@
 // Lokasi file: lib/screens/auth/login_screen.dart
 
+import 'package:calyra/controllers/auth_controller.dart';
+import 'package:calyra/models/service_response.dart';
 import 'package:calyra/screens/auth/forgot_password_screen.dart';
 import 'package:calyra/screens/auth/signup_screen.dart';
 import 'package:calyra/screens/main_screen.dart';
-import 'package:calyra/services/auth_service.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Import untuk firebase_auth sudah dihapus
 
@@ -22,57 +24,38 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
-  String getErrorMessage(String errorCode) {
-    switch (errorCode) {
-      case "invalid-credential":
-      case "wrong-password":
-      case "user-not-found":
-        return "Incorrect email or password. Please try again.";
-      case "user-disabled":
-        return "This user account has been disabled.";
-      case "invalid-email":
-        return "The email address is badly formatted.";
-      case "network-request-failed":
-        return "Network error. Please check your internet connection.";
-      default:
-        if (errorCode.isNotEmpty) {
-          return errorCode;
-        }
-        return "An undefined error occurred. Please try again.";
+  final AuthController _authController = AuthController();
+
+  Future<void> _signInUser() async {
+    _showLoading();
+
+  final ServiceResponse<User?> response = await _authController.signIn(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (mounted) {
+      Navigator.pop(context);
+
+      if (response.isSuccess) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      } else {
+        final message = response.message ?? 'An undefined error occurred. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: $message')),
+        );
+      }
     }
   }
 
-  Future<void> signInUser() async {
+  void _showLoading() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-
-    final authService = AuthService();
-    String? result = await authService.signInWithEmailAndPassword(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
-
-    if (mounted) Navigator.pop(context); // Hentikan loading
-
-    if (result == "Success") {
-      // Arahkan ke Halaman Home/Main setelah berhasil login
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
-    } else {
-      // Jika gagal, tampilkan pesan error
-      String errorMessage = getErrorMessage(result ?? "An undefined error occurred.");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $errorMessage')),
-        );
-      }
-    }
   }
 
   @override
@@ -127,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
 
               ElevatedButton(
-                onPressed: signInUser,
+                onPressed: _signInUser,
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B263B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),

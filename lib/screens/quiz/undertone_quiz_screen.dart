@@ -1,6 +1,7 @@
 // Lokasi file: lib/screens/quiz/undertone_quiz_screen.dart
 
 import 'dart:typed_data';
+import 'package:calyra/models/quiz/quiz_keys.dart';
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/quiz/skintone_quiz_screen.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ class UndertoneQuizScreen extends StatelessWidget {
   // Fungsi untuk menangani saat sebuah opsi dipilih
   void _onOptionSelected(BuildContext context, String answer) {
     // 1. Simpan jawaban ke provider
-    context.read<QuizProvider>().addAnswer('undertone', answer);
+  context.read<QuizProvider>().addAnswer(QuizKeys.undertone, answer);
 
     // 2. Navigasi ke halaman kuis berikutnya
     Navigator.push(
@@ -58,7 +59,7 @@ class UndertoneQuizScreen extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       )

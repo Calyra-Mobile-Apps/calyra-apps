@@ -1,33 +1,29 @@
 // Lokasi file: lib/providers/quiz_provider.dart
 
-import 'dart:typed_data'; // Digunakan untuk Uint8List
-import 'package:flutter/foundation.dart'; // Digunakan untuk kIsWeb dan ChangeNotifier
+import 'package:calyra/models/quiz_session.dart';
+import 'package:flutter/foundation.dart';
 
-// Provider ini bertugas menyimpan data kuis sementara (foto & jawaban)
 class QuizProvider with ChangeNotifier {
-  // Ubah dari File? menjadi Uint8List? agar kompatibel dengan web
-  Uint8List? _selfieImageBytes;
-  final Map<String, String> _answers = {};
+  QuizProvider() : _session = QuizSession();
 
-  Uint8List? get selfieImageBytes => _selfieImageBytes;
-  Map<String, String> get answers => _answers;
+  final QuizSession _session;
 
-  // Menyimpan foto selfie yang diambil dalam bentuk bytes
+  QuizSession get session => _session;
+  Uint8List? get selfieImageBytes => _session.selfieImageBytes;
+  Map<String, String> get answers => Map<String, String>.from(_session.answers);
+
   void setSelfieBytes(Uint8List imageBytes) {
-    _selfieImageBytes = imageBytes;
+    _session.setSelfieImage(imageBytes);
     notifyListeners();
   }
 
-  // Menambah jawaban dari setiap langkah kuis
   void addAnswer(String questionId, String answer) {
-    _answers[questionId] = answer;
+    _session.setAnswer(questionId, answer);
     notifyListeners();
   }
 
-  // Membersihkan data setelah kuis selesai
   void resetQuiz() {
-    _selfieImageBytes = null;
-    _answers.clear();
+    _session.reset();
     notifyListeners();
   }
 }
