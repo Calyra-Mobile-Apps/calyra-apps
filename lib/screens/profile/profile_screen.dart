@@ -17,8 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = AuthController();
   final FirestoreService _firestoreService = FirestoreService();
 
-  String _userName = 'Calyra User';
-  String _userEmail = 'email@example.com';
+  UserModel? _userModel; 
   bool _isLoading = true;
 
   @override
@@ -31,7 +30,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = _authController.currentUser;
     if (user == null) {
       if (mounted) {
-        // Redirect ke Login jika tidak ada pengguna yang login
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
           (route) => false,
@@ -40,12 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _userEmail = user.email ?? _userEmail;
-      });
-    }
-
+    // Mengambil data lengkap dari Firestore
     final ServiceResponse<UserModel> response =
         await _firestoreService.getUserData(user.uid);
 
@@ -53,13 +46,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (response.isSuccess && response.data != null) {
       setState(() {
-        _userName = response.data!.name;
+        _userModel = response.data!;
         _isLoading = false;
       });
     } else {
-      // Fallback jika gagal mengambil nama dari Firestore
+      // Fallback jika gagal mengambil data dari Firestore
       setState(() {
-        _userName = user.email?.split('@').first ?? 'Calyra User';
+        _userModel = UserModel(
+          uid: user.uid,
+          name: user.email?.split('@').first ?? 'Calyra User',
+          email: user.email ?? 'email@example.com',
+          createdAt: Timestamp.now(), // Menggunakan waktu saat ini sebagai fallback
+        );
         _isLoading = false;
       });
     }
@@ -99,7 +97,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    // Cek _userModel selain _isLoading untuk memastikan data sudah ada
+    if (_isLoading || _userModel == null) {
       return const Scaffold(
         body:
             Center(child: CircularProgressIndicator(color: Color(0xFF1B263B))),
@@ -166,6 +165,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Widget untuk Card Informasi Pengguna
   Widget _buildUserInfoCard(BuildContext context) {
+    // Memastikan _userModel tidak null (sudah dicek di build)
+    final user = _userModel!; 
+
     return Card(
       elevation: 4,
       shadowColor: Colors.black12,
@@ -189,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _userName,
+                    user.name, // Menggunakan data dari _userModel
                     style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -198,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _userEmail,
+                    user.email, // Menggunakan data dari _userModel
                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -208,19 +210,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         // --- NAVIGASI KE EDIT PROFILE PAGE ---
-                        final currentUserModel = UserModel(
-                          uid: _authController.currentUser!.uid,
-                          name: _userName,
-                          email: _userEmail,
-                          createdAt: Timestamp
-                              .now(),
-                        );
-
+                        // Cukup meneruskan objek _userModel yang sudah ada
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => EditProfileScreen(
-                                currentUser: currentUserModel),
+                                currentUser: user),
                           ),
                         );
                       },
