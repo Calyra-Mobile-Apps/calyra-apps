@@ -139,6 +139,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     if (value.length < 8) {
                       return 'Password must be at least 8 characters';
                     }
+                    if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(value)) {
+return 'Password must contain both letters and numbers';
+}
                     return null;
                   },
                 ),
@@ -154,6 +157,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password confirmation cannot be empty';
+                    }
+                    final passwordError = _passwordController.text.isEmpty
+                        ? 'Password cannot be empty'
+                        : (_passwordController.text.length < 8)
+                            ? 'Password must be at least 8 characters'
+                            : (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(_passwordController.text))
+                                ? 'Please use a combination of letters and numbers'
+                                : null;
+                    if (passwordError != null) {
+                        return 'Tolong perbaiki password di atas.';
                     }
                     if (value != _passwordController.text) {
                       return 'Passwords do not match';
