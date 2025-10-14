@@ -10,8 +10,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Import untuk firebase_auth sudah dihapus
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -24,12 +22,32 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
+  bool _isFormValid = false;
+
   final AuthController _authController = AuthController();
 
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_checkFormValidity);
+    _passwordController.addListener(_checkFormValidity);
+  }
+
+  void _checkFormValidity() {
+    final isValid =
+        _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+    if (isValid != _isFormValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
+
   Future<void> _signInUser() async {
+    if (!_isFormValid) return;
     _showLoading();
 
-  final ServiceResponse<User?> response = await _authController.signIn(
+    final ServiceResponse<User?> response = await _authController.signIn(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
@@ -42,7 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       } else {
-        final message = response.message ?? 'An undefined error occurred. Please try again.';
+        final message = response.message ??
+            'An undefined error occurred. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: $message')),
         );
@@ -60,6 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _emailController.removeListener(_checkFormValidity);
+    _passwordController.removeListener(_checkFormValidity);
+
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -67,7 +89,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Bagian build tidak perlu diubah
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -76,13 +97,23 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 50),
-              const Text('Welcome back', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
-              const Text('Sign In', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, color: Colors.grey)),
+              const Text('Welcome back',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0D1B2A))),
+              const Text('Sign In',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, color: Colors.grey)),
               const SizedBox(height: 30),
-              Image.asset('assets/images/logo.png', height: 80),
+              Image.asset('assets/images/logo.png', height: 150),
               const SizedBox(height: 40),
-
-              CustomTextFormField(controller: _emailController, labelText: 'Email Address', hintText: 'Enter your email address', prefixIcon: Icons.email_outlined),
+              CustomTextFormField(
+                  controller: _emailController,
+                  labelText: 'Email Address',
+                  hintText: 'Enter your email address',
+                  prefixIcon: Icons.email_outlined),
               const SizedBox(height: 16),
               CustomTextFormField(
                 controller: _passwordController,
@@ -90,10 +121,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintText: 'Enter your password',
                 prefixIcon: Icons.lock_outline,
                 isPassword: !_isPasswordVisible,
-                suffixIcon: IconButton(icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible)),
+                suffixIcon: IconButton(
+                    icon: Icon(_isPasswordVisible
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible)),
               ),
               const SizedBox(height: 8),
-
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -104,33 +139,54 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                  child: const Text('Forgot Password?', style: TextStyle(color: Colors.blue)),
+                  child: const Text('Forgot Password?',
+                      style: TextStyle(color: Colors.blue)),
                 ),
               ),
               const SizedBox(height: 24),
-
               ElevatedButton(
-                onPressed: _signInUser,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B263B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                onPressed: _isFormValid ? _signInUser : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      _isFormValid ? Colors.black : Colors.grey[300],
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: Text('Sign In',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _isFormValid ? Colors.white : Colors.grey[600],
+                    )),
               ),
               const SizedBox(height: 24),
-
-              const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8.0), child: Text('OR')), Expanded(child: Divider())]),
+              const Row(children: [
+                Expanded(child: Divider()),
+                Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text('OR')),
+                Expanded(child: Divider())
+              ]),
               const SizedBox(height: 24),
-              
               Center(
                 child: Text.rich(
-                  TextSpan(text: "Don't have an account? ", style: const TextStyle(color: Colors.black), children: [
-                    TextSpan(
-                      text: 'Sign Up.',
-                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SignUpScreen()));
-                        },
-                    ),
-                  ]),
+                  TextSpan(
+                      text: "Don't have an account? ",
+                      style: const TextStyle(color: Colors.black),
+                      children: [
+                        TextSpan(
+                          text: 'Sign Up.',
+                          style: const TextStyle(
+                              color: Colors.red, fontWeight: FontWeight.bold),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => const SignUpScreen()));
+                            },
+                        ),
+                      ]),
                 ),
               ),
               const SizedBox(height: 20),

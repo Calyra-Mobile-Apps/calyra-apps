@@ -27,7 +27,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
+  bool _isFormValid = false;
+
   final AuthController _authController = AuthController();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_checkFormValidity);
+    _emailController.addListener(_checkFormValidity);
+    _passwordController.addListener(_checkFormValidity);
+    _confirmPasswordController.addListener(_checkFormValidity);
+  }
+
+  void _checkFormValidity() {
+    final nameValid = _nameController.text.isNotEmpty;
+    final emailValid = _emailController.text.isNotEmpty;
+    final passwordValid = _passwordController.text.isNotEmpty;
+    final confirmValid = _confirmPasswordController.text.isNotEmpty;
+
+    final passwordsMatch =
+        _passwordController.text == _confirmPasswordController.text;
+
+    final isValid = nameValid &&
+        emailValid &&
+        passwordValid &&
+        confirmValid &&
+        passwordsMatch;
+    if (isValid != _isFormValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
 
   Future<void> _signUpUser() async {
     if (_formKey.currentState!.validate()) {
@@ -44,14 +76,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
         if (response.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration successful! Please sign in.')),
+            const SnackBar(
+                content: Text('Registration successful! Please sign in.')),
           );
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
           );
         } else {
-          final message = response.message ?? 'An undefined error occurred. Please try again.';
+          final message = response.message ??
+              'An undefined error occurred. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Sign up failed: $message')),
           );
@@ -70,6 +104,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
+    _nameController.removeListener(_checkFormValidity);
+    _emailController.removeListener(_checkFormValidity);
+    _passwordController.removeListener(_checkFormValidity);
+    _confirmPasswordController.removeListener(_checkFormValidity);
+
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -79,7 +118,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Bagian Widget build() ini tidak perlu diubah sama sekali.
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -90,12 +128,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 50),
-                const Text('Welcome Buddies!', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
-                const Text('Sign Up', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, color: Colors.grey)),
+                const Text('Welcome Buddies!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0D1B2A))),
+                const Text('Sign Up',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 20, color: Colors.grey)),
                 const SizedBox(height: 30),
-                Image.asset('assets/images/logo.png', height: 80),
+                Image.asset('assets/images/logo.png', height: 150),
                 const SizedBox(height: 40),
-                
                 CustomTextFormField(
                     controller: _nameController,
                     labelText: 'Name',
@@ -108,7 +152,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     }),
                 const SizedBox(height: 16),
-                
                 CustomTextFormField(
                     controller: _emailController,
                     labelText: 'Email Address',
@@ -124,14 +167,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     }),
                 const SizedBox(height: 16),
-
                 CustomTextFormField(
                   controller: _passwordController,
                   labelText: 'Password',
                   hintText: 'Enter your password',
                   prefixIcon: Icons.lock_outline,
                   isPassword: !_isPasswordVisible,
-                  suffixIcon: IconButton(icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible)),
+                  suffixIcon: IconButton(
+                      icon: Icon(_isPasswordVisible
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible)),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password cannot be empty';
@@ -140,20 +187,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return 'Password must be at least 8 characters';
                     }
                     if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(value)) {
-return 'Password must contain both letters and numbers';
-}
+                      return 'Password must contain both letters and numbers';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                
                 CustomTextFormField(
                   controller: _confirmPasswordController,
                   labelText: 'Password Confirmation',
                   hintText: 'Confirm your password',
                   prefixIcon: Icons.lock_outline,
                   isPassword: !_isConfirmPasswordVisible,
-                  suffixIcon: IconButton(icon: Icon(_isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible)),
+                  suffixIcon: IconButton(
+                      icon: Icon(_isConfirmPasswordVisible
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () => setState(() =>
+                          _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible)),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password confirmation cannot be empty';
@@ -162,11 +214,12 @@ return 'Password must contain both letters and numbers';
                         ? 'Password cannot be empty'
                         : (_passwordController.text.length < 8)
                             ? 'Password must be at least 8 characters'
-                            : (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(_passwordController.text))
+                            : (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)')
+                                    .hasMatch(_passwordController.text))
                                 ? 'Please use a combination of letters and numbers'
                                 : null;
                     if (passwordError != null) {
-                        return 'Tolong perbaiki password di atas.';
+                      return 'Please correct the password above';
                     }
                     if (value != _passwordController.text) {
                       return 'Passwords do not match';
@@ -175,28 +228,54 @@ return 'Password must contain both letters and numbers';
                   },
                 ),
                 const SizedBox(height: 30),
-
                 ElevatedButton(
-                  onPressed: _signUpUser,
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B263B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  onPressed: _isFormValid ? _signUpUser : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _isFormValid ? Colors.black : Colors.grey[300],
+                    foregroundColor:
+                        _isFormValid ? Colors.white : Colors.grey[600],
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text('Sign Up',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _isFormValid ? Colors.white : Colors.grey[600],
+                      )),
                 ),
                 const SizedBox(height: 24),
-                
-                const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8.0), child: Text('OR')), Expanded(child: Divider())]),
+                const Row(children: [
+                  Expanded(child: Divider()),
+                  Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text('OR')),
+                  Expanded(child: Divider())
+                ]),
                 const SizedBox(height: 24),
                 Center(
                   child: Text.rich(
-                    TextSpan(text: "Already have an account? ", style: const TextStyle(color: Colors.black), children: [
-                      TextSpan(
-                        text: 'Sign In.',
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
-                          },
-                      ),
-                    ]),
+                    TextSpan(
+                        text: "Already have an account? ",
+                        style: const TextStyle(color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: 'Sign In.',
+                            style: const TextStyle(
+                                color: Colors.red, fontWeight: FontWeight.bold),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LoginScreen()),
+                                    (route) => false);
+                              },
+                          ),
+                        ]),
                   ),
                 ),
                 const SizedBox(height: 20),
