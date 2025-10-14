@@ -7,21 +7,23 @@ class UserModel {
   final String name;
   final String email;
   final Timestamp createdAt;
+  final String? avatarPath;
 
   UserModel({
     required this.uid,
     required this.name,
     required this.email,
     required this.createdAt,
+    this.avatarPath,
   });
 
-  // Factory constructor untuk membuat objek UserModel dari data Firestore
   factory UserModel.fromFirestore(Map<String, dynamic> data, String uid) {
     return UserModel(
       uid: uid,
       name: data['name'] ?? 'No Name',
       email: data['email'] ?? 'No Email',
       createdAt: data['created_at'] ?? Timestamp.now(),
+      avatarPath: data['avatarPath'] as String?,
     );
   }
 
@@ -30,13 +32,14 @@ class UserModel {
       'name': name,
       'email': email,
       'created_at': createdAt,
+      'avatarPath': avatarPath,
     };
   }
 
   UserModel copyWith({
     String? name,
     String? email,
-    Timestamp? createdAt,
+    Timestamp? createdAt, required String avatarPath,
   }) {
     return UserModel(
       uid: uid,

@@ -17,8 +17,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthController _authController = AuthController();
   final FirestoreService _firestoreService = FirestoreService();
 
-  UserModel? _userModel; 
+  UserModel? _userModel;
   bool _isLoading = true;
+
+  static const String defaultAvatarPath = 'assets/images/Logo.png';
 
   @override
   void initState() {
@@ -38,7 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    // Mengambil data lengkap dari Firestore
     final ServiceResponse<UserModel> response =
         await _firestoreService.getUserData(user.uid);
 
@@ -50,13 +51,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
     } else {
-      // Fallback jika gagal mengambil data dari Firestore
       setState(() {
         _userModel = UserModel(
           uid: user.uid,
           name: user.email?.split('@').first ?? 'Calyra User',
           email: user.email ?? 'email@example.com',
-          createdAt: Timestamp.now(), // Menggunakan waktu saat ini sebagai fallback
+          createdAt: Timestamp.now(),
+          avatarPath: defaultAvatarPath,
         );
         _isLoading = false;
       });
@@ -97,7 +98,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Cek _userModel selain _isLoading untuk memastikan data sudah ada
     if (_isLoading || _userModel == null) {
       return const Scaffold(
         body:
@@ -106,7 +106,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      // Background page diatur menjadi putih
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -122,19 +121,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: Color(0xFF0D1B2A)),
               ),
               const SizedBox(height: 24),
-
-              // Kartu Informasi Pengguna (Card Profile)
               _buildUserInfoCard(context),
               const SizedBox(height: 32),
-
-              // Daftar Menu
               _buildProfileMenu(
                 context,
                 icon: Icons.history,
                 text: 'History',
-                onTap: () {
-                  // TODO: Implementasi navigasi ke AnalysisHistoryScreen
-                },
+                onTap: () {},
               ),
               _buildProfileMenu(
                 context,
@@ -163,10 +156,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Widget untuk Card Informasi Pengguna
   Widget _buildUserInfoCard(BuildContext context) {
-    // Memastikan _userModel tidak null (sudah dicek di build)
-    final user = _userModel!; 
+    final user = _userModel!;
+    final avatarPath = user.avatarPath ?? defaultAvatarPath;
+    final isDefaultIcon = avatarPath == defaultAvatarPath;
 
     return Card(
       elevation: 4,
@@ -178,20 +171,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Avatar di Kiri
-            const CircleAvatar(
+            CircleAvatar(
               radius: 40,
               backgroundColor: Color(0xFFE0E0E0),
-              child: Icon(Icons.person, size: 40, color: Colors.white),
+              child: ClipOval(
+                child: isDefaultIcon
+                  ? const Icon( // Tampilkan Icon.person jika path adalah marker default
+                      Icons.person,
+                      size: 40,
+                      color: Colors.white,
+                    )
+                    : Image.asset(
+                  avatarPath,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.person,
+                        size: 40, color: Colors.white);
+                  },
+                ),
+              ),
             ),
             const SizedBox(width: 16),
-            // Nama, Email, dan Tombol di Kanan
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.name, // Menggunakan data dari _userModel
+                    user.name,
                     style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -200,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user.email, // Menggunakan data dari _userModel
+                    user.email,
                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -208,18 +216,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(
                     height: 35,
                     child: ElevatedButton(
-                      onPressed: () {
-                        // --- NAVIGASI KE EDIT PROFILE PAGE ---
-                        // Cukup meneruskan objek _userModel yang sudah ada
-                        Navigator.push(
+                      onPressed: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => EditProfileScreen(
-                                currentUser: user),
+                            builder: (context) =>
+                                EditProfileScreen(currentUser: user),
                           ),
                         );
+                        if (mounted && result != null && result is UserModel) {
+                          setState(() {
+                            _userModel = result;
+                          });
+                        } else {
+                          _initialiseUser();
+                        }
                       },
-                      // Tombol Edit Profile: Hitam dengan teks putih
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
@@ -243,7 +255,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Widget untuk setiap item menu
   Widget _buildProfileMenu(BuildContext context,
       {required IconData icon,
       required String text,
@@ -252,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Color? iconColor}) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 4, // Menambahkan elevasi agar timbul
+      elevation: 4,
       shadowColor: Colors.black12,
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -264,7 +275,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: textColor ?? const Color(0xFF0D1B2A),
                 fontWeight: FontWeight.w600,
                 fontSize: 15)),
-        // Menggunakan Icons.arrow_forward sesuai gambar
         trailing: Icon(Icons.arrow_forward,
             size: 20, color: textColor ?? Colors.grey[400]),
         onTap: onTap,
