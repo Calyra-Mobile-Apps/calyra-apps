@@ -16,7 +16,7 @@ class FirestoreService {
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
 
-  static const String _usersCollection = 'users';
+  static const String _usersCollection = 'Users';
   static const String _analysisHistoryCollection = 'analysisHistory';
 
   Future<ServiceResponse<UserModel>> getUserData(String uid) async {

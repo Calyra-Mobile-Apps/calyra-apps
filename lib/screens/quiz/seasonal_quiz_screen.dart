@@ -24,8 +24,7 @@ class SeasonalColorQuizScreen extends StatelessWidget {
 
   void _onOptionSelected(BuildContext context, String answer) {
     final quizProvider = context.read<QuizProvider>();
-    // 1. Simpan jawaban terakhir
-  quizProvider.addAnswer(QuizKeys.seasonalColor, answer);
+    quizProvider.addAnswer(QuizKeys.seasonalColor, answer);
 
     // 2. Navigasi ke halaman hasil (kita akan buat ini selanjutnya)
     Navigator.push(
@@ -38,8 +37,8 @@ class SeasonalColorQuizScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final quizProvider = context.watch<QuizProvider>();
     final Uint8List? selfieBytes = quizProvider.selfieImageBytes;
-  final String undertone =
-    quizProvider.answers[QuizKeys.undertone] ?? 'warm';
+    final String undertone =
+        quizProvider.answers[QuizKeys.undertone] ?? 'warm';
 
     // Tentukan palet mana yang akan ditampilkan berdasarkan jawaban undertone
     final palettesToShow = undertone == 'warm' ? warmPalettes : coolPalettes;
@@ -57,11 +56,11 @@ class SeasonalColorQuizScreen extends StatelessWidget {
             children: [
               if (selfieBytes != null)
                 Container(
-                  width: 200,
-                  height: 200,
+                  width: 220,
+                  height: 220,
                   margin: const EdgeInsets.only(bottom: 30),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     image: DecorationImage(
                       image: MemoryImage(selfieBytes),
                       fit: BoxFit.cover,

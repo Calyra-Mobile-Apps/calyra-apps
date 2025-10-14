@@ -2,6 +2,7 @@
 
 import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/providers/quiz_provider.dart';
+import 'package:calyra/screens/main_screen.dart';
 import 'package:calyra/services/analysis_service.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:flutter/material.dart';
@@ -85,9 +86,14 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             ? [
                 IconButton(
                   icon: const Icon(Icons.close),
-                  // Tombol close akan membawa pengguna kembali ke halaman utama (root)
-                  onPressed: () =>
-                      Navigator.of(context).popUntil((route) => route.isFirst),
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => const MainScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
                 )
               ]
             : [],

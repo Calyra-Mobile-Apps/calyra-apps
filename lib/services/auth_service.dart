@@ -47,7 +47,7 @@ class AuthService {
 
       if (user != null) {
         // 2. Simpan data tambahan di Firestore
-        await _firestore.collection('users').doc(user.uid).set({
+  await _firestore.collection('Users').doc(user.uid).set({
           'name': name,
           'email': email,
           'created_at': Timestamp.now(),

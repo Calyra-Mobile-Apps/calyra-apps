@@ -49,11 +49,11 @@ class SkintoneQuizScreen extends StatelessWidget {
               // Tampilkan gambar selfie jika ada
               if (selfieBytes != null)
                 Container(
-                  width: 200,
-                  height: 200,
+                  width: 220,
+                  height: 220,
                   margin: const EdgeInsets.only(bottom: 30),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     image: DecorationImage(
                       image: MemoryImage(selfieBytes),
                       fit: BoxFit.cover,
@@ -62,14 +62,15 @@ class SkintoneQuizScreen extends StatelessWidget {
                 )
               else
                 Container(
-                  width: 200,
-                  height: 200,
+                  width: 220,
+                  height: 220,
                   margin: const EdgeInsets.only(bottom: 30),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     color: Colors.grey[200],
                   ),
-                  child: const Center(child: Text('Selfie not found')),
+                  alignment: Alignment.center,
+                  child: const Text('Selfie not found'),
                 ),
               
               const Text(

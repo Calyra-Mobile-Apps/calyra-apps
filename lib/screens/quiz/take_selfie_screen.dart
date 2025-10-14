@@ -3,7 +3,7 @@
 import 'dart:typed_data';
 
 import 'package:calyra/providers/quiz_provider.dart';
-import 'package:calyra/screens/home/home_screen.dart';
+import 'package:calyra/screens/main_screen.dart';
 import 'package:calyra/screens/quiz/undertone_quiz_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -209,9 +209,10 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () {
-                       Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      context.read<QuizProvider>().resetQuiz();
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const MainScreen()),
+                        (route) => false,
                       );
                     },
                     child: Text('Skip', style: TextStyle(color: Colors.grey[600], fontSize: 16)),

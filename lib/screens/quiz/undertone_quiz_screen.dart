@@ -48,11 +48,11 @@ class UndertoneQuizScreen extends StatelessWidget {
               // Tampilkan gambar selfie jika ada
               if (selfieBytes != null)
                 Container(
-                  width: 250,
-                  height: 250,
+                  width: 240,
+                  height: 240,
                   margin: const EdgeInsets.only(bottom: 40),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     image: DecorationImage(
                       image: MemoryImage(selfieBytes),
                       fit: BoxFit.cover,
@@ -60,25 +60,23 @@ class UndertoneQuizScreen extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
                       )
                     ],
                   ),
                 )
               else
-                // Tampilan jika gambar tidak ditemukan
                 Container(
-                  width: 250,
-                  height: 250,
+                  width: 240,
+                  height: 240,
                   margin: const EdgeInsets.only(bottom: 40),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    shape: BoxShape.circle,
                     color: Colors.grey[200],
                   ),
-                  child: const Center(
-                    child: Text('Selfie not found', style: TextStyle(color: Colors.grey)),
-                  ),
+                  alignment: Alignment.center,
+                  child: const Text('Selfie not found', style: TextStyle(color: Colors.grey)),
                 ),
 
               // Pilihan Jawaban
