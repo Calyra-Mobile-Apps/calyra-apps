@@ -207,7 +207,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                               : () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const UndertoneQuizScreen()),
+                                    MaterialPageRoute(builder: (context) => const UndertoneQuizMainScreen()),
                                   );
                                 },
                           style: ElevatedButton.styleFrom(
