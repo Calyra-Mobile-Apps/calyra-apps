@@ -1,9 +1,11 @@
 // Lokasi file: lib/screens/profile/edit_profile_screen.dart
 import 'package:calyra/models/user_model.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:calyra/models/service_response.dart';
+import 'package:intl/intl.dart';
 
 const List<String> availableAvatars = [
   'assets/images/B1.png',
@@ -33,9 +35,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _passwordController;
+  
+  DateTime? _selectedDateOfBirth;
+  late DateTime? _originalDateOfBirth;
+  late TextEditingController _dobController;
 
-  bool _isPasswordVisible = false;
   bool _hasChanges = false;
 
   late String _originalName;
@@ -51,10 +55,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _originalAvatarPath = widget.currentUser.avatarPath ?? defaultAvatarPath;
     _selectedAvatarPath = _originalAvatarPath;
 
+  _originalDateOfBirth = widget.currentUser.dateOfBirth?.toDate();
+    _selectedDateOfBirth = _originalDateOfBirth;
+    _dobController = TextEditingController(
+      text: _originalDateOfBirth == null
+          ? ''
+          : DateFormat('dd MMMM yyyy').format(_originalDateOfBirth!),
+    );
+
     _nameController = TextEditingController(text: _originalName);
     _emailController = TextEditingController(text: _originalEmail);
-    _passwordController = TextEditingController(text: '');
     _nameController.addListener(_checkChanges);
+    _dobController.addListener(_checkChanges);
   }
 
   @override
@@ -62,14 +74,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.removeListener(_checkChanges);
     _nameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 
   void _checkChanges() {
     final nameChanged = _nameController.text.trim() != _originalName;
     final avatarChanged = _selectedAvatarPath != _originalAvatarPath;
-    final bool changed = nameChanged || avatarChanged;
+    final dobChanged = _selectedDateOfBirth != _originalDateOfBirth;
+
+    final bool changed = nameChanged || avatarChanged || dobChanged;
 
     if (changed != _hasChanges) {
       setState(() {
@@ -78,21 +92,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> _selectDateOfBirth(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateOfBirth ?? DateTime(2000), // Default 2000 jika null
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      helpText: 'Select Date of Birth',
+      confirmText: 'SELECT',
+    );
+    if (picked != null && picked != _selectedDateOfBirth) {
+      setState(() {
+        _selectedDateOfBirth = picked;
+        _dobController.text = DateFormat('dd MMMM yyyy').format(picked);
+        _checkChanges();
+      });
+    }
+  }
+
   Future<void> _handleSave() async {
     if (_formKey.currentState!.validate() && _hasChanges) {
-      _showLoading(); // Tampilkan loading
+      _showLoading();
+
+      // Konversi DateTime ke Timestamp untuk Firestore
+      final Timestamp? dobTimestamp = _selectedDateOfBirth == null
+          ? null
+          : Timestamp.fromDate(_selectedDateOfBirth!);
 
       final updatedUser = widget.currentUser.copyWith(
         name: _nameController.text.trim(),
         avatarPath: _selectedAvatarPath,
+        dateOfBirth: dobTimestamp, // BARU: Sertakan tanggal lahir
       );
 
-      // PANGGIL SERVICE UNTUK MENYIMPAN KE FIRESTORE
       final ServiceResponse<void> response = 
           await _firestoreService.updateUserData(updatedUser);
 
       if (!mounted) return;
-      Navigator.pop(context); // Hilangkan loading
+      Navigator.pop(context);
 
       if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,10 +137,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             content: Text('Profile updated successfully!'),
           ),
         );
-        // KEMBALIKAN DATA USER YANG SUDAH TERBARU KE PROFILE SCREEN
         Navigator.pop(context, updatedUser); 
       } else {
-        // Tampilkan error jika gagal menyimpan
         final message = response.message ?? 'An undefined error occurred.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -111,7 +146,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             backgroundColor: Colors.red,
           ),
         );
-        // Penting: Halaman ini tetap ada di stack, biarkan pengguna mencoba lagi.
       }
     }
   }
@@ -264,19 +298,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (value) => null,
                 ),
                 const SizedBox(height: 16),
-                CustomTextFormField(
-                  controller: _passwordController,
-                  labelText: 'Password',
-                  hintText: '',
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: !_isPasswordVisible,
-                  suffixIcon: IconButton(
-                      icon: Icon(_isPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () => setState(
-                          () => _isPasswordVisible = !_isPasswordVisible)),
-                  validator: (value) => null,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Date of Birth',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _dobController,
+                      readOnly: true, 
+                      onTap: () => _selectDateOfBirth(context),
+                      decoration: InputDecoration(
+                        hintText: 'Select your date of birth',
+                        prefixIcon: Icon(Icons.calendar_today_outlined, color: Colors.grey[600]),
+                        suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8F9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(color: Colors.blue),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 50),
                 ElevatedButton(
