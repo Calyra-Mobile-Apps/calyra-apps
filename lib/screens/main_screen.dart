@@ -30,15 +30,28 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Menggunakan IndexedStack untuk menjaga state setiap halaman
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      // MENGGANTI BottomNavigationBar standar dengan Custom Widget
-      bottomNavigationBar: _CustomBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onItemTapped,
+      extendBody: true,
+      body: Stack(
+        children: [
+          // Menggunakan IndexedStack untuk menjaga state setiap halaman
+          IndexedStack(
+            index: _selectedIndex,
+            children: _pages,
+          ),
+          if (_selectedIndex != 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: _CustomBottomNavBar(
+                  selectedIndex: _selectedIndex,
+                  onItemSelected: _onItemTapped,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -75,7 +88,7 @@ class _CustomBottomNavBar extends StatelessWidget {
     // Ukuran Ikon standar
     const double iconSize = 24.0;
     // Padding Lingkaran standar (seharusnya: iconSize + padding * 2 = 48)
-    const double circlePadding = 12.0;
+    const double circlePadding = 14.0;
 
     return Container(
       // 1. Floating Effect & Ukuran: Memberikan margin agar 'menggantung'
@@ -87,7 +100,7 @@ class _CustomBottomNavBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 1,
             blurRadius: 12,
             offset: const Offset(0, 5),
@@ -98,7 +111,7 @@ class _CustomBottomNavBar extends StatelessWidget {
         // Menggunakan MainAxisAlignment.spaceEvenly atau Center
         // agar tombol-tombol non-aktif (lingkaran) tetap memiliki ruang
         // dan tombol aktif (pill) bisa mengambil ruang yang dibutuhkan.
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(items.length, (index) {
           final isSelected = index == selectedIndex;
           final item = items[index];
@@ -115,9 +128,9 @@ class _CustomBottomNavBar extends StatelessWidget {
               // Lebar ditentukan oleh isSelected:
               // - Jika terpilih: Padding horizontal lebih besar, menjadi bentuk pill.
               // - Jika tidak terpilih: Padding sama sisi, menjadi lingkaran.
-              padding: isSelected
-                  ? const EdgeInsets.symmetric(horizontal: 20, vertical: 12)
-                  : const EdgeInsets.all(circlePadding),
+        padding: isSelected
+          ? const EdgeInsets.symmetric(horizontal: 56, vertical: 12)
+          : const EdgeInsets.all(circlePadding),
 
               decoration: BoxDecoration(
                 color: Colors.black,

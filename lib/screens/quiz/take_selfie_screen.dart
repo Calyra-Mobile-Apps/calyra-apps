@@ -146,21 +146,26 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                       children: [
                         const Text('Take Selfie', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
-                        Text('Snap your face to discover your perfect color season', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                        Text(
+                          'Snap your face to discover your perfect color season',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.calendar_today, size: 16, color: Colors.grey[700]),
                             const SizedBox(width: 8),
-                            Text(formattedDate, style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500)),
+                            Text(
+                              formattedDate,
+                              style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                            ),
                           ],
                         ),
                       ],
                     ),
-
                     _buildCaptureArea(),
-
                     Column(
                       children: [
                         _buildInstruction(Icons.wb_sunny_outlined, 'Ensure good lighting'),
@@ -168,7 +173,6 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                         _buildInstruction(Icons.face_retouching_natural_outlined, 'Show full face'),
                       ],
                     ),
-
                     if (kIsWeb)
                       Column(
                         children: [
@@ -194,9 +198,6 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                           ],
                         ],
                       ),
-
-                    if (kIsWeb) const SizedBox(height: 12),
-
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -242,7 +243,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
 
   Widget _buildInstruction(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

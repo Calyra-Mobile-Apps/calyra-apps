@@ -1,4 +1,5 @@
 import 'package:calyra/models/product.dart';
+import 'package:calyra/models/season_filter.dart';
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
 
@@ -18,8 +19,8 @@ class BrandCatalogScreen extends StatefulWidget {
 
 class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _seasonFilters = const ['Summer', 'Autumn', 'Spring', 'Winter'];
-  String _selectedSeason = '';
+  final List<SeasonFilter> _seasonFilters = SeasonFilter.values;
+  SeasonFilter _selectedSeason = SeasonFilter.summer;
 
   @override
   void dispose() {
@@ -93,10 +94,11 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: ChoiceChip(
-              label: Text(season),
+              label: Text(season.label),
               selected: isSelected,
               showCheckmark: false,
-              onSelected: (_) {
+              onSelected: (selected) {
+                if (!selected) return;
                 setState(() {
                   _selectedSeason = season;
                 });

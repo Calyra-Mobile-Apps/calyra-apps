@@ -173,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundColor: Color(0xFFE0E0E0),
+              backgroundColor: const Color(0xFFE0E0E0),
               child: ClipOval(
                 child: isDefaultIcon
                   ? const Icon( // Tampilkan Icon.person jika path adalah marker default
