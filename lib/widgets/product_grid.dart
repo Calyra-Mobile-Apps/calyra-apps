@@ -1,31 +1,68 @@
 import 'package:calyra/models/product.dart';
+import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductGrid extends StatelessWidget {
-  const ProductGrid({
-    super.key,
-    required this.products,
-    this.allowScrolling = true,
-  });
+  const ProductGrid({super.key, required this.products});
 
   final List<Product> products;
-  final bool allowScrolling;
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      itemCount: products.length,
-      shrinkWrap: !allowScrolling,
-      physics: allowScrolling ? null : const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.65,
+        childAspectRatio: 0.7,
       ),
+      itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
-        return ProductCard(product: product);
+        // 1. BUNGKUS CARD DENGAN GESTUREDETECTOR
+        return GestureDetector(
+          onTap: () {
+            // 2. TAMBAHKAN LOGIKA NAVIGASI
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ProductDetailScreen(product: product),
+              ),
+            );
+          },
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey));
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

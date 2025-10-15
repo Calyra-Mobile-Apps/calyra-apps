@@ -1,17 +1,17 @@
-import 'package:calyra/models/product.dart';
+// lib/models/season_category.dart
+
+import 'package:flutter/material.dart';
 
 class SeasonCategory {
-  const SeasonCategory({
-    required this.name,
-    required this.description,
-    required this.iconPath,
-    required this.paletteImagePath,
-    required this.products,
-  });
+  final String title;
+  final String subtitle;
+  final String assetPath;
+  final List<Color> gradientColors;
 
-  final String name;
-  final String description;
-  final String iconPath;
-  final String paletteImagePath;
-  final List<Product> products;
+  const SeasonCategory({
+    required this.title,
+    required this.subtitle,
+    required this.assetPath,
+    required this.gradientColors,
+  });
 }
