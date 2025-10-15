@@ -1,17 +1,16 @@
 // Lokasi file: lib/screens/brand/brand_catalog_screen.dart
 
 import 'package:calyra/models/product.dart';
-import 'package:calyra/models/season_filter.dart';
-import 'package:calyra/services/firestore_service.dart'; // <-- 1. IMPORT SERVICE
+import 'package:calyra/models/season_filter.dart'; // Pastikan import ini ada
+import 'package:calyra/services/firestore_service.dart';
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
 
-// 2. UBAH PARAMETER CONSTRUCTOR
 class BrandCatalogScreen extends StatefulWidget {
   const BrandCatalogScreen({
     super.key,
     required this.brandLogoPath,
-    required this.brandName, // Diubah dari 'products' menjadi 'brandName'
+    required this.brandName,
   });
 
   final String brandLogoPath;
@@ -23,33 +22,45 @@ class BrandCatalogScreen extends StatefulWidget {
 
 class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<SeasonFilter> _seasonFilters = SeasonFilter.values;
-  SeasonFilter _selectedSeason = SeasonFilter.summer;
+  
+  // 1. REVISI: Tambahkan 'all' dan jadikan default
+  // Menyusun ulang agar 'All' selalu di depan, diikuti Season lain
+  final List<SeasonFilter> _seasonFilters = [
+    SeasonFilter.all,
+    ...SeasonFilter.values.where((e) => e != SeasonFilter.all).toList()
+  ];
+  SeasonFilter _selectedSeason = SeasonFilter.all;
 
-  // 3. VARIABLE UNTUK MENAMPUNG PROSES PENGAMBILAN DATA
-  late Future<List<Product>> _productsFuture;
+  late Future<Map<String, List<Product>>> _productsFuture;
 
   @override
   void initState() {
     super.initState();
-    // 4. PANGGIL FUNGSI UNTUK MENGAMBIL DATA SAAT HALAMAN DIBUKA
     _productsFuture = _fetchProducts();
   }
 
-  Future<List<Product>> _fetchProducts() async {
+  Future<Map<String, List<Product>>> _fetchProducts() async {
     final firestoreService = FirestoreService();
-    // Memanggil fungsi dari service dengan nama brand
     final response = await firestoreService.getProductsByBrandName(widget.brandName);
 
     if (response.isSuccess && response.data != null) {
-      return response.data!;
+      final Map<String, List<Product>> groupedProducts = {};
+      
+      for (var product in response.data!) {
+        final key = product.productId; 
+        
+        if (!groupedProducts.containsKey(key)) {
+          groupedProducts[key] = [];
+        }
+        groupedProducts[key]!.add(product);
+      }
+      
+      return groupedProducts;
     } else {
-      // Menampilkan pesan error jika gagal
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response.message ?? 'Failed to load products')),
       );
-      // Mengembalikan list kosong jika terjadi error
-      return [];
+      return {}; 
     }
   }
 
@@ -89,39 +100,54 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
               const SizedBox(height: 16),
               _buildSeasonFilter(),
               const SizedBox(height: 20),
-              // 5. GUNAKAN FUTUREBUILDER UNTUK MENAMPILKAN DATA
+              
               Expanded(
-                child: FutureBuilder<List<Product>>(
+                child: FutureBuilder<Map<String, List<Product>>>(
                   future: _productsFuture,
                   builder: (context, snapshot) {
-                    // Saat data masih dimuat, tampilkan loading indicator
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    // Jika ada error
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     }
-                    // Jika tidak ada data atau data kosong
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(child: Text('No products found.'));
                     }
 
-                    // Jika data berhasil didapat, filter dan tampilkan
-                    final allProducts = snapshot.data!;
-                    final filteredProducts = allProducts.where((product) {
-                      final query = _searchController.text.trim().toLowerCase();
-                      final seasonMatch = product.seasonName.toLowerCase().contains(_selectedSeason.label.toLowerCase());
-                      
-                      if (query.isEmpty) {
-                        return seasonMatch;
-                      }
-                      
-                      final nameMatch = product.productName.toLowerCase().contains(query);
-                      return nameMatch && seasonMatch;
-                    }).toList();
+                    final allProductGroupsMap = snapshot.data!;
+                    final List<List<Product>> filteredProductGroups = [];
+                    
+                    final query = _searchController.text.trim().toLowerCase();
+                    final selectedLabel = _selectedSeason.label.toLowerCase();
 
-                    return ProductGrid(products: filteredProducts);
+                    for (final group in allProductGroupsMap.values) {
+                      final mainProduct = group.first;
+
+                      // 1. Filter Nama Produk (Wajib untuk semua filter)
+                      final nameMatch = mainProduct.productName.toLowerCase().contains(query);
+                      if (!nameMatch) continue;
+
+                      // 2. Filter Berdasarkan Season
+                      if (_selectedSeason == SeasonFilter.all) {
+                        // Jika 'All', tambahkan seluruh grup shades (unfiltered)
+                        filteredProductGroups.add(group);
+                      } else {
+                        // Jika filter season, filter shade dalam grup
+                        final List<Product> shadesMatchingFilter = group.where((shade) {
+                          // Memeriksa apakah nama musim shade mengandung label filter
+                          return shade.seasonName.toLowerCase().contains(selectedLabel);
+                        }).toList();
+                        
+                        // Hanya tambahkan produk jika ada shade yang cocok
+                        if (shadesMatchingFilter.isNotEmpty) {
+                          // Grup yang dikirim ke ProductGrid HANYA berisi shade yang difilter.
+                          filteredProductGroups.add(shadesMatchingFilter);
+                        }
+                      }
+                    }
+
+                    return ProductGrid(productGroups: filteredProductGroups);
                   },
                 ),
               ),
@@ -145,10 +171,10 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
           borderSide: BorderSide.none,
         ),
       ),
-      // Memanggil setState agar UI di-rebuild saat user mengetik
       onChanged: (value) => setState(() {}),
     );
   }
+
 
   Widget _buildSeasonFilter() {
     return SingleChildScrollView(
@@ -180,6 +206,4 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
       ),
     );
   }
-  
-  // Hapus getter `filteredProducts` yang lama karena sudah ditangani di dalam FutureBuilder
 }

@@ -1,4 +1,4 @@
-// lib/screens/home/category_detail_screen.dart
+// Lokasi file: lib/screens/home/category_detail_screen.dart
 
 import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_category.dart';
@@ -16,26 +16,40 @@ class CategoryDetailScreen extends StatefulWidget {
 }
 
 class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
-  late Future<List<Product>> _productsFuture;
+  // UBAH TIPE DATA FUTURE: Sekarang akan mengembalikan Map<String, List<Product>>
+  late Future<Map<String, List<Product>>> _productsFuture;
 
   @override
   void initState() {
     super.initState();
-    _productsFuture = _fetchProductsBySeason();
+    _productsFuture = _fetchAndGroupProductsBySeason();
   }
 
-  Future<List<Product>> _fetchProductsBySeason() async {
+  // UBAH FUNGSI: Menambahkan logika pengelompokan
+  Future<Map<String, List<Product>>> _fetchAndGroupProductsBySeason() async {
     final firestoreService = FirestoreService();
-    // Menggunakan category.title (misal: "Spring") untuk query
+    // 1. Ambil semua shade berdasarkan season
     final response = await firestoreService.getProductsBySeason(widget.category.title);
 
     if (response.isSuccess && response.data != null) {
-      return response.data!;
+      final Map<String, List<Product>> groupedProducts = {};
+      
+      // 2. Lakukan pengelompokan berdasarkan productId
+      for (var product in response.data!) {
+        final key = product.productId; 
+        
+        if (!groupedProducts.containsKey(key)) {
+          groupedProducts[key] = [];
+        }
+        groupedProducts[key]!.add(product);
+      }
+      
+      return groupedProducts;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response.message ?? 'Failed to load products')),
       );
-      return [];
+      return {}; // Mengembalikan map kosong jika terjadi error
     }
   }
 
@@ -47,7 +61,8 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: FutureBuilder<List<Product>>(
+        // UBAH TIPE FUTUREBUILDER
+        child: FutureBuilder<Map<String, List<Product>>>(
           future: _productsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -57,8 +72,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               return const Center(child: Text('No recommended products found.'));
             }
             
-            // Menggunakan ProductGrid yang sudah ada
-            return ProductGrid(products: snapshot.data!);
+            // Konversi Map menjadi List<List<Product>> sebelum dikirim ke ProductGrid
+            final List<List<Product>> productGroups = snapshot.data!.values.toList();
+
+            // PANGGIL WIDGET DENGAN ARGUMEN BARU
+            return ProductGrid(productGroups: productGroups); 
           },
         ),
       ),
