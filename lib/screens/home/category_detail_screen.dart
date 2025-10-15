@@ -1,100 +1,65 @@
+// lib/screens/home/category_detail_screen.dart
+
+import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_category.dart';
-import 'package:calyra/widgets/product_grid.dart';
+import 'package:calyra/services/firestore_service.dart';
+import 'package:calyra/widgets/product_grid.dart'; // Pastikan widget ini ada
 import 'package:flutter/material.dart';
 
-class CategoryDetailScreen extends StatelessWidget {
+class CategoryDetailScreen extends StatefulWidget {
   const CategoryDetailScreen({super.key, required this.category});
 
   final SeasonCategory category;
 
   @override
+  State<CategoryDetailScreen> createState() => _CategoryDetailScreenState();
+}
+
+class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = _fetchProductsBySeason();
+  }
+
+  Future<List<Product>> _fetchProductsBySeason() async {
+    final firestoreService = FirestoreService();
+    // Menggunakan category.title (misal: "Spring") untuk query
+    final response = await firestoreService.getProductsBySeason(widget.category.title);
+
+    if (response.isSuccess && response.data != null) {
+      return response.data!;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.message ?? 'Failed to load products')),
+      );
+      return [];
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF0D1B2A)),
+        title: Text(widget.category.title), // Menggunakan .title
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          height: 80,
-                          width: 80,
-                          child: Image.asset(
-                            category.iconPath,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 240),
-                          child: Text(
-                            category.name,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0D1B2A),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 320),
-                      child: Text(
-                        category.description,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  category.paletteImagePath,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'Recommended Products',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0D1B2A),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ProductGrid(
-                products: category.products,
-                allowScrolling: false,
-              ),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: FutureBuilder<List<Product>>(
+          future: _productsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No recommended products found.'));
+            }
+            
+            // Menggunakan ProductGrid yang sudah ada
+            return ProductGrid(products: snapshot.data!);
+          },
         ),
       ),
     );

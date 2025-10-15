@@ -152,11 +152,13 @@ class HomeScreen extends StatelessWidget {
           imageUrl: brand.imageUrl,
           logoPath: brand.homeLogoPath ?? brand.logoPath,
           onTap: () {
+            // --- PERUBAHAN UTAMA ADA DI SINI ---
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => BrandCatalogScreen(
                   brandLogoPath: brand.logoPath,
-                  products: brand.products,
+                  brandName:
+                      brand.name, // Mengirim NAMA BRAND, bukan list produk
                 ),
               ),
             );
@@ -166,5 +168,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-

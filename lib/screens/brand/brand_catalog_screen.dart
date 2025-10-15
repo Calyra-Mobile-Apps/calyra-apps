@@ -1,17 +1,21 @@
+// Lokasi file: lib/screens/brand/brand_catalog_screen.dart
+
 import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_filter.dart';
+import 'package:calyra/services/firestore_service.dart'; // <-- 1. IMPORT SERVICE
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
 
+// 2. UBAH PARAMETER CONSTRUCTOR
 class BrandCatalogScreen extends StatefulWidget {
   const BrandCatalogScreen({
     super.key,
     required this.brandLogoPath,
-    required this.products,
+    required this.brandName, // Diubah dari 'products' menjadi 'brandName'
   });
 
   final String brandLogoPath;
-  final List<Product> products;
+  final String brandName;
 
   @override
   State<BrandCatalogScreen> createState() => _BrandCatalogScreenState();
@@ -21,6 +25,33 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
   final TextEditingController _searchController = TextEditingController();
   final List<SeasonFilter> _seasonFilters = SeasonFilter.values;
   SeasonFilter _selectedSeason = SeasonFilter.summer;
+
+  // 3. VARIABLE UNTUK MENAMPUNG PROSES PENGAMBILAN DATA
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // 4. PANGGIL FUNGSI UNTUK MENGAMBIL DATA SAAT HALAMAN DIBUKA
+    _productsFuture = _fetchProducts();
+  }
+
+  Future<List<Product>> _fetchProducts() async {
+    final firestoreService = FirestoreService();
+    // Memanggil fungsi dari service dengan nama brand
+    final response = await firestoreService.getProductsByBrandName(widget.brandName);
+
+    if (response.isSuccess && response.data != null) {
+      return response.data!;
+    } else {
+      // Menampilkan pesan error jika gagal
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.message ?? 'Failed to load products')),
+      );
+      // Mengembalikan list kosong jika terjadi error
+      return [];
+    }
+  }
 
   @override
   void dispose() {
@@ -58,8 +89,41 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
               const SizedBox(height: 16),
               _buildSeasonFilter(),
               const SizedBox(height: 20),
+              // 5. GUNAKAN FUTUREBUILDER UNTUK MENAMPILKAN DATA
               Expanded(
-                child: ProductGrid(products: filteredProducts),
+                child: FutureBuilder<List<Product>>(
+                  future: _productsFuture,
+                  builder: (context, snapshot) {
+                    // Saat data masih dimuat, tampilkan loading indicator
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    // Jika ada error
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    // Jika tidak ada data atau data kosong
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No products found.'));
+                    }
+
+                    // Jika data berhasil didapat, filter dan tampilkan
+                    final allProducts = snapshot.data!;
+                    final filteredProducts = allProducts.where((product) {
+                      final query = _searchController.text.trim().toLowerCase();
+                      final seasonMatch = product.seasonName.toLowerCase().contains(_selectedSeason.label.toLowerCase());
+                      
+                      if (query.isEmpty) {
+                        return seasonMatch;
+                      }
+                      
+                      final nameMatch = product.productName.toLowerCase().contains(query);
+                      return nameMatch && seasonMatch;
+                    }).toList();
+
+                    return ProductGrid(products: filteredProducts);
+                  },
+                ),
               ),
             ],
           ),
@@ -81,6 +145,7 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
           borderSide: BorderSide.none,
         ),
       ),
+      // Memanggil setState agar UI di-rebuild saat user mengetik
       onChanged: (value) => setState(() {}),
     );
   }
@@ -115,12 +180,6 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
       ),
     );
   }
-
-  List<Product> get filteredProducts {
-    final query = _searchController.text.trim().toLowerCase();
-    return widget.products.where((product) {
-      if (query.isEmpty) return true;
-      return product.name.toLowerCase().contains(query);
-    }).toList();
-  }
+  
+  // Hapus getter `filteredProducts` yang lama karena sudah ditangani di dalam FutureBuilder
 }

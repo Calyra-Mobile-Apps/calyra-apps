@@ -1,6 +1,7 @@
 // Lokasi file: lib/services/firestore_service.dart
 
 import 'package:calyra/models/analysis_result.dart';
+import 'package:calyra/models/product.dart'; // <-- 1. TAMBAHKAN IMPORT INI
 import 'package:calyra/models/service_response.dart';
 import 'package:calyra/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,6 +19,7 @@ class FirestoreService {
 
   static const String _usersCollection = 'Users';
   static const String _analysisHistoryCollection = 'analysisHistory';
+  static const String _productsCollection = 'Products'; // Diganti dari 'shades'
 
   Future<ServiceResponse<UserModel>> getUserData(String uid) async {
     try {
@@ -32,7 +34,8 @@ class FirestoreService {
     }
   }
 
-  Future<ServiceResponse<void>> saveAnalysisResult(AnalysisResult result) async {
+  Future<ServiceResponse<void>> saveAnalysisResult(
+      AnalysisResult result) async {
     final User? user = _auth.currentUser;
     if (user == null) {
       return ServiceResponse.failure('User is not logged in.');
@@ -65,6 +68,46 @@ class FirestoreService {
       return ServiceResponse.success();
     } catch (e) {
       return ServiceResponse.failure('Error updating user data: $e');
+    }
+  }
+
+  Future<ServiceResponse<List<Product>>> getProductsByBrandName(
+      String brandName) async {
+    try {
+      // --- PERUBAHAN DI SINI ---
+      final querySnapshot = await _db
+          .collection(
+              _productsCollection) // Menggunakan nama collection yang benar
+          .where('brand_name', isEqualTo: brandName)
+          .get();
+
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching products: $e');
+    }
+  }
+
+  Future<ServiceResponse<List<Product>>> getProductsBySeason(
+      String seasonName) async {
+    try {
+      // --- PERUBAHAN DI SINI ---
+      final querySnapshot = await _db
+          .collection(
+              _productsCollection) // Menggunakan nama collection yang benar
+          .where('season_name', isEqualTo: seasonName)
+          .get();
+
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching products by season: $e');
     }
   }
 }
