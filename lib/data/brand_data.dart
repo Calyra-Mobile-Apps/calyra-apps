@@ -43,4 +43,12 @@ final List<BrandInfo> featuredBrands = [
     homeLogoPath: 'assets/images/omg-white.png',
     products: [],
   ),
+    const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+    id: 'BRD003',
+    name: 'Luxcrime',
+    imageUrl: 'assets/images/home-luxcrime.png',
+    logoPath: 'assets/images/Logo_luxcrime.png',
+    homeLogoPath: 'assets/images/luxcrime-white.png',
+    products: [],
+  ),
 ];
