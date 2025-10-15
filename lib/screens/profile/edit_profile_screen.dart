@@ -2,6 +2,8 @@
 import 'package:calyra/models/user_model.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
+import 'package:calyra/services/firestore_service.dart';
+import 'package:calyra/models/service_response.dart';
 
 const List<String> availableAvatars = [
   'assets/images/B1.png',
@@ -28,6 +30,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final FirestoreService _firestoreService = FirestoreService();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
@@ -50,8 +53,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     _nameController = TextEditingController(text: _originalName);
     _emailController = TextEditingController(text: _originalEmail);
-    _passwordController =
-        TextEditingController(text: '');
+    _passwordController = TextEditingController(text: '');
     _nameController.addListener(_checkChanges);
   }
 
@@ -78,19 +80,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _handleSave() async {
     if (_formKey.currentState!.validate() && _hasChanges) {
+      _showLoading(); // Tampilkan loading
+
       final updatedUser = widget.currentUser.copyWith(
         name: _nameController.text.trim(),
         avatarPath: _selectedAvatarPath,
       );
-      if (mounted) {
+
+      // PANGGIL SERVICE UNTUK MENYIMPAN KE FIRESTORE
+      final ServiceResponse<void> response = 
+          await _firestoreService.updateUserData(updatedUser);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Hilangkan loading
+
+      if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile updated successfully!'),
           ),
         );
-        Navigator.pop(context, updatedUser);
+        // KEMBALIKAN DATA USER YANG SUDAH TERBARU KE PROFILE SCREEN
+        Navigator.pop(context, updatedUser); 
+      } else {
+        // Tampilkan error jika gagal menyimpan
+        final message = response.message ?? 'An undefined error occurred.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save profile: $message'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        // Penting: Halaman ini tetap ada di stack, biarkan pengguna mencoba lagi.
       }
     }
+  }
+
+  void _showLoading() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
   }
 
   void _showAvatarPicker(BuildContext context) {
@@ -248,7 +279,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (value) => null,
                 ),
                 const SizedBox(height: 50),
-
                 ElevatedButton(
                   onPressed: _hasChanges ? _handleSave : null,
                   style: ElevatedButton.styleFrom(
@@ -292,27 +322,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: isDefaultIcon
                   ? const Icon(
                       Icons.person,
-                      size: 50, 
+                      size: 50,
                       color: Colors.white,
                     )
                   : Image.asset(
-                  currentAvatarPath,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.person,
-                      size: 50, color: Colors.white);
-                },
-              ),
+                      currentAvatarPath,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.person,
+                            size: 50, color: Colors.white);
+                      },
+                    ),
             ),
           ),
           Positioned(
             bottom: 0,
             right: 0,
             child: GestureDetector(
-              onTap: () => _showAvatarPicker(
-                  context), 
+              onTap: () => _showAvatarPicker(context),
               child: Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(

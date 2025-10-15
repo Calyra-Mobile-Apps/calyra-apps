@@ -49,5 +49,27 @@ class FirestoreService {
       return ServiceResponse.failure('Error saving analysis result: $e');
     }
   }
-}
 
+  Future<ServiceResponse<void>> updateUserData(UserModel user) async {
+    try {
+      // Data yang akan di-update atau dibuat (jika belum ada)
+      final dataToUpdate = {
+        'name': user.name,
+        // Pastikan Anda hanya menyimpan jika nilainya tidak null.
+        // Jika nilainya null, Firestore akan menghapus field saat merge.
+        // Sebaiknya, kirim saja jika ada perubahan.
+        'avatarPath': user.avatarPath, 
+      };
+
+      // *** REVISI UTAMA DI SINI: Menggunakan SET dengan merge: true ***
+      await _db.collection(_usersCollection).doc(user.uid).set(
+            dataToUpdate,
+            SetOptions(merge: true), // Penting agar tidak menimpa field lain
+          );
+      return ServiceResponse.success();
+    } catch (e) {
+      // Pastikan Anda mengimpor ServiceResponse
+      return ServiceResponse.failure('Error updating user data: $e');
+    }
+  }
+}

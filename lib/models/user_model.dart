@@ -39,13 +39,15 @@ class UserModel {
   UserModel copyWith({
     String? name,
     String? email,
-    Timestamp? createdAt, required String avatarPath,
+    Timestamp? createdAt, 
+    String? avatarPath, // <-- REVISI: Jadikan String? agar opsional
   }) {
     return UserModel(
       uid: uid,
       name: name ?? this.name,
       email: email ?? this.email,
       createdAt: createdAt ?? this.createdAt,
+      avatarPath: avatarPath ?? this.avatarPath, // <-- REVISI: Tambahkan pembaruan avatarPath
     );
   }
 }
