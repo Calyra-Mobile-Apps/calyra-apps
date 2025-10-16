@@ -56,11 +56,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   void _checkStep2Validity() {
     final newPass = _newPasswordController.text;
     final confirmPass = _confirmNewPasswordController.text;
-
     final passwordsMatch = newPass == confirmPass;
     final isNewDifferentFromOld = newPass != _oldPasswordController.text;
-
-    // Password complexity check (min 8 characters, letters and numbers)
     final passwordComplex = newPass.length >= 8 && 
                             RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(newPass);
 
@@ -71,7 +68,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
   }
 
-  // --- Step 1: Re-authentication Handler ---
   Future<void> _handleReauthenticate() async {
     if (_formKey.currentState!.validate() && _isStep1Valid) {
       _showLoading('Verifying old password...');
@@ -81,11 +77,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
-
+        Navigator.pop(context); 
         if (response.isSuccess) {
-          setState(() => _currentStep = 2); // Move to step 2: New Password
-          _formKey.currentState!.reset(); // Reset form key for step 2 validation
+          setState(() => _currentStep = 2);
+          _formKey.currentState!.reset(); 
         } else {
           final message = response.message ?? 'Authentication failed.';
           ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +94,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
   }
 
-  // --- Step 2: Password Update Handler ---
   Future<void> _handleUpdatePassword() async {
     if (_formKey.currentState!.validate() && _isStep2Valid) {
       _showLoading('Updating password...');
@@ -109,13 +103,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context); 
 
         if (response.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Password updated successfully!')),
           );
-          Navigator.pop(context); // Go back to Profile screen
+          Navigator.pop(context); 
         } else {
           final message = response.message ?? 'Update failed.';
           ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +156,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             }
           },
         ),
-        title: Text('Change Password (Step $_currentStep/2)', 
+        title: Text('Change Password',
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
         ),
         centerTitle: true,
@@ -213,7 +207,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: Text('Next Step', style: TextStyle(
+                  child: Text('Next', style: TextStyle(
                     fontSize: 16, fontWeight: FontWeight.bold, color: _isStep1Valid ? Colors.white : Colors.grey[600])),
                 ),
               ],
