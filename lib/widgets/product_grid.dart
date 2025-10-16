@@ -5,13 +5,21 @@ import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductGrid extends StatelessWidget {
-  const ProductGrid({super.key, required this.productGroups});
+  // --- BARU: Menambahkan parameter padding ---
+  const ProductGrid({
+    super.key,
+    required this.productGroups,
+    this.padding,
+  });
 
   final List<List<Product>> productGroups;
+  final EdgeInsetsGeometry? padding; // Properti baru untuk padding
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      // --- BARU: Menerapkan padding ke GridView ---
+      padding: padding,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
@@ -43,12 +51,11 @@ class ProductGrid extends StatelessWidget {
               ),
             );
           },
-          // --- MODIFIKASI PADA CARD DI SINI ---
           child: Card(
-            color: Colors.white, // 1. Warna kartu diatur menjadi putih bersih
-            shadowColor: Colors.black.withOpacity(0.1), // 2. Warna bayangan diperhalus
+            color: Colors.white,
+            shadowColor: Colors.black.withOpacity(0.1),
             clipBehavior: Clip.antiAlias,
-            elevation: 4, // 3. Elevasi sedikit dinaikkan untuk shadow yang lebih jelas
+            elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -75,7 +82,7 @@ class ProductGrid extends StatelessWidget {
                     },
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: const Color(0xFFF0F0F0), // Warna placeholder diubah
+                        color: const Color(0xFFF0F0F0),
                         child: const Center(
                             child: Icon(Icons.image_not_supported_outlined,
                                 size: 40, color: Colors.grey)),

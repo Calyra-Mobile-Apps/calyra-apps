@@ -125,7 +125,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- MODIFIKASI ADA DI SINI ---
   Widget _buildDefaultContent() {
     return SingleChildScrollView(
       child: Column(
@@ -144,17 +143,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           _buildBrandMakeup(context),
-          // --- BARU: Menambahkan ruang kosong di bagian bawah ---
-          // Ini akan mendorong konten terakhir ke atas saat di-scroll,
-          // sehingga tidak tertutup oleh navigation bar.
           const SizedBox(height: 100),
-          // ----------------------------------------------------
         ],
       ),
     );
   }
-  // ------------------------------------
 
+  // --- MODIFIKASI ADA DI SINI ---
   Widget _buildSearchResults() {
     final String query = _searchController.text.trim().toLowerCase();
 
@@ -185,10 +180,15 @@ class _HomeScreenState extends State<HomeScreen> {
           return Center(child: Text('No products found for "$query"'));
         }
 
-        return ProductGrid(productGroups: filteredProductGroups);
+        // Menambahkan padding di bagian bawah grid hasil pencarian
+        return ProductGrid(
+          productGroups: filteredProductGroups,
+          padding: const EdgeInsets.only(bottom: 100.0),
+        );
       },
     );
   }
+  // ---------------------------------
 
   Widget _buildHeader() {
     return const Column(
