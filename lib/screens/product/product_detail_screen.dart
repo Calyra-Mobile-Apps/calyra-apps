@@ -63,43 +63,52 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 20),
                   Text(
                     currentProduct.productName,
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: SizedBox(
-                      height: 250,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: widget.productShades.length,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _currentPage = index;
-                          });
-                        },
-                        itemBuilder: (context, index) {
-                          final product = widget.productShades[index];
-                          return _buildShadeView(context, product);
-                        },
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      widget.productShades.length,
-                      (index) => _buildDotIndicator(index == _currentPage),
-                    ),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        height: 320,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: widget.productShades.length,
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentPage = index;
+                            });
+                          },
+                          itemBuilder: (context, index) {
+                            final product = widget.productShades[index];
+                            return _buildShadeView(context, product);
+                          },
+                        ),
+                      ),
+
+                      if (widget.productShades.length > 1) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _buildArrowButton(isLeft: true),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: _buildArrowButton(isLeft: false),
+                        ),
+                      ],
+                    ],
                   ),
+                  
                   const SizedBox(height: 24),
+
                   Text(
                     currentProduct.shadeName,
                     style: TextStyle(fontSize: 18, color: Colors.grey[600]),
@@ -126,10 +135,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
             child: SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF15A24),
                   foregroundColor: Colors.white,
@@ -139,9 +148,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
                 onPressed: () => _launchURL(context, currentProduct),
-                child: const Text('Find on Shopee',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.shopping_cart_outlined), 
+                label: const Text(
+                  'Find on Shopee', 
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                ),
               ),
             ),
           ),
@@ -151,64 +162,63 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildShadeView(BuildContext context, Product product) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Image.network(
-            product.imageSwatchUrl,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[200],
-                alignment: Alignment.center,
-                child: const Icon(Icons.broken_image,
-                    size: 80, color: Colors.grey),
-              );
-            },
-          ),
-        ),
-        _buildColorSwatch(product.colorHex),
-      ],
-    );
-  }
-
-  Widget _buildDotIndicator(bool isActive) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-      height: 8.0,
-      width: isActive ? 24.0 : 8.0,
-      decoration: BoxDecoration(
-        color: isActive ? Colors.black : Colors.grey[300],
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Image.network(
+        product.imageSwatchUrl,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[200],
+            alignment: Alignment.center,
+            child: const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+          );
+        },
       ),
     );
   }
+  
+  Widget _buildArrowButton({required bool isLeft}) {
+    final bool isVisible = isLeft
+        ? _currentPage > 0
+        : _currentPage < widget.productShades.length - 1;
 
-  Widget _buildColorSwatch(String colorHex) {
-    Color color;
-    try {
-      String hex = colorHex.startsWith('0x') ? colorHex.substring(2) : colorHex;
-      if (hex.length == 6) {
-        hex = 'FF' + hex;
-      }
-      color = Color(int.parse(hex, radix: 16));
-    } catch (e) {
-      color = Colors.grey;
-    }
-
-    return Container(
-      width: 40,
-      height: 15,
-      margin: const EdgeInsets.only(top: 8.0),
-      decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: Colors.grey.shade300, width: 1)),
+    return Visibility(
+      visible: isVisible,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          icon: Icon(
+            isLeft ? Icons.arrow_back_ios_new : Icons.arrow_forward_ios,
+            size: 20,
+          ),
+          color: Colors.white,
+          onPressed: () {
+            if (isLeft) {
+              _pageController.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            } else {
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
+          },
+        ),
+      ),
     );
   }
-
+  
   Widget _buildDetailRow(String title, String value) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
 

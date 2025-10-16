@@ -1,19 +1,23 @@
 // Lokasi file: lib/widgets/product_grid.dart
 
 import 'package:calyra/models/product.dart';
-// Import yang diperlukan
-import 'package:calyra/models/season_filter.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductGrid extends StatelessWidget {
-  const ProductGrid({super.key, required this.productGroups});
+  const ProductGrid({
+    super.key,
+    required this.productGroups,
+    this.padding,
+  });
 
   final List<List<Product>> productGroups;
+  final EdgeInsetsGeometry? padding; 
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      padding: padding,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
@@ -45,8 +49,10 @@ class ProductGrid extends StatelessWidget {
             );
           },
           child: Card(
+            color: Colors.white,
+            shadowColor: Colors.black.withOpacity(0.1),
             clipBehavior: Clip.antiAlias,
-            elevation: 2,
+            elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -58,27 +64,44 @@ class ProductGrid extends StatelessWidget {
                     mainProduct.imageUrl,
                     fit: BoxFit.cover,
                     width: double.infinity,
+                    loadingBuilder: (BuildContext context, Widget child,
+                        ImageChunkEvent? loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
                     errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                          child: Icon(Icons.broken_image,
-                              size: 60, color: Colors.grey));
+                      return Container(
+                        color: const Color(0xFFF0F0F0),
+                        child: const Center(
+                            child: Icon(Icons.image_not_supported_outlined,
+                                size: 40, color: Colors.grey)),
+                      );
                     },
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(12.0),
                   child: Text(
                     mainProduct.productName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.only(left: 8.0, bottom: 8.0, right: 8.0),
+                  padding: const EdgeInsets.only(
+                      left: 12.0, bottom: 12.0, right: 12.0),
                   child: Text(
                     shadeText,
                     style: TextStyle(
@@ -92,60 +115,6 @@ class ProductGrid extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.network(
-                product.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade200,
-                    child: const Center(
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 40,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Text(
-              product.name,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

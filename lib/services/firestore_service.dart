@@ -150,4 +150,16 @@ class FirestoreService {
           'Error fetching products by brand and season: $e');
     }
   }
+
+  Future<ServiceResponse<List<Product>>> getAllProducts() async {
+    try {
+      final querySnapshot = await _db.collection(_productsCollection).get();
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching all products: $e');
+    }
+  }
 }
