@@ -13,7 +13,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class TakeSelfieScreen extends StatefulWidget {
-  const TakeSelfieScreen({super.key});
+  final bool isInitialFlow;
+  const TakeSelfieScreen({super.key, this.isInitialFlow = false});
 
   @override
   State<TakeSelfieScreen> createState() => _TakeSelfieScreenState();
@@ -25,6 +26,8 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
   CameraController? _cameraController;
   Future<void>? _initializeCameraFuture;
   String? _cameraError;
+  final double _bottomNavbarHeightPadding =
+      100.0;
 
   @override
   void initState() {
@@ -125,9 +128,20 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
     }
   }
 
+  void _handleSkip(BuildContext context) {
+    context.read<QuizProvider>().resetQuiz();
+    if (widget.isInitialFlow) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final String formattedDate = DateFormat('d MMMM yyyy').format(DateTime.now());
+    final String formattedDate =
+        DateFormat('d MMMM yyyy').format(DateTime.now());
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -135,31 +149,42 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: EdgeInsets.fromLTRB(
+                  24.0, 20.0, 24.0, _bottomNavbarHeightPadding),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight -
+                        _bottomNavbarHeightPadding +
+                        40),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Column(
                       children: [
-                        const Text('Take Selfie', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                        const Text('Take Selfie',
+                            style: TextStyle(
+                                fontSize: 28, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(
                           'Snap your face to discover your perfect color season',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.calendar_today, size: 16, color: Colors.grey[700]),
+                            Icon(Icons.calendar_today,
+                                size: 16, color: Colors.grey[700]),
                             const SizedBox(width: 8),
                             Text(
                               formattedDate,
-                              style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -168,9 +193,13 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                     _buildCaptureArea(),
                     Column(
                       children: [
-                        _buildInstruction(Icons.wb_sunny_outlined, 'Ensure good lighting'),
-                        _buildInstruction(Icons.center_focus_strong_outlined, 'Face the camera straight'),
-                        _buildInstruction(Icons.face_retouching_natural_outlined, 'Show full face'),
+                        _buildInstruction(
+                            Icons.wb_sunny_outlined, 'Ensure good lighting'),
+                        _buildInstruction(Icons.center_focus_strong_outlined,
+                            'Face the camera straight'),
+                        _buildInstruction(
+                            Icons.face_retouching_natural_outlined,
+                            'Show full face'),
                       ],
                     ),
                     if (kIsWeb)
@@ -178,14 +207,18 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                         children: [
                           const SizedBox(height: 8),
                           ElevatedButton.icon(
-                            onPressed: _cameraController == null ? null : _captureWebImage,
+                            onPressed: _cameraController == null
+                                ? null
+                                : _captureWebImage,
                             icon: const Icon(Icons.camera_alt),
                             label: const Text('Capture'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 32, vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30)),
                             ),
                           ),
                           if (_cameraError != null) ...[
@@ -193,7 +226,8 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                             Text(
                               _cameraError!,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                              style: const TextStyle(
+                                  color: Colors.redAccent, fontSize: 12),
                             ),
                           ],
                         ],
@@ -207,28 +241,30 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                               : () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const UndertoneQuizMainScreen()),
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const UndertoneQuizMainScreen()),
                                   );
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
                           ),
-                          child: const Text('Next', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          child: const Text('Next',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: () {
-                            context.read<QuizProvider>().resetQuiz();
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (_) => const MainScreen()),
-                              (route) => false,
-                            );
-                          },
-                          child: Text('Skip', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-                        ),
+                        if (widget.isInitialFlow)
+                          TextButton(
+                            onPressed: () => _handleSkip(context),
+                            child: Text('Skip',
+                                style: TextStyle(
+                                    color: Colors.grey[600], fontSize: 16)),
+                          ),
                       ],
                     ),
                   ],
@@ -249,7 +285,11 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
         children: [
           Icon(icon, color: Colors.grey[800]),
           const SizedBox(width: 12),
-          Text(text, style: TextStyle(fontSize: 16, color: Colors.grey[800], fontWeight: FontWeight.w500)),
+          Text(text,
+              style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -263,11 +303,13 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
         shape: BoxShape.circle,
         color: Colors.grey[200],
         image: _imageBytes != null
-            ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
+            ? DecorationImage(
+                image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
             : null,
       ),
       child: _imageBytes == null
-          ? Center(child: Icon(Icons.camera_alt, size: 80, color: Colors.grey[400]))
+          ? Center(
+              child: Icon(Icons.camera_alt, size: 80, color: Colors.grey[400]))
           : null,
     );
 

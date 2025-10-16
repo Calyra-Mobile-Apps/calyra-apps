@@ -17,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = <Widget>[
     const HomeScreen(),
-    const TakeSelfieScreen(),
+    const TakeSelfieScreen(isInitialFlow: false),
     const ProfileScreen(),
   ];
 
@@ -37,19 +37,18 @@ class _MainScreenState extends State<MainScreen> {
             index: _selectedIndex,
             children: _pages,
           ),
-          if (_selectedIndex != 1)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SafeArea(
-                top: false,
-                child: _CustomBottomNavBar(
-                  selectedIndex: _selectedIndex,
-                  onItemSelected: _onItemTapped,
-                ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: _CustomBottomNavBar(
+                selectedIndex: _selectedIndex,
+                onItemSelected: _onItemTapped,
               ),
             ),
+          ),
         ],
       ),
     );

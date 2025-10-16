@@ -75,11 +75,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: const Text('Confirm Logout'),
           content: const Text('Are you sure you want to log out?'),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.black)),
               onPressed: () => navigator.pop(),
             ),
             TextButton(
@@ -113,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 120.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -151,12 +153,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
-              _buildProfileMenu( 
+              _buildProfileMenu(
                 context,
                 icon: Icons.help_outline,
                 text: 'FAQ',
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const FAQScreen())); 
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const FAQScreen()));
                 },
               ),
               _buildProfileMenu(
@@ -199,6 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 iconColor: Colors.red,
                 onTap: _handleLogout,
               ),
+              const SizedBox(height: 50),
             ],
           ),
         ),
