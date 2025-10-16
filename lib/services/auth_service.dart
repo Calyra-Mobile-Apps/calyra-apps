@@ -70,6 +70,48 @@ class AuthService {
     }
   }
 
+  Future<ServiceResponse<void>> reauthenticateUser(String oldPassword) async {
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      return ServiceResponse.failure('User is not logged in.');
+    }
+
+    try {
+      final AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: oldPassword,
+      );
+      
+      // Attempt re-authentication
+      await user.reauthenticateWithCredential(credential);
+      
+      // If re-authentication succeeds, it means the old password was correct.
+      return ServiceResponse.success();
+    } on FirebaseAuthException catch (e) {
+      // Handles cases like 'wrong-password' or 'invalid-credential'
+      return ServiceResponse.failure(_mapFirebaseError(e));
+    } catch (e) {
+      return ServiceResponse.failure('An unexpected error occurred during re-authentication: $e');
+    }
+  }
+
+  Future<ServiceResponse<void>> updatePassword(String newPassword) async {
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      return ServiceResponse.failure('User is not logged in.');
+    }
+
+    try {
+      // Re-authentication should be done BEFORE this call.
+      await user.updatePassword(newPassword);
+      return ServiceResponse.success();
+    } on FirebaseAuthException catch (e) {
+      return ServiceResponse.failure(_mapFirebaseError(e));
+    } catch (e) {
+      return ServiceResponse.failure('An unexpected error occurred: $e');
+    }
+  }
+
   // Fungsi untuk Sign Out
   Future<void> signOut() async {
     await _auth.signOut();

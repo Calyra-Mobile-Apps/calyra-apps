@@ -28,6 +28,14 @@ class AuthController {
     return _authService.sendPasswordResetEmail(email);
   }
 
+  Future<ServiceResponse<void>> reauthenticateUser(String oldPassword) {
+    return _authService.reauthenticateUser(oldPassword);
+  }
+  
+   Future<ServiceResponse<void>> updatePassword(String newPassword) {
+    return _authService.updatePassword(newPassword);
+  }
+
   Future<void> signOut() {
     return _authService.signOut();
   }

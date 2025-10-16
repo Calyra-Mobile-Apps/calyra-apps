@@ -3,6 +3,7 @@ import 'package:calyra/models/service_response.dart';
 import 'package:calyra/models/user_model.dart';
 import 'package:calyra/screens/auth/login_screen.dart';
 import 'package:calyra/screens/profile/edit_profile_screen.dart';
+import 'package:calyra/screens/profile/change_password_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -128,6 +129,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.history,
                 text: 'History',
                 onTap: () {},
+              ),
+              _buildProfileMenu(
+                context,
+                icon: Icons.lock_reset,
+                text: 'Change Password',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ChangePasswordScreen()),
+                  );
+                },
               ),
               _buildProfileMenu(
                 context,
