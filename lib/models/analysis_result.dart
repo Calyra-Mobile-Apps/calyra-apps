@@ -6,7 +6,6 @@ class AnalysisResult {
   final String undertone;
   final String skintone;
   final DateTime analysisDate;
-  // Anda bisa tambahkan List<String> palette jika menyimpannya juga
 
   AnalysisResult({
     required this.seasonResult,
@@ -15,14 +14,14 @@ class AnalysisResult {
     required this.analysisDate,
   });
 
-  // Factory constructor untuk membuat objek dari data Firestore
   factory AnalysisResult.fromFirestore(Map<String, dynamic> data) {
     final timestamp = data['analysisDate'];
     return AnalysisResult(
       seasonResult: data['seasonResult'] as String? ?? 'Unknown',
       undertone: data['undertone'] as String? ?? 'Unknown',
       skintone: data['skintone'] as String? ?? 'Unknown',
-      analysisDate: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
+      analysisDate:
+          timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
     );
   }
 

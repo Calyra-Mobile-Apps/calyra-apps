@@ -1,59 +1,58 @@
 // Lokasi file: lib/widgets/product_grid.dart
 
 import 'package:calyra/models/product.dart';
-// Import yang diperlukan
-import 'package:calyra/models/season_filter.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductGrid extends StatelessWidget {
-  const ProductGrid({super.key, required this.productGroups});
+  const ProductGrid({
+    super.key,
+    required this.productGroups,
+    this.padding,
+  });
 
-  final List<List<Product>> productGroups; 
+  final List<List<Product>> productGroups;
+  final EdgeInsetsGeometry? padding; 
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      padding: padding,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 0.7,
       ),
-      itemCount: productGroups.length, 
+      itemCount: productGroups.length,
       itemBuilder: (context, index) {
         final productGroup = productGroups[index];
-        final mainProduct = productGroup.first; 
-        
-        // Cek apakah grup ini berisi shades dari satu musim saja (artinya, sudah difilter)
-        // Kita bisa asumsikan jika semua shade dalam grup memiliki seasonName yang sama,
-        // maka filter sedang aktif untuk season itu (kecuali ada shade yang seasonName-nya kosong).
+        final mainProduct = productGroup.first;
         final String firstSeason = mainProduct.seasonName;
-        // Gunakan `every` untuk cek apakah semua elemen memiliki seasonName yang sama dengan yang pertama
-        final bool isFilteredBySeason = productGroup.every((p) => p.seasonName == firstSeason && firstSeason.isNotEmpty);
+        final bool isFilteredBySeason = productGroup.every(
+            (p) => p.seasonName == firstSeason && firstSeason.isNotEmpty);
 
         String shadeText;
         if (isFilteredBySeason) {
-            // Jika difilter, tampilkan: "3 Summer Shades"
-            shadeText = '${productGroup.length} ${firstSeason} Shades';
+          shadeText = '${productGroup.length} ${firstSeason} Shades';
         } else {
-            // Jika tidak (berarti filter 'All' atau tidak ada data seasonName), tampilkan: "8 Shades"
-            shadeText = '${productGroup.length} Shades';
+          shadeText = '${productGroup.length} Shades';
         }
-        
+
         return GestureDetector(
           onTap: () {
-            // Kirim grup shade yang SUDAH DIFILTER ke detail screen
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => ProductDetailScreen(productShades: productGroup),
+                builder: (context) =>
+                    ProductDetailScreen(productShades: productGroup),
               ),
             );
           },
           child: Card(
-            // ... (rest of the card content)
+            color: Colors.white,
+            shadowColor: Colors.black.withOpacity(0.1),
             clipBehavior: Clip.antiAlias,
-            elevation: 2,
+            elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -62,30 +61,49 @@ class ProductGrid extends StatelessWidget {
               children: [
                 Expanded(
                   child: Image.network(
-                    mainProduct.imageUrl, 
+                    mainProduct.imageUrl,
                     fit: BoxFit.cover,
                     width: double.infinity,
+                    loadingBuilder: (BuildContext context, Widget child,
+                        ImageChunkEvent? loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
                     errorBuilder: (context, error, stackTrace) {
-                      return const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey));
+                      return Container(
+                        color: const Color(0xFFF0F0F0),
+                        child: const Center(
+                            child: Icon(Icons.image_not_supported_outlined,
+                                size: 40, color: Colors.grey)),
+                      );
                     },
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(12.0),
                   child: Text(
-                    mainProduct.productName, 
+                    mainProduct.productName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Tampilan jumlah shade
                 Padding(
-                  padding: const EdgeInsets.only(left: 8.0, bottom: 8.0, right: 8.0),
+                  padding: const EdgeInsets.only(
+                      left: 12.0, bottom: 12.0, right: 12.0),
                   child: Text(
-                    shadeText, 
+                    shadeText,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -97,59 +115,6 @@ class ProductGrid extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product});
-
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.network(
-                product.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade200,
-                    child: const Center(
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 40,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Text(
-              product.name,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

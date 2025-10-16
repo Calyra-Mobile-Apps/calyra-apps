@@ -23,9 +23,7 @@ class AnalysisService {
     );
   }
 
-  // --- LOGIKA UTAMA DIPERBARUI DI SINI ---
   String _resolveSeason(String undertone, String seasonalResult) {
-    // Fallback jika seasonalResult kosong
     if (seasonalResult == 'unknown' || seasonalResult.isEmpty) {
       if (undertone == 'warm') return 'Warm Autumn'; // Default untuk warm
       if (undertone == 'cool') return 'Cool Winter'; // Default untuk cool
@@ -49,7 +47,6 @@ class AnalysisService {
       }
     }
 
-    // Fallback jika ada kombinasi yang tidak terduga
     return seasonalResult;
   }
 }

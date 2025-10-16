@@ -35,7 +35,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  
+
   DateTime? _selectedDateOfBirth;
   late DateTime? _originalDateOfBirth;
   late TextEditingController _dobController;
@@ -55,7 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _originalAvatarPath = widget.currentUser.avatarPath ?? defaultAvatarPath;
     _selectedAvatarPath = _originalAvatarPath;
 
-  _originalDateOfBirth = widget.currentUser.dateOfBirth?.toDate();
+    _originalDateOfBirth = widget.currentUser.dateOfBirth?.toDate();
     _selectedDateOfBirth = _originalDateOfBirth;
     _dobController = TextEditingController(
       text: _originalDateOfBirth == null
@@ -95,44 +95,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _selectDateOfBirth(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDateOfBirth ?? DateTime(2000), // Default 2000 jika null
+      initialDate: _selectedDateOfBirth ?? DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
       helpText: 'Select Date of Birth',
       confirmText: 'SELECT',
-      // REVISI UTAMA DI SINI: Memaksa tema monokrom pada dialog DatePicker
       builder: (context, child) {
         return Theme(
-          // Gunakan ThemeData.light() sebagai basis
           data: ThemeData.light().copyWith(
-            // Skema warna untuk mengontrol mayoritas elemen:
             colorScheme: const ColorScheme.light(
-              // PRIMARY: Latar belakang header dan warna lingkaran tanggal terpilih
-              primary: Colors.black, 
-              // ON PRIMARY: Warna teks di dalam lingkaran terpilih (jadi putih)
-              onPrimary: Colors.white, 
-              // SURFACE: Latar belakang bagian kalender
-              surface: Colors.white, 
-              // ON SURFACE: Warna teks untuk hari/tanggal yang tidak terpilih, bulan, dan tahun (jadi hitam)
-              onSurface: Colors.black, 
-              // BACKGROUND: Latar belakang seluruh dialog
+              primary: Colors.black,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
               background: Colors.white,
             ),
-            // Mengatur tema tombol:
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Colors.black, // Warna teks tombol (CANCEL, SELECT) menjadi hitam
+                foregroundColor: Colors.black,
               ),
             ),
-            // Mengatur tema dialog secara keseluruhan (untuk memastikannya putih)
             dialogTheme: DialogThemeData(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
-              backgroundColor: Colors.white, // Latar belakang dialog
+              backgroundColor: Colors.white,
             ),
-            // Mengubah ikon (misal: tombol pensil edit) menjadi hitam monokrom
-            iconTheme: const IconThemeData(color: Colors.black), 
+            iconTheme: const IconThemeData(color: Colors.black),
           ),
           child: child!,
         );
@@ -150,31 +139,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _handleSave() async {
     if (_formKey.currentState!.validate() && _hasChanges) {
       _showLoading();
-
-      // Konversi DateTime ke Timestamp untuk Firestore
       final Timestamp? dobTimestamp = _selectedDateOfBirth == null
           ? null
           : Timestamp.fromDate(_selectedDateOfBirth!);
-
       final updatedUser = widget.currentUser.copyWith(
         name: _nameController.text.trim(),
         avatarPath: _selectedAvatarPath,
-        dateOfBirth: dobTimestamp, // BARU: Sertakan tanggal lahir
+        dateOfBirth: dobTimestamp,
       );
-
-      final ServiceResponse<void> response = 
+      final ServiceResponse<void> response =
           await _firestoreService.updateUserData(updatedUser);
-
       if (!mounted) return;
       Navigator.pop(context);
-
       if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile updated successfully!'),
           ),
         );
-        Navigator.pop(context, updatedUser); 
+        Navigator.pop(context, updatedUser);
       } else {
         final message = response.message ?? 'An undefined error occurred.';
         ScaffoldMessenger.of(context).showSnackBar(
@@ -199,14 +182,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      // REVISI 1: Atur background modal sheet menjadi putih
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return Container(
-          // REVISI 2: Atur warna Container di dalam modal menjadi putih
           color: Colors.white,
           padding: EdgeInsets.only(
             top: 20,
@@ -252,7 +233,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         border: isSelected
                             ? Border.all(color: Colors.black, width: 3)
                             : Border.all(color: Colors.grey.shade300, width: 1),
-                        color: Colors.white, // Background circle avatar sudah putih
+                        color: Colors.white,
                       ),
                       child: ClipOval(
                         child: Image.asset(
@@ -344,18 +325,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     const Text(
                       'Date of Birth',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _dobController,
-                      readOnly: true, 
-                      // Menggunakan _selectDateOfBirth dari revisi sebelumnya yang sudah monokrom
+                      readOnly: true,
                       onTap: () => _selectDateOfBirth(context),
                       decoration: InputDecoration(
                         hintText: 'Select your date of birth',
-                        prefixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.black), 
-                        suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+                        prefixIcon: const Icon(Icons.calendar_today_outlined,
+                            color: Colors.black),
+                        suffixIcon: const Icon(Icons.arrow_drop_down,
+                            color: Colors.black),
                         filled: true,
                         fillColor: const Color(0xFFF7F8F9),
                         border: OutlineInputBorder(
@@ -370,7 +353,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           borderRadius: BorderRadius.circular(12.0),
                           borderSide: const BorderSide(color: Colors.blue),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16.0, horizontal: 12.0),
                       ),
                     ),
                   ],

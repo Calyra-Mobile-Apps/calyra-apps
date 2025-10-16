@@ -146,6 +146,13 @@ class FirestoreService {
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
           .where('undertone_name', isEqualTo: undertone)
+  Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
+      String brandName, String seasonName) async {
+    try {
+      final querySnapshot = await _db
+          .collection(_productsCollection)
+          .where('brand_name', isEqualTo: brandName)
+          .where('season_name', isEqualTo: seasonName)
           .get();
 
       final querySeason = _db
@@ -183,6 +190,18 @@ class FirestoreService {
     } catch (e) {
       return ServiceResponse.failure(
           'Error fetching recommended products: $e');
+    }
+  }
+
+  Future<ServiceResponse<List<Product>>> getAllProducts() async {
+    try {
+      final querySnapshot = await _db.collection(_productsCollection).get();
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching all products: $e');
     }
   }
 }

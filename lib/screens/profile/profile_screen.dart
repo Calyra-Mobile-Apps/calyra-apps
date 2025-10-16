@@ -5,6 +5,8 @@ import 'package:calyra/screens/auth/login_screen.dart';
 import 'package:calyra/screens/profile/edit_profile_screen.dart';
 import 'package:calyra/screens/profile/change_password_screen.dart';
 import 'package:calyra/screens/profile/analysis_history_screen.dart';
+import 'package:calyra/screens/profile/legal_content_screen.dart';
+import 'package:calyra/screens/profile/faq_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -130,7 +132,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: Icons.history,
                 text: 'History',
                 onTap: () {
-                  // Tambahkan navigasi ke halaman History
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -150,17 +151,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
+              _buildProfileMenu( 
+                context,
+                icon: Icons.help_outline,
+                text: 'FAQ',
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const FAQScreen())); 
+                },
+              ),
               _buildProfileMenu(
                 context,
                 icon: Icons.description_outlined,
                 text: 'Terms & Conditions',
-                onTap: () {/* Tambahkan aksi */},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LegalContentScreen(
+                        title: 'Terms & Conditions',
+                        content: kTermsAndConditionsContent,
+                      ),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenu(
                 context,
                 icon: Icons.privacy_tip_outlined,
                 text: 'Privacy Policy',
-                onTap: () {/* Tambahkan aksi */},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LegalContentScreen(
+                        title: 'Privacy Policy',
+                        content: kPrivacyPolicyContent,
+                      ),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenu(
                 context,
@@ -197,21 +226,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: const Color(0xFFE0E0E0),
               child: ClipOval(
                 child: isDefaultIcon
-                  ? const Icon( // Tampilkan Icon.person jika path adalah marker default
-                      Icons.person,
-                      size: 40,
-                      color: Colors.white,
-                    )
+                    ? const Icon(
+                        Icons.person,
+                        size: 40,
+                        color: Colors.white,
+                      )
                     : Image.asset(
-                  avatarPath,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.person,
-                        size: 40, color: Colors.white);
-                  },
-                ),
+                        avatarPath,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.person,
+                              size: 40, color: Colors.white);
+                        },
+                      ),
               ),
             ),
             const SizedBox(width: 16),

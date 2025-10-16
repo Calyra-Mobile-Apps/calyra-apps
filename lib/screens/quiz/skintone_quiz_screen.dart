@@ -89,10 +89,10 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        width: 300, 
-                        height: 300, 
+                        width: 300,
+                        height: 300,
                         decoration: BoxDecoration(
-                          color: backgroundColor, 
+                          color: backgroundColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -106,21 +106,23 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                         child: _buildSelfieArea(selfieBytes),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 30),
-                    
+
                     const Text(
                       "Choose your skin tone",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 20),
         
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5, 
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
@@ -136,7 +138,9 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                               color: option.color,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected ? Colors.black : Colors.grey.shade300,
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.grey.shade300,
                                 width: isSelected ? 3.0 : 1.0,
                               ),
                             ),
@@ -156,7 +160,8 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _selectedOption != null ? Colors.black : Colors.grey[300],
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                 ),
                 child: Text('Next',
                     style: TextStyle(

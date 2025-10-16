@@ -12,12 +12,10 @@ class AuthService {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
-  // Stream untuk memantau status otentikasi
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   User? get currentUser => _auth.currentUser;
 
-  // Fungsi untuk Sign In
   Future<ServiceResponse<User?>> signInWithEmailAndPassword(
       String email, String password) async {
     try {
@@ -31,14 +29,12 @@ class AuthService {
     }
   }
 
-  // Fungsi untuk Sign Up
   Future<ServiceResponse<User?>> signUpWithEmailAndPassword(
     String name,
     String email,
     String password,
   ) async {
     try {
-      // 1. Buat user di Firebase Authentication
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -46,8 +42,7 @@ class AuthService {
       final user = credential.user;
 
       if (user != null) {
-        // 2. Simpan data tambahan di Firestore
-  await _firestore.collection('Users').doc(user.uid).set({
+        await _firestore.collection('Users').doc(user.uid).set({
           'name': name,
           'email': email,
           'created_at': Timestamp.now(),
@@ -59,8 +54,7 @@ class AuthService {
       return ServiceResponse.failure(_mapFirebaseError(e));
     }
   }
-  
-  // Fungsi untuk Forgot Password
+
   Future<ServiceResponse<void>> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
@@ -81,17 +75,13 @@ class AuthService {
         email: user.email!,
         password: oldPassword,
       );
-      
-      // Attempt re-authentication
       await user.reauthenticateWithCredential(credential);
-      
-      // If re-authentication succeeds, it means the old password was correct.
       return ServiceResponse.success();
     } on FirebaseAuthException catch (e) {
-      // Handles cases like 'wrong-password' or 'invalid-credential'
       return ServiceResponse.failure(_mapFirebaseError(e));
     } catch (e) {
-      return ServiceResponse.failure('An unexpected error occurred during re-authentication: $e');
+      return ServiceResponse.failure(
+          'An unexpected error occurred during re-authentication: $e');
     }
   }
 
@@ -102,7 +92,6 @@ class AuthService {
     }
 
     try {
-      // Re-authentication should be done BEFORE this call.
       await user.updatePassword(newPassword);
       return ServiceResponse.success();
     } on FirebaseAuthException catch (e) {
@@ -112,7 +101,6 @@ class AuthService {
     }
   }
 
-  // Fungsi untuk Sign Out
   Future<void> signOut() async {
     await _auth.signOut();
   }
@@ -134,7 +122,8 @@ class AuthService {
       case 'network-request-failed':
         return 'Network error. Please check your internet connection.';
       default:
-        return exception.message ?? 'An unexpected error occurred. Please try again.';
+        return exception.message ??
+            'An unexpected error occurred. Please try again.';
     }
   }
 }

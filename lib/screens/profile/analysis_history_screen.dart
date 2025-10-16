@@ -40,7 +40,7 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
     }
     return []; // Return empty list on failure
   }
-  
+
   void _navigateToDetail(AnalysisResult result) {
     Navigator.push(
       context,
@@ -54,7 +54,8 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analysis History', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Analysis History',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -84,7 +85,8 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
-                      return Center(child: Text('An error occurred: ${snapshot.error}'));
+                      return Center(
+                          child: Text('An error occurred: ${snapshot.error}'));
                     }
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       // --- UI KOSONG DITAMPILKAN DI SINI ---
@@ -121,7 +123,7 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
                     }
 
                     final historyList = snapshot.data!;
-                    
+
                     return ListView.builder(
                       itemCount: historyList.length,
                       itemBuilder: (context, index) {
