@@ -8,13 +8,16 @@ class AnalysisService {
   AnalysisResult analyze(QuizSession session, {DateTime? analysisDate}) {
     final answers = session.answers;
     final undertone = answers[QuizKeys.undertone] ?? 'neutral';
-    final skintone = answers[QuizKeys.skintone] ?? 'unknown';
-    final seasonalColor = answers[QuizKeys.seasonalColor] ?? 'unknown';
-    final seasonResult = _resolveSeason(undertone, seasonalColor);
+    final skintone =
+        answers[QuizKeys.skintone] ?? '0'; // Disimpan sebagai string ID
 
+    // Mengambil data season murni (cth: "Spring", "Autumn") dari provider
+    final season = answers[QuizKeys.seasonalColor] ?? 'unknown';
+
+    // Langsung simpan data secara terpisah
     return AnalysisResult(
-      seasonResult: seasonResult,
-      undertone: undertone,
+      seasonResult: season, // Menyimpan "Spring", "Autumn", etc.
+      undertone: undertone, // Menyimpan "warm" atau "cool"
       skintone: skintone,
       analysisDate: analysisDate ?? DateTime.now(),
     );
@@ -22,11 +25,12 @@ class AnalysisService {
 
   String _resolveSeason(String undertone, String seasonalResult) {
     if (seasonalResult == 'unknown' || seasonalResult.isEmpty) {
-      if (undertone == 'warm') return 'Warm Autumn';
-      if (undertone == 'cool') return 'Cool Winter';
+      if (undertone == 'warm') return 'Warm Autumn'; // Default untuk warm
+      if (undertone == 'cool') return 'Cool Winter'; // Default untuk cool
       return 'Neutral';
     }
 
+    // Menggabungkan hasil undertone dengan hasil pilihan mayoritas seasonal.
     if (undertone == 'warm') {
       if (seasonalResult == 'Spring') {
         return 'Warm Spring';

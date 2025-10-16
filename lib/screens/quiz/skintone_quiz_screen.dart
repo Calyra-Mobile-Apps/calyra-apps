@@ -1,4 +1,4 @@
-// Lokasi file: lib/screens/quiz/skintone_quiz_screen.dart
+// lib/screens/quiz/skintone_quiz_screen.dart
 
 import 'dart:typed_data';
 import 'package:calyra/models/quiz/quiz_keys.dart';
@@ -6,6 +6,27 @@ import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/quiz/seasonal_quiz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+// --- DATA BARU: Memetakan setiap warna ke skintone_group_id ---
+class SkintoneOption {
+  final Color color;
+  final int groupId;
+
+  const SkintoneOption({required this.color, required this.groupId});
+}
+
+final List<SkintoneOption> skintoneOptions = List.generate(20, (index) {
+  // Warna-warna ini sama seperti sebelumnya
+  final colors = [
+    const Color(0xFFF1EAE1), const Color(0xFFEADCCF), const Color(0xFFE3CBB8), const Color(0xFFD6B9A1),
+    const Color(0xFFC6A68A), const Color(0xFFB59273), const Color(0xFFA88365), const Color(0xFF9B7658),
+    const Color(0xFF8C684C), const Color(0xFF7D5B41), const Color(0xFF6E4E36), const Color(0xFF5F412B),
+    const Color(0xFFFDE9E4), const Color(0xFFE8C7A7), const Color(0xFFC6A98F), const Color(0xFF9E7C69),
+    const Color(0xFFF7F2EF), const Color(0xFFEFE2DD), const Color(0xFFC7B1A4), const Color(0xFF9E8981),
+  ];
+  return SkintoneOption(color: colors[index], groupId: index + 1);
+});
+// -----------------------------------------------------------------
 
 class SkintoneQuizScreen extends StatefulWidget {
   const SkintoneQuizScreen({super.key});
@@ -15,39 +36,20 @@ class SkintoneQuizScreen extends StatefulWidget {
 }
 
 class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
-  // Daftar warna skintone untuk ditampilkan (16 pilihan)
-  static const List<Color> skintoneOptions = [
-    // Baris 1: Paling terang ke sedang
-    Color(0xFFF1EAE1), Color(0xFFEADCCF), Color(0xFFE3CBB8), Color(0xFFD6B9A1),
-    Color(0xFFC6A68A), Color(0xFFB59273), Color(0xFFA88365), Color(0xFF9B7658),
-    // Baris 2: Sedang ke gelap
-    Color(0xFF8C684C), Color(0xFF7D5B41), Color(0xFF6E4E36), Color(0xFF5F412B),
-    // BARU: Tambahkan baris 3 & 4 (atau sesuaikan 12 menjadi 16)
-    Color(0xFFFDE9E4), Color(0xFFE8C7A7), Color(0xFFC6A98F), Color(0xFF9E7C69),
-    Color(0xFFF7F2EF), Color(0xFFEFE2DD), Color(0xFFC7B1A4), Color(0xFF9E8981),
-  ];
+  SkintoneOption? _selectedOption;
 
-  // State untuk melacak pilihan pengguna
-  String? _selectedColorHex; // Menyimpan hex (String) dari warna yang dipilih
-
-  void _onOptionSelected(Color color) {
+  void _onOptionSelected(SkintoneOption option) {
     setState(() {
-      // Ubah warna menjadi hex string untuk disimpan sebagai jawaban
-      _selectedColorHex =
-          color.value.toRadixString(16).padLeft(8, '0').toUpperCase();
-      // Set the color for the background box to be instantly visible
+      _selectedOption = option;
     });
   }
 
   void _onNextPressed(BuildContext context) {
-    if (_selectedColorHex == null) return;
+    if (_selectedOption == null) return;
+    
+    // Simpan groupId sebagai string ke provider
+    context.read<QuizProvider>().addAnswer(QuizKeys.skintone, _selectedOption!.groupId.toString());
 
-    // 1. Simpan jawaban ke provider
-    // Ambil hanya 6 digit (RGB) untuk skintone, buang 2 digit pertama (Alpha)
-    final answer = _selectedColorHex!.substring(2);
-    context.read<QuizProvider>().addAnswer(QuizKeys.skintone, answer);
-
-    // 2. Navigasi ke halaman kuis berikutnya
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SeasonalColorQuizScreen()),
@@ -55,16 +57,12 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
   }
 
   Color _getBackgroundColor() {
-    if (_selectedColorHex == null) {
-      return Color(skintoneOptions.first.value).withOpacity(1);
-    }
-    return Color(int.parse(_selectedColorHex!, radix: 16)).withOpacity(1);
+    return _selectedOption?.color ?? skintoneOptions.first.color;
   }
 
   @override
   Widget build(BuildContext context) {
-    final Uint8List? selfieBytes =
-        context.watch<QuizProvider>().selfieImageBytes;
+    final Uint8List? selfieBytes = context.watch<QuizProvider>().selfieImageBytes;
     final Color backgroundColor = _getBackgroundColor();
 
     return Scaffold(
@@ -118,8 +116,7 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 20),
-
-                    // Grid untuk pilihan warna kulit
+        
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -131,18 +128,14 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                       ),
                       itemCount: skintoneOptions.length,
                       itemBuilder: (context, index) {
-                        final color = skintoneOptions[index];
-                        final colorHex = color.value
-                            .toRadixString(16)
-                            .padLeft(8, '0')
-                            .toUpperCase();
-                        final isSelected = colorHex == _selectedColorHex;
-
+                        final option = skintoneOptions[index];
+                        final isSelected = option.groupId == _selectedOption?.groupId;
+        
                         return GestureDetector(
-                          onTap: () => _onOptionSelected(color),
+                          onTap: () => _onOptionSelected(option),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: color,
+                              color: option.color,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
@@ -159,16 +152,13 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                 ),
               ),
             ),
+            
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: ElevatedButton(
-                onPressed: _selectedColorHex == null
-                    ? null
-                    : () => _onNextPressed(context),
+                onPressed: _selectedOption == null ? null : () => _onNextPressed(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedColorHex != null
-                      ? Colors.black
-                      : Colors.grey[300],
+                  backgroundColor: _selectedOption != null ? Colors.black : Colors.grey[300],
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30)),
@@ -177,9 +167,7 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _selectedColorHex != null
-                          ? Colors.white
-                          : Colors.grey[600],
+                      color: _selectedOption != null ? Colors.white : Colors.grey[600],
                     )),
               ),
             ),

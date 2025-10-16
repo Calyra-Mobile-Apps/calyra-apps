@@ -131,6 +131,21 @@ class FirestoreService {
     }
   }
 
+// --- FUNGSI UTAMA YANG DIPERBARUI TOTAL ---
+  Future<ServiceResponse<List<Product>>> getRecommendedProducts({
+    required String brandName,
+    required String undertone,
+    required String season,
+    required String skintoneGroupId,
+  }) async {
+    try {
+      final skintoneId = int.tryParse(skintoneGroupId) ?? 0;
+
+      // 1. Definisikan tiga query terpisah
+      final queryUndertone = _db
+          .collection(_productsCollection)
+          .where('brand_name', isEqualTo: brandName)
+          .where('undertone_name', isEqualTo: undertone)
   Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
       String brandName, String seasonName) async {
     try {
@@ -140,14 +155,41 @@ class FirestoreService {
           .where('season_name', isEqualTo: seasonName)
           .get();
 
-      final products = querySnapshot.docs
-          .map((doc) => Product.fromFirestore(doc.data()))
-          .toList();
+      final querySeason = _db
+          .collection(_productsCollection)
+          .where('brand_name', isEqualTo: brandName)
+          .where('season_name', isEqualTo: season)
+          .get();
 
-      return ServiceResponse.success(products);
+      final querySkintone = _db
+          .collection(_productsCollection)
+          .where('brand_name', isEqualTo: brandName)
+          .where('skintone_group_id', isEqualTo: skintoneId)
+          .get();
+
+      // 2. Jalankan semua query secara bersamaan
+      final results = await Future.wait([
+        queryUndertone,
+        querySeason,
+        querySkintone,
+      ]);
+
+      // 3. Gabungkan hasilnya dan hapus duplikat
+      final Map<String, Product> uniqueProducts = {};
+
+      for (final querySnapshot in results) {
+        for (final doc in querySnapshot.docs) {
+          final product = Product.fromFirestore(doc.data());
+          // Menggunakan product_id sebagai kunci untuk memastikan keunikan
+          uniqueProducts[product.productId] = product;
+        }
+      }
+
+      return ServiceResponse.success(uniqueProducts.values.toList());
+      
     } catch (e) {
       return ServiceResponse.failure(
-          'Error fetching products by brand and season: $e');
+          'Error fetching recommended products: $e');
     }
   }
 
