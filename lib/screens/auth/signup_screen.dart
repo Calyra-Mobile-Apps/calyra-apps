@@ -79,7 +79,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 content: Text('Registration successful! Please sign in.')),
           );
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const TakeSelfieScreen()),
+            MaterialPageRoute(
+                builder: (context) => const TakeSelfieScreen(isInitialFlow: true)), 
             (route) => false,
           );
         } else {
