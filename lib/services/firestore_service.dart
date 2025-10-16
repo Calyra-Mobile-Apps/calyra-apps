@@ -131,6 +131,17 @@ class FirestoreService {
     }
   }
 
+  // --- FUNGSI BARU UNTUK SEARCH DI HOME ---
+  Future<ServiceResponse<List<Product>>> getAllProducts() async {
+    try {
+      final querySnapshot = await _db.collection(_productsCollection).get();
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching all products: $e');
+      
   // --- PERBAIKAN UTAMA ADA DI FUNGSI INI ---
   Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
       String brandName, String seasonName) async {
