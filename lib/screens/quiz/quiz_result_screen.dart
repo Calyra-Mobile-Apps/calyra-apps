@@ -3,9 +3,7 @@
 import 'package:calyra/data/brand_data.dart';
 import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/brand_info.dart';
-import 'package:calyra/models/season_filter.dart';
 import 'package:calyra/providers/quiz_provider.dart';
-import 'package:calyra/screens/brand/brand_catalog_screen.dart';
 import 'package:calyra/screens/main_screen.dart';
 import 'package:calyra/services/analysis_service.dart';
 import 'package:calyra/services/firestore_service.dart';
@@ -13,7 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'recommendations_screen.dart';
 
-// --- DATA PALET WARNA UNTUK SEMUA MUSIM ---
+// Helper untuk format teks
+String _capitalize(String s) {
+  if (s.isEmpty) return '';
+  return s[0].toUpperCase() + s.substring(1).toLowerCase();
+}
+
+// --- DATA PALET WARNA (TIDAK BERUBAH) ---
 const Map<String, List<Color>> seasonPalettes = {
   'Warm Autumn': [
     Color(0xff4a633a), Color(0xffd58c58), Color(0xffb76a71), Color(0xff9f3b34),
@@ -35,17 +39,11 @@ const Map<String, List<Color>> seasonPalettes = {
     Color(0xFF6583C9), Color(0xFF62CDED), Color(0xFF6193DD), Color(0xFFAA97E6),
     Color(0xFF71E7C7), Color(0xFFBE4A75), Color(0xFFE769A8), Color(0xFFC761A3),
   ],
-  'Unknown': [ // Fallback
-    Colors.grey, Colors.grey, Colors.grey, Colors.grey,
-    Colors.grey, Colors.grey, Colors.grey, Colors.grey,
-    Colors.grey, Colors.grey, Colors.grey, Colors.grey,
-  ],
+  'Unknown': [ Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, Colors.grey, ],
 };
-// ---------------------------------------------
 
 class QuizResultScreen extends StatefulWidget {
   final AnalysisResult? resultFromHistory;
-
   const QuizResultScreen({super.key, this.resultFromHistory});
 
   @override
@@ -60,10 +58,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   void initState() {
     super.initState();
     if (widget.resultFromHistory != null) {
-      setState(() {
-        _analysisResult = widget.resultFromHistory;
-        _isLoading = false;
-      });
+      _analysisResult = widget.resultFromHistory;
+      _isLoading = false;
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _processAndSaveResult();
@@ -123,8 +119,13 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       return const Center(child: Text('Failed to get analysis result.'));
     }
 
-    final String seasonResult = _analysisResult!.seasonResult;
-    final List<Color> currentPalette = seasonPalettes[seasonResult] ?? seasonPalettes['Unknown']!;
+    // --- LOGIKA PENGGABUNGAN UNTUK TAMPILAN ---
+    final String undertone = _capitalize(_analysisResult!.undertone);
+    final String season = _analysisResult!.seasonResult;
+    final String fullSeasonName = '$undertone $season'; // Menghasilkan "Warm Spring"
+    // ----------------------------------------
+    
+    final List<Color> currentPalette = seasonPalettes[fullSeasonName] ?? seasonPalettes['Unknown']!;
     
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -138,20 +139,20 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             style: TextStyle(fontSize: 24, color: Colors.grey),
           ),
           Text(
-            seasonResult,
+            fullSeasonName, // Tampilkan nama lengkap
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            _getSeasonDescription(seasonResult), // Deskripsi dinamis
+            _getSeasonDescription(fullSeasonName), // Gunakan nama lengkap
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 30),
           _buildSectionTitle('Color Palettes'),
           const SizedBox(height: 16),
-          _buildColorPalettes(currentPalette), // Kirim palet warna yang sesuai
+          _buildColorPalettes(currentPalette),
           const SizedBox(height: 30),
           _buildSectionTitle('Your Product Recommendations'),
           const SizedBox(height: 8),
@@ -168,17 +169,13 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   }
 
   String _getSeasonDescription(String season) {
+    // Fungsi ini sudah benar karena menerima nama lengkap
     switch (season) {
-      case 'Warm Autumn':
-        return 'As a Warm Autumn, your natural radiance comes alive in rich, warm, and earthy colors.';
-      case 'Warm Spring':
-        return 'As a Warm Spring, you shine in bright, clear, and warm colors that reflect the vibrancy of spring.';
-      case 'Cool Winter':
-        return 'As a Cool Winter, your look is stunning in bold, cool, and high-contrast colors.';
-      case 'Cool Summer':
-        return 'As a Cool Summer, you look best in soft, muted, and cool-toned colors.';
-      default:
-        return 'Discover the colors that best suit your unique palette.';
+      case 'Warm Autumn': return 'As a Warm Autumn, your natural radiance comes alive in rich, warm, and earthy colors.';
+      case 'Warm Spring': return 'As a Warm Spring, you shine in bright, clear, and warm colors that reflect the vibrancy of spring.';
+      case 'Cool Winter': return 'As a Cool Winter, your look is stunning in bold, cool, and high-contrast colors.';
+      case 'Cool Summer': return 'As a Cool Summer, you look best in soft, muted, and cool-toned colors.';
+      default: return 'Discover the colors that best suit your unique palette.';
     }
   }
 
@@ -186,16 +183,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Text(
-        title,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-            color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-      ),
+      decoration: BoxDecoration( color: Colors.black, borderRadius: BorderRadius.circular(30), ),
+      child: Text( title, textAlign: TextAlign.center, style: const TextStyle( color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold), ),
     );
   }
 
@@ -204,46 +193,31 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: colors.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount( crossAxisCount: 4, crossAxisSpacing: 10, mainAxisSpacing: 10, ),
       itemBuilder: (context, index) {
         return Container(
-          decoration: BoxDecoration(
-            color: colors[index],
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration( color: colors[index], borderRadius: BorderRadius.circular(12), ),
         );
       },
     );
   }
 
   Widget _buildBrandRecommendations(BuildContext context) {
-    // Menggunakan data brand dari `featuredBrands` yang diimpor
     return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.8,
-      ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount( crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.8, ),
       itemCount: featuredBrands.length,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final brand = featuredBrands[index];
-        // Logika sederhana untuk memilih path gambar
         String assetPath;
         if (brand.name.toLowerCase() == 'wardah') {
           assetPath = 'assets/images/wardah-result.png';
         } else if (brand.name.toLowerCase() == 'emina') {
           assetPath = 'assets/images/emina-result.png';
         } else {
-          assetPath = brand.imageUrl; // Fallback ke gambar utama
+          assetPath = brand.imageUrl;
         }
-
         return _buildBrandCard(context, brand: brand, assetPath: assetPath);
       },
     );
@@ -252,15 +226,12 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   Widget _buildBrandCard(BuildContext context, {required BrandInfo brand, required String assetPath}) {
     return GestureDetector(
       onTap: () {
-        final String seasonResult = _analysisResult!.seasonResult;
-        
-        // Navigasi ke RecommendationsScreen yang baru
-        // Mengirim nama brand dan nama season lengkap
+        if (_analysisResult == null) return;
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => RecommendationsScreen(
               brandName: brand.name,
-              seasonName: seasonResult, 
+              analysisResult: _analysisResult!, 
             ),
           ),
         );
@@ -272,33 +243,9 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              assetPath,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Center(child: Icon(Icons.error)),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.center,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 16,
-              left: 16,
-              child: Text(
-                brand.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            Image.asset( assetPath, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error)),),
+            Container( decoration: BoxDecoration( gradient: LinearGradient( colors: [Colors.black.withOpacity(0.6), Colors.transparent], begin: Alignment.bottomCenter, end: Alignment.center, ), ), ),
+            Positioned( bottom: 16, left: 16, child: Text( brand.name, style: const TextStyle( color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold,),),),
           ],
         ),
       ),
