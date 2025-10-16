@@ -9,7 +9,8 @@ class AnalysisService {
     final answers = session.answers;
     final undertone = answers[QuizKeys.undertone] ?? 'neutral';
     final skintone = answers[QuizKeys.skintone] ?? 'unknown';
-    final seasonalColor = answers[QuizKeys.seasonalColor] ?? '';
+    // seasonalColor akan berisi 'Spring', 'Autumn', 'Summer', atau 'Winter'
+    final seasonalColor = answers[QuizKeys.seasonalColor] ?? 'unknown';
 
     final seasonResult = _resolveSeason(undertone, seasonalColor);
 
@@ -21,16 +22,33 @@ class AnalysisService {
     );
   }
 
-  String _resolveSeason(String undertone, String seasonalColor) {
+  // --- LOGIKA UTAMA DIPERBARUI DI SINI ---
+  String _resolveSeason(String undertone, String seasonalResult) {
+    // Fallback jika seasonalResult kosong
+    if (seasonalResult == 'unknown' || seasonalResult.isEmpty) {
+        if (undertone == 'warm') return 'Warm Autumn'; // Default untuk warm
+        if (undertone == 'cool') return 'Cool Winter'; // Default untuk cool
+        return 'Neutral';
+    }
+    
+    // Menggabungkan hasil undertone dengan hasil pilihan mayoritas seasonal.
     if (undertone == 'warm') {
-      return seasonalColor == 'bright_warm' ? 'Warm Spring' : 'Warm Autumn';
+      if (seasonalResult == 'Spring') {
+        return 'Warm Spring';
+      } else if (seasonalResult == 'Autumn') {
+        return 'Warm Autumn';
+      }
     }
 
     if (undertone == 'cool') {
-      return seasonalColor == 'soft_cool' ? 'Cool Summer' : 'Cool Winter';
+      if (seasonalResult == 'Summer') {
+        return 'Cool Summer';
+      } else if (seasonalResult == 'Winter') {
+        return 'Cool Winter';
+      }
     }
 
-    return 'Neutral';
+    // Fallback jika ada kombinasi yang tidak terduga
+    return seasonalResult;
   }
 }
-

@@ -1,6 +1,7 @@
-// Lokasi file: lib/screens/profile/analysis_history_screen.dart
+// lib/screens/profile/analysis_history_screen.dart
 
 import 'package:calyra/models/analysis_result.dart';
+import 'package:calyra/models/service_response.dart';
 import 'package:calyra/screens/quiz/quiz_result_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:calyra/widgets/history_card.dart';
@@ -17,55 +18,33 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   late Future<List<AnalysisResult>> _historyFuture;
 
-  // --- MOCK DATA SEMENTARA (Diganti dengan data real dari Firestore) ---
-  final List<AnalysisResult> _mockHistory = [
-    AnalysisResult(
-      seasonResult: 'Cool Summer',
-      undertone: 'cool',
-      skintone: 'light',
-      analysisDate: DateTime(2025, 10, 5),
-    ),
-    AnalysisResult(
-      seasonResult: 'Cool Winter',
-      undertone: 'cool',
-      skintone: 'fair',
-      analysisDate: DateTime(2025, 9, 26),
-    ),
-    AnalysisResult(
-      seasonResult: 'Warm Autumn',
-      undertone: 'warm',
-      skintone: 'medium',
-      analysisDate: DateTime(2025, 9, 10),
-    ),
-  ];
-  // ---------------------------------------------------------------------
-
   @override
   void initState() {
     super.initState();
-    // Di sini kita akan menggunakan mock data terlebih dahulu.
-    // Logika untuk fetch data real dari Firestore harus diimplementasikan di FirestoreService.
-    _historyFuture = Future.value(_mockHistory); 
-    // _historyFuture = _fetchAnalysisHistory(); // Untuk penggunaan real
+    _historyFuture = _fetchAnalysisHistory();
   }
 
-  // NOTE: Anda perlu mengimplementasikan fungsi ini di FirestoreService
-  // Future<List<AnalysisResult>> _fetchAnalysisHistory() async {
-  //   // Logika untuk mengambil data dari Firestore: Users/{uid}/analysisHistory
-  //   return []; 
-  // }
+  Future<List<AnalysisResult>> _fetchAnalysisHistory() async {
+    final ServiceResponse<List<AnalysisResult>> response =
+        await _firestoreService.getAnalysisHistory();
+
+    if (response.isSuccess && response.data != null) {
+      return response.data!;
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response.message ?? 'Failed to load history.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    return []; // Return empty list on failure
+  }
   
-  void _sortHistory(List<AnalysisResult> data) {
-    setState(() {
-      data.sort((a, b) => b.analysisDate.compareTo(a.analysisDate));
-    });
-  }
-
   void _navigateToDetail(AnalysisResult result) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        // Kirim hasil analisis ke QuizResultScreen dengan flag isHistory
         builder: (context) => QuizResultScreen(resultFromHistory: result),
       ),
     );
@@ -79,39 +58,24 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Subtitle
               const Text(
                 'Your personal color analysis history is saved here. Check past results to compare and refine your beauty choices.',
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 20),
-
-              // Sort By Button
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () {
-                    // Logika Sorting (saat ini hanya mengurutkan berdasarkan tanggal)
-                    _historyFuture.then(_sortHistory);
-                  },
-                  icon: const Icon(Icons.sort, size: 24, color: Colors.black),
-                  label: const Text('Sort By', style: TextStyle(color: Colors.black, fontSize: 16)),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    alignment: Alignment.centerRight
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Daftar History
               Expanded(
                 child: FutureBuilder<List<AnalysisResult>>(
                   future: _historyFuture,
@@ -119,8 +83,41 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('No analysis history found.'));
+                    if (snapshot.hasError) {
+                      return Center(child: Text('An error occurred: ${snapshot.error}'));
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      // --- UI KOSONG DITAMPILKAN DI SINI ---
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/empty.png', // Pastikan gambar ini ada
+                              width: 150,
+                              height: 150,
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'No Analysis History Yet',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0D1B2A),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Your past color analysis results will\nappear here.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                     }
 
                     final historyList = snapshot.data!;
