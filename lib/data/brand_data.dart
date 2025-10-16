@@ -3,15 +3,15 @@
 import 'package:calyra/models/brand_info.dart';
 
 final List<BrandInfo> featuredBrands = [
-  const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+  const BrandInfo(
     id: 'BRD001',
     name: 'Wardah',
     imageUrl: 'assets/images/home-wardah.jpg',
     logoPath: 'assets/images/Logo_wardah.png',
     homeLogoPath: 'assets/images/wardah-white.png',
-    products: [], // Dikosongkan karena data diambil dari Firestore
+    products: [],
   ),
-  const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+  const BrandInfo(
     id: 'BRD002',
     name: 'Emina',
     imageUrl: 'assets/images/home-emina.jpg',
@@ -19,7 +19,7 @@ final List<BrandInfo> featuredBrands = [
     homeLogoPath: 'assets/images/emina-white.png',
     products: [],
   ),
-  const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+  const BrandInfo(
     id: 'BRD007',
     name: 'Make Over',
     imageUrl: 'assets/images/home-makeover.jpg',
@@ -27,7 +27,7 @@ final List<BrandInfo> featuredBrands = [
     homeLogoPath: 'assets/images/makeover-white.png',
     products: [],
   ),
-  const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+  const BrandInfo(
     id: 'BRD006',
     name: 'Somethinc',
     imageUrl: 'assets/images/home-somethinc.jpg',
@@ -35,7 +35,7 @@ final List<BrandInfo> featuredBrands = [
     homeLogoPath: 'assets/images/somethinc-white.png',
     products: [],
   ),
-  const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+  const BrandInfo(
     id: 'BRD005',
     name: 'OMG Beauty',
     imageUrl: 'assets/images/home-omg.jpeg',
@@ -43,7 +43,7 @@ final List<BrandInfo> featuredBrands = [
     homeLogoPath: 'assets/images/omg-white.png',
     products: [],
   ),
-    const BrandInfo( // <-- TAMBAHKAN CONST DI SINI
+  const BrandInfo(
     id: 'BRD003',
     name: 'Luxcrime',
     imageUrl: 'assets/images/home-luxcrime.png',

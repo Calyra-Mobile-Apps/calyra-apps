@@ -26,20 +26,19 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
 
   Future<Map<String, List<Product>>> _fetchAndGroupProductsBySeason() async {
     final firestoreService = FirestoreService();
-    final response = await firestoreService.getProductsBySeason(widget.category.title);
-
+    final response =
+        await firestoreService.getProductsBySeason(widget.category.title);
     if (response.isSuccess && response.data != null) {
       final Map<String, List<Product>> groupedProducts = {};
-      
       for (var product in response.data!) {
-        final key = product.productId; 
-        
+        final key = product.productId;
+
         if (!groupedProducts.containsKey(key)) {
           groupedProducts[key] = [];
         }
         groupedProducts[key]!.add(product);
       }
-      
+
       return groupedProducts;
     } else {
       if(mounted) {
@@ -55,22 +54,16 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // --- MODIFIKASI: AppBar default dihilangkan ---
-      // appBar: AppBar(...),
-
-      // --- MODIFIKASI: Body diubah total untuk UI baru ---
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Kustom
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  // Tombol Back
                   InkWell(
                     onTap: () => Navigator.of(context).pop(),
                     child: const Row(
@@ -89,7 +82,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Judul dengan Ikon
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -97,7 +89,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                         widget.category.assetPath,
                         width: 40,
                         height: 40,
-                        // Jika ikon Anda hitam, kode ini akan membuatnya tetap hitam
                         color: Colors.black,
                       ),
                       const SizedBox(width: 12),
@@ -111,7 +102,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Teks Deskripsi
                   Text(
                     widget.category.description,
                     textAlign: TextAlign.center,
@@ -122,7 +112,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Gambar Palet Warna
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(widget.category.paletteImagePath),
@@ -132,7 +121,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
               ),
             ),
 
-            // Grid Produk
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),

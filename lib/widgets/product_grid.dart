@@ -5,7 +5,6 @@ import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductGrid extends StatelessWidget {
-  // --- BARU: Menambahkan parameter padding ---
   const ProductGrid({
     super.key,
     required this.productGroups,
@@ -13,12 +12,11 @@ class ProductGrid extends StatelessWidget {
   });
 
   final List<List<Product>> productGroups;
-  final EdgeInsetsGeometry? padding; // Properti baru untuk padding
+  final EdgeInsetsGeometry? padding; 
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-      // --- BARU: Menerapkan padding ke GridView ---
       padding: padding,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -30,10 +28,9 @@ class ProductGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final productGroup = productGroups[index];
         final mainProduct = productGroup.first;
-
         final String firstSeason = mainProduct.seasonName;
-        final bool isFilteredBySeason = productGroup
-            .every((p) => p.seasonName == firstSeason && firstSeason.isNotEmpty);
+        final bool isFilteredBySeason = productGroup.every(
+            (p) => p.seasonName == firstSeason && firstSeason.isNotEmpty);
 
         String shadeText;
         if (isFilteredBySeason) {

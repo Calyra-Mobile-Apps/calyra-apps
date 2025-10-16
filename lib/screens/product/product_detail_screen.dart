@@ -6,9 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key, required this.productShades});
-
   final List<Product> productShades;
-
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
@@ -47,7 +45,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final Product currentProduct = widget.productShades[_currentPage];
-    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -73,17 +70,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 20),
                   Text(
                     currentProduct.productName,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-
-                  // --- MODIFIKASI: Menggunakan Stack untuk menumpuk panah di atas slider ---
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Slider Gambar
                       SizedBox(
-                        height: 320, // Sedikit diperbesar untuk memberi ruang
+                        height: 320,
                         child: PageView.builder(
                           controller: _pageController,
                           itemCount: widget.productShades.length,
@@ -99,14 +94,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
 
-                      // Tombol Panah (hanya muncul jika gambar lebih dari 1)
                       if (widget.productShades.length > 1) ...[
-                        // Panah Kiri
                         Align(
                           alignment: Alignment.centerLeft,
                           child: _buildArrowButton(isLeft: true),
                         ),
-                        // Panah Kanan
                         Align(
                           alignment: Alignment.centerRight,
                           child: _buildArrowButton(isLeft: false),
@@ -114,7 +106,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ],
                     ],
                   ),
-                  // -----------------------------------------------------------------
                   
                   const SizedBox(height: 24),
 
@@ -125,10 +116,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'by ${currentProduct.brandName}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   const Divider(height: 32, thickness: 1),
-
                   const Text(
                     'Shade Details',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -143,7 +134,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
           ),
-          
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
             child: SizedBox(
@@ -173,7 +163,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _buildShadeView(BuildContext context, Product product) {
     return Padding(
-      // Memberi sedikit padding agar tidak terlalu mepet panah
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Image.network(
         product.imageSwatchUrl,
@@ -193,9 +182,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
   
-  // --- BARU: Widget untuk membuat tombol panah ---
   Widget _buildArrowButton({required bool isLeft}) {
-    // Logika untuk menampilkan atau menyembunyikan panah
     final bool isVisible = isLeft
         ? _currentPage > 0
         : _currentPage < widget.productShades.length - 1;

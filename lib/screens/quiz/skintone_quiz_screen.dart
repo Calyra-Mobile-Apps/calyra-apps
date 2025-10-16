@@ -33,17 +33,18 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
   void _onOptionSelected(Color color) {
     setState(() {
       // Ubah warna menjadi hex string untuk disimpan sebagai jawaban
-      _selectedColorHex = color.value.toRadixString(16).padLeft(8, '0').toUpperCase();
+      _selectedColorHex =
+          color.value.toRadixString(16).padLeft(8, '0').toUpperCase();
       // Set the color for the background box to be instantly visible
     });
   }
 
   void _onNextPressed(BuildContext context) {
     if (_selectedColorHex == null) return;
-    
+
     // 1. Simpan jawaban ke provider
     // Ambil hanya 6 digit (RGB) untuk skintone, buang 2 digit pertama (Alpha)
-    final answer = _selectedColorHex!.substring(2); 
+    final answer = _selectedColorHex!.substring(2);
     context.read<QuizProvider>().addAnswer(QuizKeys.skintone, answer);
 
     // 2. Navigasi ke halaman kuis berikutnya
@@ -53,20 +54,17 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
     );
   }
 
-  // Helper untuk mendapatkan objek Color dari hex string di state
   Color _getBackgroundColor() {
     if (_selectedColorHex == null) {
-      // Warna default jika belum ada yang dipilih (contoh: FFF1EAE1 dari skintoneOptions[0])
-      return Color(skintoneOptions.first.value).withOpacity(1); 
+      return Color(skintoneOptions.first.value).withOpacity(1);
     }
-    // Ambil warna yang dipilih dan buat Color baru (gunakan opacity penuh)
-    return Color(int.parse(_selectedColorHex!, radix: 16)).withOpacity(1); 
+    return Color(int.parse(_selectedColorHex!, radix: 16)).withOpacity(1);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ambil data gambar dari provider
-    final Uint8List? selfieBytes = context.watch<QuizProvider>().selfieImageBytes;
+    final Uint8List? selfieBytes =
+        context.watch<QuizProvider>().selfieImageBytes;
     final Color backgroundColor = _getBackgroundColor();
 
     return Scaffold(
@@ -74,7 +72,6 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
         title: const Text('Skin Tone'),
         backgroundColor: Colors.white,
         elevation: 1,
-        // Tampilkan tombol back
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
@@ -90,15 +87,14 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   children: [
-                    // --- Area Selfie & Background Warna ---
                     Center(
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        width: 300, 
-                        height: 300, 
+                        width: 300,
+                        height: 300,
                         decoration: BoxDecoration(
-                          color: backgroundColor, 
+                          color: backgroundColor,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -112,31 +108,36 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                         child: _buildSelfieArea(selfieBytes),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 30),
-                    
+
                     const Text(
                       "Choose your skin tone",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 20),
-        
+
                     // Grid untuk pilihan warna kulit
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5, 
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
                       itemCount: skintoneOptions.length,
                       itemBuilder: (context, index) {
                         final color = skintoneOptions[index];
-                        final colorHex = color.value.toRadixString(16).padLeft(8, '0').toUpperCase();
+                        final colorHex = color.value
+                            .toRadixString(16)
+                            .padLeft(8, '0')
+                            .toUpperCase();
                         final isSelected = colorHex == _selectedColorHex;
-        
+
                         return GestureDetector(
                           onTap: () => _onOptionSelected(color),
                           child: Container(
@@ -144,7 +145,9 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                               color: color,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected ? Colors.black : Colors.grey.shade300,
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.grey.shade300,
                                 width: isSelected ? 3.0 : 1.0,
                               ),
                             ),
@@ -156,22 +159,27 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                 ),
               ),
             ),
-            
-            // --- Tombol Next di Bawah ---
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: ElevatedButton(
-                onPressed: _selectedColorHex == null ? null : () => _onNextPressed(context),
+                onPressed: _selectedColorHex == null
+                    ? null
+                    : () => _onNextPressed(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedColorHex != null ? Colors.black : Colors.grey[300],
+                  backgroundColor: _selectedColorHex != null
+                      ? Colors.black
+                      : Colors.grey[300],
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                 ),
                 child: Text('Next',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _selectedColorHex != null ? Colors.white : Colors.grey[600],
+                      color: _selectedColorHex != null
+                          ? Colors.white
+                          : Colors.grey[600],
                     )),
               ),
             ),
@@ -181,7 +189,6 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
     );
   }
 
-  // Helper widget untuk area selfie agar rapi
   Widget _buildSelfieArea(Uint8List? selfieBytes) {
     Widget imageWidget = selfieBytes != null
         ? Image.memory(selfieBytes, fit: BoxFit.cover)
@@ -190,7 +197,6 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                 style: TextStyle(color: Colors.grey[600])),
           );
 
-    // CircleAvatar atau ClipOval untuk menampilkan selfie
     return Container(
       width: 220,
       height: 220,

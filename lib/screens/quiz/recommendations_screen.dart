@@ -118,12 +118,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   ),
                 ),
                 
-                // Secara dinamis membangun setiap kategori
                 ..._categories.entries.map((entry) {
                   final categoryTitle = entry.key;
                   final productTypes = entry.value;
-
-                  // Mengumpulkan semua produk yang cocok untuk kategori ini
                   final List<Product> categoryProducts = [];
                   for (var type in productTypes) {
                     if (allProducts.containsKey(type)) {
@@ -131,7 +128,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     }
                   }
                   
-                  // Hanya tampilkan section jika ada produknya
                   if (categoryProducts.isEmpty) {
                     return const SizedBox.shrink();
                   }
@@ -172,8 +168,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     );
   }
 }
-
-// --- WIDGET KOMPONEN KUSTOM ---
 
 class _CategoryPill extends StatelessWidget {
   final String title;
