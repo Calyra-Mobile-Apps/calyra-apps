@@ -1,5 +1,3 @@
-// Lokasi file: lib/screens/quiz/quiz_result_screen.dart
-
 import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/main_screen.dart';
@@ -8,9 +6,10 @@ import 'package:calyra/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+// REVISI PENTING: Import menggunakan nama file karena berada di folder yang sama
+import 'recommendations_screen.dart'; 
+
 class QuizResultScreen extends StatefulWidget {
-  // Jika halaman ini dibuka dari riwayat, ia akan menerima data hasil.
-  // Jika dibuka setelah kuis, 'resultFromHistory' akan null.
   final AnalysisResult? resultFromHistory;
 
   const QuizResultScreen({super.key, this.resultFromHistory});
@@ -26,52 +25,35 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   @override
   void initState() {
     super.initState();
-    // Cek apakah halaman ini dibuka dari riwayat atau dari alur kuis
     if (widget.resultFromHistory != null) {
-      // Jika dari riwayat, langsung tampilkan hasilnya tanpa proses
       setState(() {
         _analysisResult = widget.resultFromHistory;
         _isLoading = false;
       });
     } else {
-      // Jika dari alur kuis, jalankan proses analisis
-      // Menggunakan addPostFrameCallback untuk memastikan context sudah siap
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _processAndSaveResult();
       });
     }
   }
 
-  /// Fungsi ini hanya dijalankan jika halaman diakses dari alur kuis.
   Future<void> _processAndSaveResult() async {
     if (!mounted) return;
-
-    // 1. Ambil semua dependensi yang dibutuhkan
     final quizProvider = context.read<QuizProvider>();
     final analysisService = AnalysisService();
     final firestoreService = FirestoreService();
-
-    // 2. Dapatkan hasil analisis menggunakan sesi kuis
     final AnalysisResult result =
         analysisService.analyze(quizProvider.session);
-
-    // 3. Simpan hasil ke Firestore untuk riwayat
     final saveResponse = await firestoreService.saveAnalysisResult(result);
-
     if (!mounted) return;
-
     if (!saveResponse.isSuccess && saveResponse.message != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(saveResponse.message!)));
     }
-
-    // 4. Perbarui state UI untuk menampilkan hasil
     setState(() {
       _analysisResult = result;
       _isLoading = false;
     });
-
-    // 5. Bersihkan data kuis sementara (foto & jawaban) dari memori
     quizProvider.resetQuiz();
   }
 
@@ -79,8 +61,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Jika dibuka dari riwayat, tombol kembali akan muncul otomatis.
-        // Jika dari kuis, tampilkan tombol close.
         automaticallyImplyLeading: widget.resultFromHistory != null,
         actions: widget.resultFromHistory == null
             ? [
@@ -104,12 +84,13 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     );
   }
 
-  // Widget untuk membangun konten utama halaman hasil
   Widget _buildResultContent() {
     if (_analysisResult == null) {
       return const Center(child: Text('Failed to get analysis result.'));
     }
 
+    final String seasonResult = _analysisResult?.seasonResult ?? 'Warm Autumn';
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -122,7 +103,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             style: TextStyle(fontSize: 24, color: Colors.grey),
           ),
           Text(
-            _analysisResult!.seasonResult,
+            seasonResult,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
           ),
@@ -151,8 +132,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     );
   }
 
-  // --- Widget-widget helper ---
-
   Widget _buildSectionTitle(String title) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -171,7 +150,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   }
 
   Widget _buildColorPalettes() {
-    // Placeholder - Nanti ini bisa dibuat dinamis berdasarkan _analysisResult
     final List<Color> colors = [
       const Color(0xff4a633a), const Color(0xffd58c58), const Color(0xffb76a71), const Color(0xff9f3b34),
       const Color(0xff3f7175), const Color(0xff5a9a9f), const Color(0xff685f81), const Color(0xff5f5434),
@@ -199,7 +177,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   }
 
   Widget _buildBrandRecommendations(BuildContext context) {
-    // Placeholder
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -217,7 +194,17 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   Widget _buildBrandCard(BuildContext context, {required String brandName, required String assetPath}) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigasi ke halaman katalog brand
+        // Navigasi yang benar
+        if (brandName == 'Wardah') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              // Memanggil class RecommendationsScreen tanpa 'const'
+              builder: (_) => RecommendationsScreen(), 
+            ),
+          );
+        } else {
+          // TODO: Implementasi navigasi untuk brand Emina atau lainnya
+        }
       },
       child: Card(
         clipBehavior: Clip.antiAlias,
@@ -259,4 +246,3 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     );
   }
 }
-
