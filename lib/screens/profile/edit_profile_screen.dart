@@ -100,6 +100,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       lastDate: DateTime.now(),
       helpText: 'Select Date of Birth',
       confirmText: 'SELECT',
+      // REVISI UTAMA DI SINI: Memaksa tema monokrom pada dialog DatePicker
+      builder: (context, child) {
+        return Theme(
+          // Gunakan ThemeData.light() sebagai basis
+          data: ThemeData.light().copyWith(
+            // Skema warna untuk mengontrol mayoritas elemen:
+            colorScheme: const ColorScheme.light(
+              // PRIMARY: Latar belakang header dan warna lingkaran tanggal terpilih
+              primary: Colors.black, 
+              // ON PRIMARY: Warna teks di dalam lingkaran terpilih (jadi putih)
+              onPrimary: Colors.white, 
+              // SURFACE: Latar belakang bagian kalender
+              surface: Colors.white, 
+              // ON SURFACE: Warna teks untuk hari/tanggal yang tidak terpilih, bulan, dan tahun (jadi hitam)
+              onSurface: Colors.black, 
+              // BACKGROUND: Latar belakang seluruh dialog
+              background: Colors.white,
+            ),
+            // Mengatur tema tombol:
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // Warna teks tombol (CANCEL, SELECT) menjadi hitam
+              ),
+            ),
+            // Mengatur tema dialog secara keseluruhan (untuk memastikannya putih)
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              backgroundColor: Colors.white, // Latar belakang dialog
+            ),
+            // Mengubah ikon (misal: tombol pensil edit) menjadi hitam monokrom
+            iconTheme: const IconThemeData(color: Colors.black), 
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedDateOfBirth) {
       setState(() {
@@ -162,11 +199,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      // REVISI 1: Atur background modal sheet menjadi putih
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return Container(
+          // REVISI 2: Atur warna Container di dalam modal menjadi putih
+          color: Colors.white,
           padding: EdgeInsets.only(
             top: 20,
             left: 20,
@@ -211,7 +252,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         border: isSelected
                             ? Border.all(color: Colors.black, width: 3)
                             : Border.all(color: Colors.grey.shade300, width: 1),
-                        color: Colors.grey[200],
+                        color: Colors.white, // Background circle avatar sudah putih
                       ),
                       child: ClipOval(
                         child: Image.asset(
@@ -309,10 +350,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextFormField(
                       controller: _dobController,
                       readOnly: true, 
+                      // Menggunakan _selectDateOfBirth dari revisi sebelumnya yang sudah monokrom
                       onTap: () => _selectDateOfBirth(context),
                       decoration: InputDecoration(
                         hintText: 'Select your date of birth',
-                        prefixIcon: Icon(Icons.calendar_today_outlined, color: Colors.grey[600]),
+                        prefixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.black), 
                         suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.black),
                         filled: true,
                         fillColor: const Color(0xFFF7F8F9),

@@ -4,6 +4,7 @@ import 'package:calyra/models/user_model.dart';
 import 'package:calyra/screens/auth/login_screen.dart';
 import 'package:calyra/screens/profile/edit_profile_screen.dart';
 import 'package:calyra/screens/profile/change_password_screen.dart';
+import 'package:calyra/screens/profile/analysis_history_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -128,7 +129,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 context,
                 icon: Icons.history,
                 text: 'History',
-                onTap: () {},
+                onTap: () {
+                  // Tambahkan navigasi ke halaman History
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AnalysisHistoryScreen()),
+                  );
+                },
               ),
               _buildProfileMenu(
                 context,
