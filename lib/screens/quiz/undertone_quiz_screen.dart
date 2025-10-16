@@ -65,8 +65,8 @@ final step3 = QuizStepData(
   'Shadow/Depth Comparison',
   'Undertone',
   [
-    ComparisonOption(DecorationInfo.solid(Colors.brown.shade800), 'warm'),
     ComparisonOption(DecorationInfo.solid(Colors.black), 'cool'),
+    ComparisonOption(DecorationInfo.solid(Colors.brown.shade800), 'warm')
   ],
 );
 

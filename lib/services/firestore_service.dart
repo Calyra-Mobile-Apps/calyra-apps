@@ -1,7 +1,7 @@
 // Lokasi file: lib/services/firestore_service.dart
 
 import 'package:calyra/models/analysis_result.dart';
-import 'package:calyra/models/product.dart'; // <-- 1. TAMBAHKAN IMPORT INI
+import 'package:calyra/models/product.dart';
 import 'package:calyra/models/service_response.dart';
 import 'package:calyra/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,7 +19,7 @@ class FirestoreService {
 
   static const String _usersCollection = 'Users';
   static const String _analysisHistoryCollection = 'analysisHistory';
-  static const String _productsCollection = 'Products'; // Diganti dari 'shades'
+  static const String _productsCollection = 'Products';
 
   Future<ServiceResponse<UserModel>> getUserData(String uid) async {
     try {
@@ -53,6 +53,30 @@ class FirestoreService {
     }
   }
 
+  Future<ServiceResponse<List<AnalysisResult>>> getAnalysisHistory() async {
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      return ServiceResponse.failure('User is not logged in.');
+    }
+
+    try {
+      final querySnapshot = await _db
+          .collection(_usersCollection)
+          .doc(user.uid)
+          .collection(_analysisHistoryCollection)
+          .orderBy('analysisDate', descending: true)
+          .get();
+
+      final history = querySnapshot.docs
+          .map((doc) => AnalysisResult.fromFirestore(doc.data()))
+          .toList();
+
+      return ServiceResponse.success(history);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching analysis history: $e');
+    }
+  }
+
   Future<ServiceResponse<void>> updateUserData(UserModel user) async {
     try {
       final dataToUpdate = {
@@ -74,10 +98,8 @@ class FirestoreService {
   Future<ServiceResponse<List<Product>>> getProductsByBrandName(
       String brandName) async {
     try {
-      // --- PERUBAHAN DI SINI ---
       final querySnapshot = await _db
-          .collection(
-              _productsCollection) // Menggunakan nama collection yang benar
+          .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
           .get();
 
@@ -94,10 +116,8 @@ class FirestoreService {
   Future<ServiceResponse<List<Product>>> getProductsBySeason(
       String seasonName) async {
     try {
-      // --- PERUBAHAN DI SINI ---
       final querySnapshot = await _db
-          .collection(
-              _productsCollection) // Menggunakan nama collection yang benar
+          .collection(_productsCollection)
           .where('season_name', isEqualTo: seasonName)
           .get();
 
@@ -121,6 +141,29 @@ class FirestoreService {
       return ServiceResponse.success(products);
     } catch (e) {
       return ServiceResponse.failure('Error fetching all products: $e');
+      
+  // --- PERBAIKAN UTAMA ADA DI FUNGSI INI ---
+  Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
+      String brandName, String seasonName) async {
+    try {
+      // LOGIKA YANG SALAH DIHAPUS: `final season = seasonName.split(' ').last;`
+      // Sekarang kita menggunakan `seasonName` secara langsung
+
+      final querySnapshot = await _db
+          .collection(_productsCollection)
+          .where('brand_name', isEqualTo: brandName)
+          // MENGGUNAKAN `seasonName` LENGKAP UNTUK QUERY
+          .where('season_name', isEqualTo: seasonName) 
+          .get();
+
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure(
+          'Error fetching products by brand and season: $e');
     }
   }
 }
