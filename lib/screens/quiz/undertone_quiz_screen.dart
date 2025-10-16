@@ -223,21 +223,16 @@ class ColorComparisonStep extends StatelessWidget {
 
             // Selfie Display with Animated Square Background
             Center(
-              child: LayoutBuilder(builder: (context, constraints) {
-                final double maxWidth = constraints.maxWidth;
-                final double squareSize = maxWidth < 400 ? maxWidth : 400; 
-
-                return AnimatedContainer(
+              child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  width: squareSize, 
-                  height: squareSize, 
+                  width: 300, 
+                  height: 300, 
                   decoration: selfieContainerDecoration, 
                   alignment: Alignment.center,
-                  child: _buildSelfieImage(selfieBytes, squareSize * 0.75), 
-                );
-              }),
-            ),
+                  child: _buildSelfieImage(selfieBytes, 220),
+                ),
+              ),
 
             const SizedBox(height: 32),
 

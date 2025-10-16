@@ -95,11 +95,11 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        width: 300,
-                        height: 350, // Ditinggikan agar terlihat jelas
+                        width: 300, 
+                        height: 300, 
                         decoration: BoxDecoration(
-                          color: backgroundColor, // Background dari warna terpilih
-                          borderRadius: BorderRadius.circular(30), // Rounded corners
+                          color: backgroundColor, 
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -127,7 +127,7 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5, // Ubah ke 5 kolom (misalnya) atau biarkan 4
+                        crossAxisCount: 5, 
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),

@@ -146,7 +146,7 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Seasonal Color (${_currentStep + 1}/${palettes.length})'),
+        title: Text('Seasonal Color'),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -160,16 +160,16 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 width: 300,
-                height: 220,
+                height: 300, 
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20), // DISAMAKAN: 20
                   color: _activeSelfieBackgroundColor,
                 ),
                 child: Center(
                   child: Container(
-                    width: 150,
-                    height: 150,
+                    width: 220,
+                    height: 220,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       image: selfieBytes != null
@@ -181,7 +181,7 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
                 ),
               ),
               const Text(
-                'Coba setiap warna, lalu pilih baris palet yang paling cocok untukmu.',
+                'Try each color, then choose the palette row that suits you best.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
