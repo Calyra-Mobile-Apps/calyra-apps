@@ -131,29 +131,13 @@ class FirestoreService {
     }
   }
 
-  // --- FUNGSI BARU UNTUK SEARCH DI HOME ---
-  Future<ServiceResponse<List<Product>>> getAllProducts() async {
-    try {
-      final querySnapshot = await _db.collection(_productsCollection).get();
-      final products = querySnapshot.docs
-          .map((doc) => Product.fromFirestore(doc.data()))
-          .toList();
-      return ServiceResponse.success(products);
-    } catch (e) {
-      return ServiceResponse.failure('Error fetching all products: $e');
-      
-  // --- PERBAIKAN UTAMA ADA DI FUNGSI INI ---
   Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
       String brandName, String seasonName) async {
     try {
-      // LOGIKA YANG SALAH DIHAPUS: `final season = seasonName.split(' ').last;`
-      // Sekarang kita menggunakan `seasonName` secara langsung
-
       final querySnapshot = await _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          // MENGGUNAKAN `seasonName` LENGKAP UNTUK QUERY
-          .where('season_name', isEqualTo: seasonName) 
+          .where('season_name', isEqualTo: seasonName)
           .get();
 
       final products = querySnapshot.docs
@@ -164,6 +148,18 @@ class FirestoreService {
     } catch (e) {
       return ServiceResponse.failure(
           'Error fetching products by brand and season: $e');
+    }
+  }
+
+  Future<ServiceResponse<List<Product>>> getAllProducts() async {
+    try {
+      final querySnapshot = await _db.collection(_productsCollection).get();
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching all products: $e');
     }
   }
 }
