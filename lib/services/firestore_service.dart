@@ -1,4 +1,4 @@
-// Lokasi file: lib/services/firestore_service.dart
+// lib/services/firestore_service.dart
 
 import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/product.dart';
@@ -131,7 +131,25 @@ class FirestoreService {
     }
   }
 
-// --- FUNGSI UTAMA YANG DIPERBARUI TOTAL ---
+  Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
+      String brandName, String seasonName) async {
+    try {
+      final querySnapshot = await _db
+          .collection(_productsCollection)
+          .where('brand_name', isEqualTo: brandName)
+          .where('season_name', isEqualTo: seasonName)
+          .get();
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure(
+          'Error fetching products by brand and season: $e');
+    }
+  }
+
+  // --- FUNGSI UTAMA YANG DIPERBARUI TOTAL ---
   Future<ServiceResponse<List<Product>>> getRecommendedProducts({
     required String brandName,
     required String undertone,
@@ -146,13 +164,6 @@ class FirestoreService {
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
           .where('undertone_name', isEqualTo: undertone)
-  Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
-      String brandName, String seasonName) async {
-    try {
-      final querySnapshot = await _db
-          .collection(_productsCollection)
-          .where('brand_name', isEqualTo: brandName)
-          .where('season_name', isEqualTo: seasonName)
           .get();
 
       final querySeason = _db
@@ -186,7 +197,6 @@ class FirestoreService {
       }
 
       return ServiceResponse.success(uniqueProducts.values.toList());
-      
     } catch (e) {
       return ServiceResponse.failure(
           'Error fetching recommended products: $e');
