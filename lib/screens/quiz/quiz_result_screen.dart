@@ -208,13 +208,13 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 0.8,
       children: [
-        _buildBrandCard(context, brandName: 'Wardah', imageUrl: 'https://placehold.co/300x400/EBD4CB/000000?text=Wardah'),
-        _buildBrandCard(context, brandName: 'Emina', imageUrl: 'https://placehold.co/300x400/F5D7E5/000000?text=Emina'),
+        _buildBrandCard(context, brandName: 'Wardah', assetPath: 'assets/images/wardah-result.png'),
+        _buildBrandCard(context, brandName: 'Emina', assetPath: 'assets/images/emina-result.png'),
       ],
     );
   }
 
-  Widget _buildBrandCard(BuildContext context, {required String brandName, required String imageUrl}) {
+  Widget _buildBrandCard(BuildContext context, {required String brandName, required String assetPath}) {
     return GestureDetector(
       onTap: () {
         // TODO: Navigasi ke halaman katalog brand
@@ -226,8 +226,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              imageUrl,
+            Image.asset(
+              assetPath,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) =>
                   const Center(child: Icon(Icons.error)),
@@ -235,7 +235,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
+                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
                   begin: Alignment.bottomCenter,
                   end: Alignment.center,
                 ),
