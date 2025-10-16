@@ -14,7 +14,6 @@ class SeasonalColorQuizScreen extends StatefulWidget {
 
 class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
   Color? _selectedColor; // warna yang dipilih user
-  Color _backgroundColor = Colors.white; // background mengikuti warna terpilih
 
   // --- Daftar semua warna seasonal (contoh: 8 kotak) ---
   static const List<Color> seasonalColors = [
@@ -31,7 +30,6 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
   void _onColorSelected(Color color) {
     setState(() {
       _selectedColor = color;
-      _backgroundColor = color;
     });
   }
 
@@ -55,101 +53,163 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
     );
   }
 
+  // Helper untuk mendapatkan background color
+  Color _getBackgroundColor() {
+    if (_selectedColor == null) {
+      return seasonalColors.first; // Default warna pertama
+    }
+    return _selectedColor!;
+  }
+
   @override
   Widget build(BuildContext context) {
     final Uint8List? selfieBytes = context.watch<QuizProvider>().selfieImageBytes;
+    final Color backgroundColor = _getBackgroundColor();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seasonal Color'),
         backgroundColor: Colors.white,
         elevation: 1,
-      ),
-      backgroundColor: _backgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Foto selfie
-              if (selfieBytes != null)
-                Container(
-                  width: 220,
-                  height: 220,
-                  margin: const EdgeInsets.only(bottom: 30),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: MemoryImage(selfieBytes),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              const Text(
-                "Choose your seasonal color",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 20),
-
-              // Frame besar yang menampung kotak warna
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400, width: 1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: GridView.builder(
-                  shrinkWrap: true, // supaya GridView tidak ambil seluruh height
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: seasonalColors.length,
-                  itemBuilder: (context, index) {
-                    final color = seasonalColors[index];
-                    final isSelected = _selectedColor == color;
-
-                    return GestureDetector(
-                      onTap: () => _onColorSelected(color),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected ? Colors.black : Colors.transparent,
-                            width: 3,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Tombol Next
-              ElevatedButton(
-                onPressed: () => _onNextPressed(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Next',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    // --- Area Selfie & Background Warna (STRUKTUR BARU) ---
+                    Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        width: 300,
+                        height: 350,
+                        decoration: BoxDecoration(
+                          color: backgroundColor, // Background dari warna terpilih
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: _buildSelfieArea(selfieBytes),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    const Text(
+                      "Choose your seasonal color",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Frame besar yang menampung kotak warna
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400, width: 1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: seasonalColors.length,
+                        itemBuilder: (context, index) {
+                          final color = seasonalColors[index];
+                          final isSelected = _selectedColor == color;
+
+                          return GestureDetector(
+                            onTap: () => _onColorSelected(color),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected ? Colors.black : Colors.transparent,
+                                  width: 3,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // --- Tombol Next di Bawah ---
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: ElevatedButton(
+                onPressed: _selectedColor == null ? null : () => _onNextPressed(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _selectedColor != null ? Colors.black : Colors.grey[300],
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+                child: Text(
+                  'Next',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _selectedColor != null ? Colors.white : Colors.grey[600],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper widget untuk area selfie (SAMA DENGAN SKINTONE)
+  Widget _buildSelfieArea(Uint8List? selfieBytes) {
+    Widget imageWidget = selfieBytes != null
+        ? Image.memory(selfieBytes, fit: BoxFit.cover)
+        : Center(
+            child: Text('Selfie not found',
+                style: TextStyle(color: Colors.grey[600])),
+          );
+
+    return Container(
+      width: 220,
+      height: 220,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: ClipOval(
+        child: imageWidget,
       ),
     );
   }
