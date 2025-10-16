@@ -33,11 +33,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Link reset password telah dikirim ke email Anda.')),
+          const SnackBar(
+              content:
+                  Text('Link reset password telah dikirim ke email Anda.')),
         );
         Navigator.pop(context);
       } else {
-        final message = response.message ?? 'Terjadi kesalahan, silakan coba lagi.';
+        final message =
+            response.message ?? 'Terjadi kesalahan, silakan coba lagi.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Terjadi kesalahan: $message')),
         );
@@ -72,7 +75,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 30),
             const Text(
               'Forgot Password?',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A)),
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0D1B2A)),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -80,7 +86,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 40),
-
             CustomTextFormField(
               controller: _emailController,
               labelText: 'Email Address',
@@ -88,14 +93,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               prefixIcon: Icons.email_outlined,
             ),
             const SizedBox(height: 40),
-
             ElevatedButton(
               onPressed: _passwordReset,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1B263B),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text(
                 'Send Instructions',

@@ -13,35 +13,70 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'recommendations_screen.dart';
 
-// --- DATA PALET WARNA UNTUK SEMUA MUSIM ---
 const Map<String, List<Color>> seasonPalettes = {
   'Warm Autumn': [
-    Color(0xff4a633a), Color(0xffd58c58), Color(0xffb76a71), Color(0xff9f3b34),
-    Color(0xff3f7175), Color(0xff5a9a9f), Color(0xff685f81), Color(0xff5f5434),
-    Color(0xffe1d9c3), Color(0xffe3d091), Color(0xff4a3a3a), Color(0xff2d405d),
+    Color(0xff4a633a),
+    Color(0xffd58c58),
+    Color(0xffb76a71),
+    Color(0xff9f3b34),
+    Color(0xff3f7175),
+    Color(0xff5a9a9f),
+    Color(0xff685f81),
+    Color(0xff5f5434),
+    Color(0xffe1d9c3),
+    Color(0xffe3d091),
+    Color(0xff4a3a3a),
+    Color(0xff2d405d),
   ],
   'Warm Spring': [
-    Color(0xFFFCF3BA), Color(0xFFEBCAA4), Color(0xFFFDE470), Color(0xFF926F45),
-    Color(0xFFFAB357), Color(0xFFFD9675), Color(0xFFAFEDBE), Color(0xFF92D472),
-    Color(0xFFF8A9A5), Color(0xFFE85F79), Color(0xFFFE99AB), Color(0xFFFCD4D5),
+    Color(0xFFFCF3BA),
+    Color(0xFFEBCAA4),
+    Color(0xFFFDE470),
+    Color(0xFF926F45),
+    Color(0xFFFAB357),
+    Color(0xFFFD9675),
+    Color(0xFFAFEDBE),
+    Color(0xFF92D472),
+    Color(0xFFF8A9A5),
+    Color(0xFFE85F79),
+    Color(0xFFFE99AB),
+    Color(0xFFFCD4D5),
   ],
   'Cool Winter': [
-    Color(0xFFF5F5F5), Color(0xFFA1A0A5), Color(0xFF655555), Color(0xFF000000),
-    Color(0xFF01219C), Color(0xFF07C3FC), Color(0xFF2573E2), Color(0xFF704FDE),
-    Color(0xFF71FFD9), Color(0xFFA41C4E), Color(0xFFD72A55), Color(0xFFC4288D),
+    Color(0xFFF5F5F5),
+    Color(0xFFA1A0A5),
+    Color(0xFF655555),
+    Color(0xFF000000),
+    Color(0xFF01219C),
+    Color(0xFF07C3FC),
+    Color(0xFF2573E2),
+    Color(0xFF704FDE),
+    Color(0xFF71FFD9),
+    Color(0xFFA41C4E),
+    Color(0xFFD72A55),
+    Color(0xFFC4288D),
   ],
   'Cool Summer': [
-    Color(0xFFFFFFFF), Color(0xFFB6B5BB), Color(0xFF9E8686), Color(0xFF000000),
-    Color(0xFF6583C9), Color(0xFF62CDED), Color(0xFF6193DD), Color(0xFFAA97E6),
-    Color(0xFF71E7C7), Color(0xFFBE4A75), Color(0xFFE769A8), Color(0xFFC761A3),
+    Color(0xFFFFFFFF),
+    Color(0xFFB6B5BB),
+    Color(0xFF9E8686),
+    Color(0xFF000000),
+    Color(0xFF6583C9),
+    Color(0xFF62CDED),
+    Color(0xFF6193DD),
+    Color(0xFFAA97E6),
+    Color(0xFF71E7C7),
+    Color(0xFFBE4A75),
+    Color(0xFFE769A8),
+    Color(0xFFC761A3),
   ],
-  'Unknown': [ // Fallback
+  'Unknown': [
+    // Fallback
     Colors.grey, Colors.grey, Colors.grey, Colors.grey,
     Colors.grey, Colors.grey, Colors.grey, Colors.grey,
     Colors.grey, Colors.grey, Colors.grey, Colors.grey,
   ],
 };
-// ---------------------------------------------
 
 class QuizResultScreen extends StatefulWidget {
   final AnalysisResult? resultFromHistory;
@@ -76,8 +111,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     final quizProvider = context.read<QuizProvider>();
     final analysisService = AnalysisService();
     final firestoreService = FirestoreService();
-    final AnalysisResult result =
-        analysisService.analyze(quizProvider.session);
+    final AnalysisResult result = analysisService.analyze(quizProvider.session);
     final saveResponse = await firestoreService.saveAnalysisResult(result);
     if (!mounted) return;
     if (!saveResponse.isSuccess && saveResponse.message != null) {
@@ -124,8 +158,9 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     }
 
     final String seasonResult = _analysisResult!.seasonResult;
-    final List<Color> currentPalette = seasonPalettes[seasonResult] ?? seasonPalettes['Unknown']!;
-    
+    final List<Color> currentPalette =
+        seasonPalettes[seasonResult] ?? seasonPalettes['Unknown']!;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -221,7 +256,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   }
 
   Widget _buildBrandRecommendations(BuildContext context) {
-    // Menggunakan data brand dari `featuredBrands` yang diimpor
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -234,14 +268,13 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final brand = featuredBrands[index];
-        // Logika sederhana untuk memilih path gambar
         String assetPath;
         if (brand.name.toLowerCase() == 'wardah') {
           assetPath = 'assets/images/wardah-result.png';
         } else if (brand.name.toLowerCase() == 'emina') {
           assetPath = 'assets/images/emina-result.png';
         } else {
-          assetPath = brand.imageUrl; // Fallback ke gambar utama
+          assetPath = brand.imageUrl;
         }
 
         return _buildBrandCard(context, brand: brand, assetPath: assetPath);
@@ -249,18 +282,16 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     );
   }
 
-  Widget _buildBrandCard(BuildContext context, {required BrandInfo brand, required String assetPath}) {
+  Widget _buildBrandCard(BuildContext context,
+      {required BrandInfo brand, required String assetPath}) {
     return GestureDetector(
       onTap: () {
         final String seasonResult = _analysisResult!.seasonResult;
-        
-        // Navigasi ke RecommendationsScreen yang baru
-        // Mengirim nama brand dan nama season lengkap
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => RecommendationsScreen(
               brandName: brand.name,
-              seasonName: seasonResult, 
+              seasonName: seasonResult,
             ),
           ),
         );

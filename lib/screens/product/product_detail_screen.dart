@@ -4,19 +4,16 @@ import 'package:calyra/models/product.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ProductDetailScreen extends StatefulWidget { // Ubah menjadi StatefulWidget
-  // UBAH PARAMETER MENJADI LIST OF SHADES
+class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key, required this.productShades});
-
   final List<Product> productShades;
-
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   late PageController _pageController;
-  int _currentPage = 0; // State untuk melacak shade yang sedang aktif
+  int _currentPage = 0;
 
   @override
   void initState() {
@@ -30,7 +27,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
-  // Helper untuk membuka URL - menggunakan shade yang sedang aktif
   Future<void> _launchURL(BuildContext context, Product product) async {
     if (product.linkProduct != null && product.linkProduct!.isNotEmpty) {
       final Uri url = Uri.parse(product.linkProduct!);
@@ -48,9 +44,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil shade yang sedang ditampilkan
     final Product currentProduct = widget.productShades[_currentPage];
-    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -73,21 +67,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Nama Produk (Teks tetap)
                   Text(
                     currentProduct.productName,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-
-                  // Container untuk PageView/Slider (Gambar Shade)
                   Center(
                     child: SizedBox(
-                      height: 250, 
+                      height: 250,
                       child: PageView.builder(
                         controller: _pageController,
                         itemCount: widget.productShades.length,
-                        // Update state saat halaman berubah
                         onPageChanged: (index) {
                           setState(() {
                             _currentPage = index;
@@ -101,8 +92,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Indikator Halaman (Dots)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -111,22 +100,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Nama Shade & Brand
                   Text(
-                    currentProduct.shadeName, // Nama shade saat ini
+                    currentProduct.shadeName,
                     style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'by ${currentProduct.brandName}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   const Divider(height: 32, thickness: 1),
-
-                  // Detail Produk (Menampilkan detail shade yang aktif)
                   const Text(
-                    'Shade Details', // Ubah judul
+                    'Shade Details',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -139,7 +125,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
           ),
-          // Tombol Shopee (Diletakkan di bawah Expanded agar tetap terlihat)
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: SizedBox(
@@ -153,9 +138,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                // Gunakan currentProduct untuk link
                 onPressed: () => _launchURL(context, currentProduct),
-                child: const Text('Find on Shopee', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('Find on Shopee',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ),
@@ -164,12 +150,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // Widget untuk menampilkan satu shade (image)
   Widget _buildShadeView(BuildContext context, Product product) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Gambar Produk
         Expanded(
           child: Image.network(
             product.imageSwatchUrl,
@@ -178,12 +162,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               return Container(
                 color: Colors.grey[200],
                 alignment: Alignment.center,
-                child: const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+                child: const Icon(Icons.broken_image,
+                    size: 80, color: Colors.grey),
               );
             },
           ),
         ),
-        // Swatch warna
         _buildColorSwatch(product.colorHex),
       ],
     );
@@ -201,8 +185,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-  
-  // Widget untuk menampilkan swatch warna
+
   Widget _buildColorSwatch(String colorHex) {
     Color color;
     try {
@@ -212,7 +195,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
       color = Color(int.parse(hex, radix: 16));
     } catch (e) {
-      color = Colors.grey; 
+      color = Colors.grey;
     }
 
     return Container(
@@ -220,14 +203,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       height: 15,
       margin: const EdgeInsets.only(top: 8.0),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey.shade300, width: 1)
-      ),
+          color: color,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.grey.shade300, width: 1)),
     );
   }
 
-  // Widget helper untuk baris detail (tidak berubah)
   Widget _buildDetailRow(String title, String value) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
 

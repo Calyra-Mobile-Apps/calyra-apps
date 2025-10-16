@@ -43,7 +43,7 @@ class UserModel {
   UserModel copyWith({
     String? name,
     String? email,
-    Timestamp? createdAt, 
+    Timestamp? createdAt,
     String? avatarPath,
     Timestamp? dateOfBirth,
   }) {
@@ -52,7 +52,7 @@ class UserModel {
       name: name ?? this.name,
       email: email ?? this.email,
       createdAt: createdAt ?? this.createdAt,
-      avatarPath: avatarPath ?? this.avatarPath, 
+      avatarPath: avatarPath ?? this.avatarPath,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
     );
   }

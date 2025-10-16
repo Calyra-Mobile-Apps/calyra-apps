@@ -4,7 +4,7 @@ import 'package:calyra/models/season_category.dart';
 import 'package:flutter/material.dart';
 
 final List<SeasonCategory> seasonCategories = [
-  const SeasonCategory( // <-- TAMBAHKAN CONST DI SINI
+  const SeasonCategory(
     title: 'Spring',
     subtitle: 'Warm & Bright',
     assetPath: 'assets/images/icon-spring.png',
@@ -13,7 +13,7 @@ final List<SeasonCategory> seasonCategories = [
       Color(0xFFFFF0F5),
     ],
   ),
-  const SeasonCategory( // <-- TAMBAHKAN CONST DI SINI
+  const SeasonCategory(
     title: 'Summer',
     subtitle: 'Cool & Bright',
     assetPath: 'assets/images/icon-summer.png',
@@ -22,7 +22,7 @@ final List<SeasonCategory> seasonCategories = [
       Color(0xFFE0FFFF),
     ],
   ),
-  const SeasonCategory( // <-- TAMBAHKAN CONST DI SINI
+  const SeasonCategory(
     title: 'Autumn',
     subtitle: 'Warm & Muted',
     assetPath: 'assets/images/icon-autumn.png',
@@ -31,7 +31,7 @@ final List<SeasonCategory> seasonCategories = [
       Color(0xFFFFF8E1),
     ],
   ),
-  const SeasonCategory( // <-- TAMBAHKAN CONST DI SINI
+  const SeasonCategory(
     title: 'Winter',
     subtitle: 'Cool & Muted',
     assetPath: 'assets/images/icon-winter.png',

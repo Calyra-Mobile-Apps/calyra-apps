@@ -19,7 +19,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final AuthController _authController = AuthController();
 
   int _currentStep = 1; // Start at step 1: Enter Old Password
-  
+
   bool _isOldPasswordVisible = false;
   bool _isNewPasswordVisible = false;
   bool _isConfirmNewPasswordVisible = false;
@@ -34,7 +34,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     _newPasswordController.addListener(_checkStep2Validity);
     _confirmNewPasswordController.addListener(_checkStep2Validity);
   }
-  
+
   @override
   void dispose() {
     _oldPasswordController.removeListener(_checkStep1Validity);
@@ -58,11 +58,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final confirmPass = _confirmNewPasswordController.text;
     final passwordsMatch = newPass == confirmPass;
     final isNewDifferentFromOld = newPass != _oldPasswordController.text;
-    final passwordComplex = newPass.length >= 8 && 
-                            RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(newPass);
+    final passwordComplex = newPass.length >= 8 &&
+        RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(newPass);
 
     final isValid = passwordComplex && passwordsMatch && isNewDifferentFromOld;
-    
+
     if (isValid != _isStep2Valid) {
       setState(() => _isStep2Valid = isValid);
     }
@@ -77,15 +77,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        Navigator.pop(context); 
+        Navigator.pop(context);
         if (response.isSuccess) {
           setState(() => _currentStep = 2);
-          _formKey.currentState!.reset(); 
+          _formKey.currentState!.reset();
         } else {
           final message = response.message ?? 'Authentication failed.';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Verification Failed: ${message.contains('wrong-password') ? 'Incorrect password.' : message}'),
+              content: Text(
+                  'Verification Failed: ${message.contains('wrong-password') ? 'Incorrect password.' : message}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -103,13 +104,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        Navigator.pop(context); 
+        Navigator.pop(context);
 
         if (response.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Password updated successfully!')),
           );
-          Navigator.pop(context); 
+          Navigator.pop(context);
         } else {
           final message = response.message ?? 'Update failed.';
           ScaffoldMessenger.of(context).showSnackBar(
@@ -157,8 +158,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           },
         ),
         title: Text('Change Password',
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
-        ),
+            style: const TextStyle(
+                color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -170,13 +171,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             children: [
               Text(
                 _currentStep == 1 ? 'Verify Old Password' : 'Set New Password',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A)),
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0D1B2A)),
               ),
               const SizedBox(height: 16),
               Text(
-                _currentStep == 1 
-                  ? 'Please enter your current password to proceed to the next step.'
-                  : 'Enter and confirm your new password (min 8 characters, must contain letters and numbers).',
+                _currentStep == 1
+                    ? 'Please enter your current password to proceed to the next step.'
+                    : 'Enter and confirm your new password (min 8 characters, must contain letters and numbers).',
                 style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 40),
@@ -193,22 +197,31 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       icon: Icon(_isOldPasswordVisible
                           ? Icons.visibility_off
                           : Icons.visibility),
-                      onPressed: () => setState(
-                          () => _isOldPasswordVisible = !_isOldPasswordVisible)),
-                  validator: (value) => value == null || value.isEmpty ? 'Current password cannot be empty' : null,
+                      onPressed: () => setState(() =>
+                          _isOldPasswordVisible = !_isOldPasswordVisible)),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Current password cannot be empty'
+                      : null,
                 ),
                 const SizedBox(height: 50),
                 ElevatedButton(
                   onPressed: _isStep1Valid ? _handleReauthenticate : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isStep1Valid ? Colors.black : Colors.grey[300],
-                    foregroundColor: _isStep1Valid ? Colors.white : Colors.grey[600],
+                    backgroundColor:
+                        _isStep1Valid ? Colors.black : Colors.grey[300],
+                    foregroundColor:
+                        _isStep1Valid ? Colors.white : Colors.grey[600],
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: Text('Next', style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: _isStep1Valid ? Colors.white : Colors.grey[600])),
+                  child: Text('Next',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              _isStep1Valid ? Colors.white : Colors.grey[600])),
                 ),
               ],
 
@@ -224,13 +237,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       icon: Icon(_isNewPasswordVisible
                           ? Icons.visibility_off
                           : Icons.visibility),
-                      onPressed: () => setState(
-                          () => _isNewPasswordVisible = !_isNewPasswordVisible)),
+                      onPressed: () => setState(() =>
+                          _isNewPasswordVisible = !_isNewPasswordVisible)),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Password cannot be empty';
-                    if (value.length < 8) return 'Password must be at least 8 characters';
-                    if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(value)) return 'Must contain letters and numbers';
-                    if (value == _oldPasswordController.text) return 'New password must be different from the old one';
+                    if (value == null || value.isEmpty)
+                      return 'Password cannot be empty';
+                    if (value.length < 8)
+                      return 'Password must be at least 8 characters';
+                    if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(value))
+                      return 'Must contain letters and numbers';
+                    if (value == _oldPasswordController.text)
+                      return 'New password must be different from the old one';
                     return null;
                   },
                 ),
@@ -249,8 +266,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           _isConfirmNewPasswordVisible =
                               !_isConfirmNewPasswordVisible)),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Confirmation cannot be empty';
-                    if (value != _newPasswordController.text) return 'Passwords do not match';
+                    if (value == null || value.isEmpty)
+                      return 'Confirmation cannot be empty';
+                    if (value != _newPasswordController.text)
+                      return 'Passwords do not match';
                     return null;
                   },
                 ),
@@ -258,14 +277,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ElevatedButton(
                   onPressed: _isStep2Valid ? _handleUpdatePassword : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isStep2Valid ? Colors.black : Colors.grey[300],
-                    foregroundColor: _isStep2Valid ? Colors.white : Colors.grey[600],
+                    backgroundColor:
+                        _isStep2Valid ? Colors.black : Colors.grey[300],
+                    foregroundColor:
+                        _isStep2Valid ? Colors.white : Colors.grey[600],
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: Text('Change Password', style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: _isStep2Valid ? Colors.white : Colors.grey[600])),
+                  child: Text('Change Password',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              _isStep2Valid ? Colors.white : Colors.grey[600])),
                 ),
               ],
             ],

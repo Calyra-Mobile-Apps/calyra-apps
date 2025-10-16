@@ -1,6 +1,6 @@
 // Lokasi file: lib/models/product.dart
 
-class Product { 
+class Product {
   const Product({
     required this.brandName,
     required this.productType,
@@ -26,16 +26,14 @@ class Product {
   final String colorHex;
   final String undertoneName;
   final String seasonName;
-  final dynamic skintoneGroupId; // Bisa jadi String atau int dari Firestore
+  final dynamic skintoneGroupId;
   final String skintoneName;
   final String imageSwatchUrl;
   final String? linkProduct;
 
-  // Getter untuk kompatibilitas dengan widget yang sudah ada
   String get name => productName;
   String get imageUrl => imageSwatchUrl;
 
-  // Factory constructor untuk membuat objek dari data Firestore
   factory Product.fromFirestore(Map<String, dynamic> data) {
     return Product(
       brandName: data['brand_name'] ?? '',

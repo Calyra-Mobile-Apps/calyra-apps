@@ -3,7 +3,7 @@
 import 'package:calyra/models/analysis_result.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:calyra/data/palette_assets.dart'; 
+import 'package:calyra/data/palette_assets.dart';
 
 class HistoryCard extends StatelessWidget {
   final AnalysisResult result;
@@ -15,11 +15,9 @@ class HistoryCard extends StatelessWidget {
     required this.onTap,
   });
 
-  // Helper untuk mendapatkan asset path berdasarkan Season Result
   String _getSeasonPaletteAsset(String season) {
-    // Memecah Season Result (contoh: 'Cool Summer' -> 'Summer')
-    final seasonType = season.split(' ').last; 
-    
+    final seasonType = season.split(' ').last;
+
     switch (seasonType) {
       case 'Spring':
         return PaletteAssets.spring;
@@ -30,8 +28,7 @@ class HistoryCard extends StatelessWidget {
       case 'Winter':
         return PaletteAssets.winter;
       default:
-        // Jika tidak dikenali, gunakan fallback atau salah satu yang umum
-        return PaletteAssets.unknown; 
+        return PaletteAssets.unknown;
     }
   }
 
@@ -39,7 +36,7 @@ class HistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final assetPath = _getSeasonPaletteAsset(result.seasonResult);
     final formattedDate = DateFormat('d MMMM yyyy').format(result.analysisDate);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -58,7 +55,6 @@ class HistoryCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Side Palette Image Bar (REVISI DI SINI)
             Container(
               width: 12,
               height: double.infinity,
@@ -66,18 +62,17 @@ class HistoryCard extends StatelessWidget {
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(12),
                 ),
-                // Mengganti Gradient dengan Image Asset
                 image: DecorationImage(
                   image: AssetImage(assetPath),
-                  fit: BoxFit.cover, // Memastikan gambar mengisi area
+                  fit: BoxFit.cover,
                   repeat: ImageRepeat.repeatY,
                 ),
               ),
             ),
-            
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -88,14 +83,20 @@ class HistoryCard extends StatelessWidget {
                         SizedBox(width: 4),
                         Text(
                           'Personal Color Analysis',
-                          style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       result.seasonResult, // Season Result
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A)),
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0D1B2A)),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -106,8 +107,6 @@ class HistoryCard extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Tombol Check Details
             const Padding(
               padding: EdgeInsets.only(right: 16.0),
               child: Align(
@@ -117,7 +116,7 @@ class HistoryCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black, 
+                    color: Colors.black,
                   ),
                 ),
               ),

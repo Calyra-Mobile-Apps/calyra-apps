@@ -22,9 +22,6 @@ class BrandCatalogScreen extends StatefulWidget {
 
 class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
   final TextEditingController _searchController = TextEditingController();
-  
-  // 1. REVISI: Tambahkan 'all' dan jadikan default
-  // Menyusun ulang agar 'All' selalu di depan, diikuti Season lain
   final List<SeasonFilter> _seasonFilters = [
     SeasonFilter.all,
     ...SeasonFilter.values.where((e) => e != SeasonFilter.all).toList()
@@ -41,26 +38,27 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
 
   Future<Map<String, List<Product>>> _fetchProducts() async {
     final firestoreService = FirestoreService();
-    final response = await firestoreService.getProductsByBrandName(widget.brandName);
+    final response =
+        await firestoreService.getProductsByBrandName(widget.brandName);
 
     if (response.isSuccess && response.data != null) {
       final Map<String, List<Product>> groupedProducts = {};
-      
+
       for (var product in response.data!) {
-        final key = product.productId; 
-        
+        final key = product.productId;
+
         if (!groupedProducts.containsKey(key)) {
           groupedProducts[key] = [];
         }
         groupedProducts[key]!.add(product);
       }
-      
+
       return groupedProducts;
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response.message ?? 'Failed to load products')),
       );
-      return {}; 
+      return {};
     }
   }
 
@@ -100,7 +98,6 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
               const SizedBox(height: 16),
               _buildSeasonFilter(),
               const SizedBox(height: 20),
-              
               Expanded(
                 child: FutureBuilder<Map<String, List<Product>>>(
                   future: _productsFuture,
@@ -117,31 +114,26 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
 
                     final allProductGroupsMap = snapshot.data!;
                     final List<List<Product>> filteredProductGroups = [];
-                    
+
                     final query = _searchController.text.trim().toLowerCase();
                     final selectedLabel = _selectedSeason.label.toLowerCase();
 
                     for (final group in allProductGroupsMap.values) {
                       final mainProduct = group.first;
-
-                      // 1. Filter Nama Produk (Wajib untuk semua filter)
-                      final nameMatch = mainProduct.productName.toLowerCase().contains(query);
+                      final nameMatch =
+                          mainProduct.productName.toLowerCase().contains(query);
                       if (!nameMatch) continue;
-
-                      // 2. Filter Berdasarkan Season
                       if (_selectedSeason == SeasonFilter.all) {
-                        // Jika 'All', tambahkan seluruh grup shades (unfiltered)
                         filteredProductGroups.add(group);
                       } else {
-                        // Jika filter season, filter shade dalam grup
-                        final List<Product> shadesMatchingFilter = group.where((shade) {
-                          // Memeriksa apakah nama musim shade mengandung label filter
-                          return shade.seasonName.toLowerCase().contains(selectedLabel);
+                        final List<Product> shadesMatchingFilter =
+                            group.where((shade) {
+                          return shade.seasonName
+                              .toLowerCase()
+                              .contains(selectedLabel);
                         }).toList();
-                        
-                        // Hanya tambahkan produk jika ada shade yang cocok
+
                         if (shadesMatchingFilter.isNotEmpty) {
-                          // Grup yang dikirim ke ProductGrid HANYA berisi shade yang difilter.
                           filteredProductGroups.add(shadesMatchingFilter);
                         }
                       }
@@ -174,7 +166,6 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
       onChanged: (value) => setState(() {}),
     );
   }
-
 
   Widget _buildSeasonFilter() {
     return SingleChildScrollView(

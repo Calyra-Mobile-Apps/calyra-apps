@@ -131,18 +131,13 @@ class FirestoreService {
     }
   }
 
-  // --- PERBAIKAN UTAMA ADA DI FUNGSI INI ---
   Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
       String brandName, String seasonName) async {
     try {
-      // LOGIKA YANG SALAH DIHAPUS: `final season = seasonName.split(' ').last;`
-      // Sekarang kita menggunakan `seasonName` secara langsung
-
       final querySnapshot = await _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          // MENGGUNAKAN `seasonName` LENGKAP UNTUK QUERY
-          .where('season_name', isEqualTo: seasonName) 
+          .where('season_name', isEqualTo: seasonName)
           .get();
 
       final products = querySnapshot.docs

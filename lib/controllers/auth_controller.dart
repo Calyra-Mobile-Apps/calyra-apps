@@ -31,8 +31,8 @@ class AuthController {
   Future<ServiceResponse<void>> reauthenticateUser(String oldPassword) {
     return _authService.reauthenticateUser(oldPassword);
   }
-  
-   Future<ServiceResponse<void>> updatePassword(String newPassword) {
+
+  Future<ServiceResponse<void>> updatePassword(String newPassword) {
     return _authService.updatePassword(newPassword);
   }
 

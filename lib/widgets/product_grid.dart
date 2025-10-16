@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 class ProductGrid extends StatelessWidget {
   const ProductGrid({super.key, required this.productGroups});
 
-  final List<List<Product>> productGroups; 
+  final List<List<Product>> productGroups;
 
   @override
   Widget build(BuildContext context) {
@@ -20,38 +20,31 @@ class ProductGrid extends StatelessWidget {
         mainAxisSpacing: 16,
         childAspectRatio: 0.7,
       ),
-      itemCount: productGroups.length, 
+      itemCount: productGroups.length,
       itemBuilder: (context, index) {
         final productGroup = productGroups[index];
-        final mainProduct = productGroup.first; 
-        
-        // Cek apakah grup ini berisi shades dari satu musim saja (artinya, sudah difilter)
-        // Kita bisa asumsikan jika semua shade dalam grup memiliki seasonName yang sama,
-        // maka filter sedang aktif untuk season itu (kecuali ada shade yang seasonName-nya kosong).
+        final mainProduct = productGroup.first;
         final String firstSeason = mainProduct.seasonName;
-        // Gunakan `every` untuk cek apakah semua elemen memiliki seasonName yang sama dengan yang pertama
-        final bool isFilteredBySeason = productGroup.every((p) => p.seasonName == firstSeason && firstSeason.isNotEmpty);
+        final bool isFilteredBySeason = productGroup.every(
+            (p) => p.seasonName == firstSeason && firstSeason.isNotEmpty);
 
         String shadeText;
         if (isFilteredBySeason) {
-            // Jika difilter, tampilkan: "3 Summer Shades"
-            shadeText = '${productGroup.length} ${firstSeason} Shades';
+          shadeText = '${productGroup.length} ${firstSeason} Shades';
         } else {
-            // Jika tidak (berarti filter 'All' atau tidak ada data seasonName), tampilkan: "8 Shades"
-            shadeText = '${productGroup.length} Shades';
+          shadeText = '${productGroup.length} Shades';
         }
-        
+
         return GestureDetector(
           onTap: () {
-            // Kirim grup shade yang SUDAH DIFILTER ke detail screen
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => ProductDetailScreen(productShades: productGroup),
+                builder: (context) =>
+                    ProductDetailScreen(productShades: productGroup),
               ),
             );
           },
           child: Card(
-            // ... (rest of the card content)
             clipBehavior: Clip.antiAlias,
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -62,18 +55,20 @@ class ProductGrid extends StatelessWidget {
               children: [
                 Expanded(
                   child: Image.network(
-                    mainProduct.imageUrl, 
+                    mainProduct.imageUrl,
                     fit: BoxFit.cover,
                     width: double.infinity,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Center(child: Icon(Icons.broken_image, size: 60, color: Colors.grey));
+                      return const Center(
+                          child: Icon(Icons.broken_image,
+                              size: 60, color: Colors.grey));
                     },
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    mainProduct.productName, 
+                    mainProduct.productName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -81,11 +76,11 @@ class ProductGrid extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Tampilan jumlah shade
                 Padding(
-                  padding: const EdgeInsets.only(left: 8.0, bottom: 8.0, right: 8.0),
+                  padding:
+                      const EdgeInsets.only(left: 8.0, bottom: 8.0, right: 8.0),
                   child: Text(
-                    shadeText, 
+                    shadeText,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -116,7 +111,8 @@ class ProductCard extends StatelessWidget {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: Image.network(
                 product.imageUrl,
                 fit: BoxFit.cover,
