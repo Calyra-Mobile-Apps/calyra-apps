@@ -1,5 +1,3 @@
-// Lokasi file: lib/screens/quiz/seasonal_color_quiz_screen.dart
-
 import 'dart:typed_data';
 import 'package:calyra/models/quiz/quiz_keys.dart';
 import 'package:calyra/providers/quiz_provider.dart';
@@ -7,26 +5,50 @@ import 'package:calyra/screens/quiz/quiz_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class SeasonalColorQuizScreen extends StatelessWidget {
+class SeasonalColorQuizScreen extends StatefulWidget {
   const SeasonalColorQuizScreen({super.key});
 
-  // --- Palet Warna untuk Warm Tone ---
-  static const warmPalettes = {
-    'bright_warm': [Color(0xfff3a683), Color(0xfff7d794), Color(0xff77dd77), Color(0xfff8a5c2)],
-    'earthy_warm': [Color(0xffcc8e77), Color(0xffe1b382), Color(0xff7a8e7a), Color(0xffc23616)],
-  };
+  @override
+  State<SeasonalColorQuizScreen> createState() => _SeasonalColorQuizScreenState();
+}
 
-  // --- Palet Warna untuk Cool Tone ---
-  static const coolPalettes = {
-    'soft_cool': [Color(0xffd1ccc0), Color(0xffa2b5cd), Color(0xff536878), Color(0xffcfb87c)],
-    'vivid_cool': [Color(0xffe74c3c), Color(0xff3498db), Color(0xfff1c40f), Color(0xffffffff)],
-  };
+class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
+  Color? _selectedColor; // warna yang dipilih user
+  Color _backgroundColor = Colors.white; // background mengikuti warna terpilih
 
-  void _onOptionSelected(BuildContext context, String answer) {
-    final quizProvider = context.read<QuizProvider>();
-    quizProvider.addAnswer(QuizKeys.seasonalColor, answer);
+  // --- Daftar semua warna seasonal (contoh: 8 kotak) ---
+  static const List<Color> seasonalColors = [
+    Color(0xfff3a683),
+    Color(0xfff7d794),
+    Color(0xff77dd77),
+    Color(0xfff8a5c2),
+    Color(0xffcc8e77),
+    Color(0xffe1b382),
+    Color(0xff7a8e7a),
+    Color(0xffc23616),
+  ];
 
-    // 2. Navigasi ke halaman hasil (kita akan buat ini selanjutnya)
+  void _onColorSelected(Color color) {
+    setState(() {
+      _selectedColor = color;
+      _backgroundColor = color;
+    });
+  }
+
+  void _onNextPressed(BuildContext context) {
+    if (_selectedColor == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih salah satu warna terlebih dahulu!')),
+      );
+      return;
+    }
+
+    // Simpan jawaban ke provider sebagai hex string
+    context.read<QuizProvider>().addAnswer(
+          QuizKeys.seasonalColor,
+          '#${_selectedColor!.value.toRadixString(16).substring(2).toUpperCase()}',
+        );
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const QuizResultScreen()),
@@ -35,13 +57,7 @@ class SeasonalColorQuizScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final quizProvider = context.watch<QuizProvider>();
-    final Uint8List? selfieBytes = quizProvider.selfieImageBytes;
-    final String undertone =
-        quizProvider.answers[QuizKeys.undertone] ?? 'warm';
-
-    // Tentukan palet mana yang akan ditampilkan berdasarkan jawaban undertone
-    final palettesToShow = undertone == 'warm' ? warmPalettes : coolPalettes;
+    final Uint8List? selfieBytes = context.watch<QuizProvider>().selfieImageBytes;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,11 +65,14 @@ class SeasonalColorQuizScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
       ),
+      backgroundColor: _backgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Foto selfie
               if (selfieBytes != null)
                 Container(
                   width: 220,
@@ -68,18 +87,64 @@ class SeasonalColorQuizScreen extends StatelessWidget {
                   ),
                 ),
               const Text(
-                "Which color palette looks best on you?",
+                "Choose your seasonal color",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
 
-              // Tampilkan palet berdasarkan undertone
-              ...palettesToShow.entries.map(
-                (entry) => _buildPaletteOption(
-                  context: context,
-                  palettes: entry.value,
-                  onTap: () => _onOptionSelected(context, entry.key),
+              // Frame besar yang menampung kotak warna
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400, width: 1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: GridView.builder(
+                  shrinkWrap: true, // supaya GridView tidak ambil seluruh height
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: seasonalColors.length,
+                  itemBuilder: (context, index) {
+                    final color = seasonalColors[index];
+                    final isSelected = _selectedColor == color;
+
+                    return GestureDetector(
+                      onTap: () => _onColorSelected(color),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? Colors.black : Colors.transparent,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tombol Next
+              ElevatedButton(
+                onPressed: () => _onNextPressed(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'Next',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ],
@@ -88,34 +153,4 @@ class SeasonalColorQuizScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildPaletteOption({required BuildContext context, required List<Color> palettes, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            alignment: WrapAlignment.center,
-            children: palettes.map((color) {
-              return Container(
-                width: 60,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
 }
-

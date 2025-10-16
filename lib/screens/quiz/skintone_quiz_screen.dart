@@ -7,21 +7,52 @@ import 'package:calyra/screens/quiz/seasonal_quiz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class SkintoneQuizScreen extends StatelessWidget {
+class SkintoneQuizScreen extends StatefulWidget {
   const SkintoneQuizScreen({super.key});
 
-  // Daftar warna skintone untuk ditampilkan
-  static const List<Color> skintoneOptions = [
-    Color(0xFFF1EAE1), Color(0xFFEADCCF), Color(0xFFE3CBB8), Color(0xFFD6B9A1),
-    Color(0xFFC6A68A), Color(0xFFB59273), Color(0xFFA88365), Color(0xFF9B7658),
-    Color(0xFF8C684C), Color(0xFF7D5B41), Color(0xFF6E4E36), Color(0xFF5F412B),
+  @override
+  State<SkintoneQuizScreen> createState() => _SkintoneQuizScreenState();
+}
+
+class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
+  String? _selectedAnswer; // Menyimpan warna yang dipilih
+  Color _backgroundColor = Colors.white; // Background awal
+
+  // List warna skintone (hex)
+  final List<Map<String, dynamic>> skintoneOptions = [
+    {'hex': const Color(0xFFF1EAE1), 'value': 'F1EAE1'},
+    {'hex': const Color(0xFFEADCCF), 'value': 'EADCCF'},
+    {'hex': const Color(0xFFE3CBB8), 'value': 'E3CBB8'},
+    {'hex': const Color(0xFFD6B9A1), 'value': 'D6B9A1'},
+    {'hex': const Color(0xFFC6A68A), 'value': 'C6A68A'},
+    {'hex': const Color(0xFFB59273), 'value': 'B59273'},
+    {'hex': const Color(0xFFA88365), 'value': 'A88365'},
+    {'hex': const Color(0xFF9B7658), 'value': '9B7658'},
+    {'hex': const Color(0xFF8C684C), 'value': '8C684C'},
+    {'hex': const Color(0xFF7D5B41), 'value': '7D5B41'},
+    {'hex': const Color(0xFF6E4E36), 'value': '6E4E36'},
+    {'hex': const Color(0xFF5F412B), 'value': '5F412B'},
   ];
 
-  void _onOptionSelected(BuildContext context, String answer) {
-    // 1. Simpan jawaban ke provider
-  context.read<QuizProvider>().addAnswer(QuizKeys.skintone, answer);
+  void _onOptionSelected(String value, Color bgColor) {
+    setState(() {
+      _selectedAnswer = value;
+      _backgroundColor = bgColor; // ubah background sesuai warna yang dipilih
+    });
+  }
 
-    // 2. Navigasi ke halaman kuis berikutnya
+  void _onNextPressed(BuildContext context) {
+    if (_selectedAnswer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih salah satu warna terlebih dahulu!')),
+      );
+      return;
+    }
+
+    // Simpan jawaban ke provider
+    context.read<QuizProvider>().addAnswer(QuizKeys.skintone, _selectedAnswer!);
+
+    // Lanjut ke halaman quiz berikutnya
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SeasonalColorQuizScreen()),
@@ -30,7 +61,6 @@ class SkintoneQuizScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil data gambar dari provider
     final Uint8List? selfieBytes = context.watch<QuizProvider>().selfieImageBytes;
 
     return Scaffold(
@@ -38,15 +68,19 @@ class SkintoneQuizScreen extends StatelessWidget {
         title: const Text('Skin Tone'),
         backgroundColor: Colors.white,
         elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: _backgroundColor, // ← background mengikuti kotak yang dipilih
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Tampilkan gambar selfie jika ada
+              // Foto selfie
               if (selfieBytes != null)
                 Container(
                   width: 220,
@@ -58,6 +92,13 @@ class SkintoneQuizScreen extends StatelessWidget {
                       image: MemoryImage(selfieBytes),
                       fit: BoxFit.cover,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      )
+                    ],
                   ),
                 )
               else
@@ -70,9 +111,9 @@ class SkintoneQuizScreen extends StatelessWidget {
                     color: Colors.grey[200],
                   ),
                   alignment: Alignment.center,
-                  child: const Text('Selfie not found'),
+                  child: const Text('Selfie not found', style: TextStyle(color: Colors.grey)),
                 ),
-              
+
               const Text(
                 "Choose your skin tone",
                 textAlign: TextAlign.center,
@@ -80,31 +121,64 @@ class SkintoneQuizScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Grid untuk pilihan warna kulit
+              // Frame besar menampung semua kotak warna
               Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400, width: 1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  itemCount: skintoneOptions.length,
-                  itemBuilder: (context, index) {
-                    final color = skintoneOptions[index];
-                    return GestureDetector(
-                      onTap: () => _onOptionSelected(
-                        context,
-                        color.toARGB32().toRadixString(16),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300)
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: skintoneOptions.length,
+                    itemBuilder: (context, index) {
+                      final option = skintoneOptions[index];
+                      final bool isSelected = _selectedAnswer == option['value'];
+                      return GestureDetector(
+                        onTap: () => _onOptionSelected(option['value'], option['hex']),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: option['hex'],
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? Colors.black : Colors.transparent,
+                              width: 3,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(2, 2),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tombol Next
+              ElevatedButton(
+                onPressed: () => _onNextPressed(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'Next',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ],
@@ -114,4 +188,3 @@ class SkintoneQuizScreen extends StatelessWidget {
     );
   }
 }
-
