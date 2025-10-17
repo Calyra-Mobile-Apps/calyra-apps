@@ -9,6 +9,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Import untuk firebase_auth dan cloud_firestore sudah dihapus
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -79,8 +81,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 content: Text('Registration successful! Please sign in.')),
           );
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-                builder: (context) => const TakeSelfieScreen(isInitialFlow: true)), 
+            MaterialPageRoute(builder: (context) => const TakeSelfieScreen()),
             (route) => false,
           );
         } else {

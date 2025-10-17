@@ -1,56 +1,40 @@
-// lib/screens/quiz/recommendations_screen.dart
+// Lokasi file: lib/screens/quiz/recommendations_screen.dart
 
 import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/product.dart';
+import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-// Tipe data baru untuk menampung produk yang sudah dikelompokkan
-class RecommendedProduct {
-  final Product productInfo;
-  final List<Product> recommendedShades;
-
-  RecommendedProduct({required this.productInfo, required this.recommendedShades});
-}
-
-// Helper untuk format teks
 String _capitalize(String s) {
   if (s.isEmpty) return '';
   return s[0].toUpperCase() + s.substring(1).toLowerCase();
 }
 
+class RecommendedProduct {
+  final Product productInfo;
+  final List<Product> recommendedShades;
+  RecommendedProduct({required this.productInfo, required this.recommendedShades});
+}
 
 class RecommendationsScreen extends StatefulWidget {
   final String brandName;
   final AnalysisResult analysisResult;
-
-  const RecommendationsScreen({
-    super.key,
-    required this.brandName,
-    required this.analysisResult,
-  });
+  const RecommendationsScreen({super.key, required this.brandName, required this.analysisResult});
 
   @override
   State<RecommendationsScreen> createState() => _RecommendationsScreenState();
 }
 
 class _RecommendationsScreenState extends State<RecommendationsScreen> {
-  late final Future<Map<String, List<RecommendedProduct>>> _categorizedProductsFuture;
+  late Future<Map<String, List<RecommendedProduct>>> _categorizedProductsFuture;
 
-  // --- DAFTAR PRODUCT_TYPE DIPERBARUI BERDASARKAN LOG ANDA ---
-  final List<String> complexionTypes = [
-    'Foundation', 'Concealer', 'Cushion', 'Powder', 'Compact Powder', 'Loose Powder',
-    'BB Cream', 'Tinted Moisturizer', 'Bronzer', 'Contour',
-    'Liquid Complexion', 'Powder Complexion'
-  ];
-  final List<String> colorTypes = [
-    'Lipstick', 'Liptint', 'Lipcream', 'Lip Gloss', 'Blush', 'Eyeshadow', 'Lip Matte',
-    'Liquid Lipstick'
-  ];
-
+  final List<String> complexionTypes = ['Foundation', 'Concealer', 'Cushion', 'Powder', 'Compact Powder', 'Loose Powder', 'BB Cream', 'Tinted Moisturizer', 'Bronzer', 'Contour', 'Liquid Complexion', 'Powder Complexion'];
+  final List<String> colorTypes = ['Lipstick', 'Liptint', 'Lipcream', 'Lip Gloss', 'Blush', 'Eyeshadow', 'Lip Matte', 'Liquid Lipstick'];
+  final List<String> _categoryOrder = ['Best Shade for You', 'Universal Products', 'Liquid Complexion', 'Powder Complexion', 'Cheeks', 'Lips', 'Eyes'];
   final Map<String, List<String>> _displayCategories = {
-    'Best Shade': ['Foundation', 'Concealer', 'Bronzer', 'Contour'],
+    'Best Shade for You': ['Foundation', 'Concealer', 'Cushion', 'BB Cream', 'Tinted Moisturizer'],
+    'Universal Products': [],
     'Liquid Complexion': ['Foundation', 'Cushion', 'BB Cream', 'Tinted Moisturizer', 'Liquid Complexion'],
     'Powder Complexion': ['Powder', 'Compact Powder', 'Loose Powder', 'Powder Complexion'],
     'Cheeks': ['Blush'],
@@ -66,67 +50,56 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
   Future<Map<String, List<RecommendedProduct>>> _fetchAndProcessRecommendations() async {
     final firestoreService = FirestoreService();
-    
     final response = await firestoreService.getProductsByBrandName(widget.brandName);
-
     if (response.isSuccess && response.data != null) {
       final allProducts = response.data!;
-      final allTypes = allProducts.map((p) => p.productType).toSet();
-      print('ℹ️ Tipe produk yang ditemukan di database: $allTypes');
-
       final userUndertone = _capitalize(widget.analysisResult.undertone);
-      final userSeason = _capitalize(widget.analysisResult.seasonResult);
+      final userSeason = _capitalize(widget.analysisResult.seasonResult.split(' ').last);
       final userSkintoneId = int.tryParse(widget.analysisResult.skintone) ?? 0;
-      
+      final isNeutralResult = userUndertone == 'Neutral';
       final List<Product> recommendedShades = [];
+      final List<Product> universalShades = [];
       for (final product in allProducts) {
-        bool isMatch = false;
-        
-        if (complexionTypes.contains(product.productType)) {
-          if (product.undertoneName == userUndertone && product.skintoneGroupId == userSkintoneId) {
-            isMatch = true;
-          }
-        } 
-        else if (colorTypes.contains(product.productType)) {
-          if (product.undertoneName == userUndertone && product.seasonName == userSeason) {
-            isMatch = true;
-          }
+        final bool isUniversal = product.undertoneName.isEmpty && product.seasonName.isEmpty;
+        if (isUniversal) {
+          universalShades.add(product);
+          continue;
         }
-
-        if (isMatch) {
-          recommendedShades.add(product);
+        if (!isNeutralResult) {
+          bool isMatch = false;
+          if (complexionTypes.contains(product.productType)) {
+            if (product.undertoneName == userUndertone && product.skintoneGroupId == userSkintoneId) {
+              isMatch = true;
+            }
+          } else if (colorTypes.contains(product.productType)) {
+            if (product.undertoneName == userUndertone && product.seasonName == userSeason) {
+              isMatch = true;
+            }
+          }
+          if (isMatch) {
+            recommendedShades.add(product);
+          }
         }
       }
-      
-      print('✅ Ditemukan ${recommendedShades.length} SHADES yang cocok setelah difilter.');
-
+      final allRecommendedShades = [...recommendedShades, ...universalShades];
       final Map<String, List<Product>> shadesByProductId = {};
-      for (final shade in recommendedShades) {
-        if (shadesByProductId.containsKey(shade.productId)) {
-          shadesByProductId[shade.productId]!.add(shade);
-        } else {
-          shadesByProductId[shade.productId] = [shade];
-        }
+      for (final shade in allRecommendedShades) {
+        shadesByProductId.putIfAbsent(shade.productId, () => []).add(shade);
       }
-
-      final List<RecommendedProduct> finalProducts = shadesByProductId.values.map((shades) {
-        return RecommendedProduct(
-          productInfo: shades.first,
-          recommendedShades: shades,
-        );
+      final List<RecommendedProduct> finalProducts = shadesByProductId.entries.map((entry) {
+        return RecommendedProduct(productInfo: entry.value.first, recommendedShades: entry.value);
       }).toList();
-
       final Map<String, List<RecommendedProduct>> groupedForUI = {};
       for (final recProduct in finalProducts) {
         final type = recProduct.productInfo.productType;
+        final isUniversal = recProduct.productInfo.undertoneName.isEmpty && recProduct.productInfo.seasonName.isEmpty;
+        if (isUniversal) {
+           groupedForUI.putIfAbsent('Universal Products', () => []).add(recProduct);
+        }
         for (final category in _displayCategories.entries) {
           if (category.value.contains(type)) {
-            if (groupedForUI.containsKey(category.key)) {
-              groupedForUI[category.key]!.add(recProduct);
-            } else {
-              groupedForUI[category.key] = [recProduct];
-            }
-            break;
+            groupedForUI.putIfAbsent(category.key, () => []).add(recProduct);
+            if (category.key != 'Best Shade for You') break;
           }
         }
       }
@@ -138,8 +111,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... sisa kode tidak berubah
-    final fullSeasonName = '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult}';
+    final fullSeasonName = '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult.split(' ').last}';
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.brandName} Spotlight', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -157,40 +129,37 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Text(
-                'No specific recommendations found for your $fullSeasonName palette in this brand.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text(
+                  'No specific recommendations found for your $fullSeasonName palette in this brand.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
               ),
-            ));
+            );
           }
-
           final categorizedProducts = snapshot.data!;
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${widget.brandName} for Your $fullSeasonName Palette',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.2),
+                        '${widget.brandName} for Your\n$fullSeasonName Palette',
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.2),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Explore products picked just for you.',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
+                      const Text('Explore products picked just for you.', style: TextStyle(fontSize: 16, color: Colors.grey)),
                     ],
                   ),
                 ),
-                ..._displayCategories.entries.map((entry) {
-                  final categoryTitle = entry.key;
+                ..._categoryOrder.map((categoryTitle) {
                   final productsInCategory = categorizedProducts[categoryTitle];
                   if (productsInCategory == null || productsInCategory.isEmpty) {
                     return const SizedBox.shrink();
@@ -198,26 +167,15 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20.0),
-                        child: _CategoryPill(title: categoryTitle),
-                      ),
+                      _CategoryPill(title: categoryTitle),
                       SizedBox(
-                        height: (categoryTitle == 'Best Shade') ? 180 : 230,
+                        height: 230,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          itemCount: (categoryTitle == 'Best Shade') 
-                              ? productsInCategory.fold<int>(0, (prev, e) => prev + e.recommendedShades.length)
-                              : productsInCategory.length,
+                          padding: const EdgeInsets.fromLTRB(20, 0, 5, 10),
+                          itemCount: productsInCategory.length,
                           itemBuilder: (context, index) {
-                            if (categoryTitle == 'Best Shade') {
-                              final List<Product> allShades = productsInCategory.expand((p) => p.recommendedShades).toList();
-                              return _ShadeItem(product: allShades[index]);
-                            } else {
-                              final recProduct = productsInCategory[index];
-                              return _ProductItem(recommendedProduct: recProduct);
-                            }
+                            return _ProductItem(recommendedProduct: productsInCategory[index]);
                           },
                         ),
                       ),
@@ -234,14 +192,13 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   }
 }
 
-// Widget-widget di bawah ini tidak perlu diubah
 class _CategoryPill extends StatelessWidget {
   final String title;
   const _CategoryPill({required this.title});
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 20.0, bottom: 10.0),
+      padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 16.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(30.0)),
@@ -251,123 +208,81 @@ class _CategoryPill extends StatelessWidget {
   }
 }
 
-class _ShadeItem extends StatelessWidget {
-  final Product product;
-  const _ShadeItem({required this.product});
-
-  Color _hexToColor(String hexCode) {
-    try {
-      final String hex = hexCode.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch(e) {
-      return Colors.grey.shade300;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15.0),
-      child: SizedBox(
-        width: 110,
-        child: Column(
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  height: 120,
-                  width: 110,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(55), bottom: Radius.circular(15)),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  child: Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: _hexToColor(product.colorHex),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3)
-                    ),
-                    child: Center(
-                      child: Text(
-                        product.shadeName,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text("Shade for ${product.productType}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.black87)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+// --- PERBAIKAN FINAL ADA DI SINI ---
 class _ProductItem extends StatelessWidget {
   final RecommendedProduct recommendedProduct;
   const _ProductItem({required this.recommendedProduct});
 
-  Future<void> _launchURL() async {
-    final link = recommendedProduct.productInfo.linkProduct;
-    if (link != null && link.isNotEmpty) {
-      final Uri url = Uri.parse(link);
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {}
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final productInfo = recommendedProduct.productInfo;
-    final shadeNames = recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
+    final shadeCount = recommendedProduct.recommendedShades.length;
+    final allShadeNames = recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
 
     return GestureDetector(
-      onTap: _launchURL,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 15.0),
-        child: SizedBox(
-          width: 110,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 140,
-                width: 110,
-                padding: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10.0)),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(
+              productShades: recommendedProduct.recommendedShades,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 150,
+        margin: const EdgeInsets.only(right: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Gambar Produk di dalam Card
+            Card(
+              margin: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 2,
+              child: Container(
+                height: 150,
+                width: 150,
+                color: Colors.grey.shade100,
                 child: Image.network(
                   productInfo.imageSwatchUrl,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image)),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                productInfo.productName,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black),
+            ),
+            const SizedBox(height: 10),
+
+            // Bagian Teks
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text(
+                    productInfo.productName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Shade: $allShadeNames',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$shadeCount Recommended Shade${shadeCount > 1 ? 's' : ''}',
+                    style: const TextStyle(fontSize: 12, color: Colors.blueGrey, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Flexible(
-                child: Text(
-                  "Shade: $shadeNames",
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

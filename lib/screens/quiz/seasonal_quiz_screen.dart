@@ -1,4 +1,4 @@
-// lib/screens/quiz/seasonal_quiz_screen.dart
+// Lokasi file: lib/screens/quiz/seasonal_quiz_screen.dart
 
 import 'dart:typed_data';
 import 'package:calyra/models/quiz/quiz_keys.dart';
@@ -7,19 +7,16 @@ import 'package:calyra/screens/quiz/quiz_result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// --- DATA PALET WARNA (4 WARNA PER MUSIM) ---
+// --- DATA PALET WARNA (TIDAK BERUBAH) ---
 const List<Map<String, List<Color>>> warmStepPalettes = [
-  // Screen 1
   {
     'Spring': [Color(0xFFFCF3BA), Color(0xFFEBCAA4), Color(0xFFFDE470), Color(0xFF926F45)],
     'Autumn': [Color(0xFFF4EED4), Color(0xFFDDBF99), Color(0xFFE8D167), Color(0xFF66371B)],
   },
-  // Screen 2
   {
     'Spring': [Color(0xFFFAB357), Color(0xFFFD9675), Color(0xFFAFEDBE), Color(0xFF92D472)],
     'Autumn': [Color(0xFFE5A453), Color(0xFFE18E30), Color(0xFFB47331), Color(0xFF6EAC83)],
   },
-  // Screen 3
   {
     'Spring': [Color(0xFFF8A9A5), Color(0xFFE85F79), Color(0xFFFE99AB), Color(0xFFFCD4D5)],
     'Autumn': [Color(0xFFBD2E20), Color(0xFFB14A5D), Color(0xFFF48598), Color(0xFFDD9598)],
@@ -27,17 +24,14 @@ const List<Map<String, List<Color>>> warmStepPalettes = [
 ];
 
 const List<Map<String, List<Color>>> coolStepPalettes = [
-  // Screen 1
   {
     'Summer': [Color(0xFFFFFFFF), Color(0xFFB6B5BB), Color(0xFF9E8686), Color(0xFF000000)],
     'Winter': [Color(0xFFF5F5F5), Color(0xFFA1A0A5), Color(0xFF655555), Color(0xFF000000)],
   },
-  // Screen 2
   {
     'Summer': [Color(0xFF6583C9), Color(0xFF62CDED), Color(0xFF6193DD), Color(0xFFAA97E6)],
     'Winter': [Color(0xFF01219C), Color(0xFF07C3FC), Color(0xFF2573E2), Color(0xFF704FDE)],
   },
-  // Screen 3
   {
     'Summer': [Color(0xFF71E7C7), Color(0xFFBE4A75), Color(0xFFE769A8), Color(0xFFC761A3)],
     'Winter': [Color(0xFF71FFD9), Color(0xFFA41C4E), Color(0xFFD72A55), Color(0xFFC4288D)],
@@ -146,7 +140,7 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Seasonal Color'),
+        title: const Text('Seasonal Color'),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -163,7 +157,7 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
                 height: 300, 
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20), // DISAMAKAN: 20
+                  borderRadius: BorderRadius.circular(20),
                   color: _activeSelfieBackgroundColor,
                 ),
                 child: Center(
@@ -186,21 +180,37 @@ class _SeasonalColorQuizScreenState extends State<SeasonalColorQuizScreen> {
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 32),
+              
+              // --- PERBAIKAN LOGIKA ADA DI BAGIAN onColorTap DAN onSelect ---
               _ColorPaletteRow(
                 colors: season1Colors,
                 isSelected: _selectedSeasonForRow == season1Name,
                 activeColor: _activeSelfieBackgroundColor,
-                onColorTap: (color) => setState(() => _activeSelfieBackgroundColor = color),
-                onSelect: () => setState(() => _selectedSeasonForRow = season1Name),
+                onColorTap: (color) => setState(() {
+                  _activeSelfieBackgroundColor = color;
+                  _selectedSeasonForRow = season1Name; // Otomatis pilih baris ini
+                }),
+                onSelect: () => setState(() {
+                  _selectedSeasonForRow = season1Name;
+                  _activeSelfieBackgroundColor = season1Colors.first; // Set warna pertama sebagai default
+                }),
               ),
               const SizedBox(height: 24),
               _ColorPaletteRow(
                 colors: season2Colors,
                 isSelected: _selectedSeasonForRow == season2Name,
                 activeColor: _activeSelfieBackgroundColor,
-                onColorTap: (color) => setState(() => _activeSelfieBackgroundColor = color),
-                onSelect: () => setState(() => _selectedSeasonForRow = season2Name),
+                onColorTap: (color) => setState(() {
+                  _activeSelfieBackgroundColor = color;
+                  _selectedSeasonForRow = season2Name; // Otomatis pilih baris ini
+                }),
+                onSelect: () => setState(() {
+                  _selectedSeasonForRow = season2Name;
+                  _activeSelfieBackgroundColor = season2Colors.first; // Set warna pertama sebagai default
+                }),
               ),
+              // --- AKHIR DARI PERBAIKAN ---
+
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
