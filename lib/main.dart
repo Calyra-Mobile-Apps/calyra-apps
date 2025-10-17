@@ -1,6 +1,6 @@
 // Lokasi file: lib/main.dart
 
-import 'package:calyra/my_behavior.dart'; // <-- TAMBAHKAN IMPORT INI
+import 'package:calyra/my_behavior.dart';
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -31,21 +31,22 @@ class CalyraApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Calyra',
         debugShowCheckedModeBanner: false,
-        // --- MODIFIKASI DI SINI ---
-        // Menambahkan ScrollConfiguration untuk menghilangkan efek glow
         builder: (context, child) {
           return ScrollConfiguration(
             behavior: MyBehavior(),
             child: child!,
           );
         },
-        // -------------------------
         theme: ThemeData(
           scaffoldBackgroundColor: Colors.white,
           textTheme: GoogleFonts.plusJakartaSansTextTheme(
             Theme.of(context).textTheme,
           ),
           useMaterial3: true,
+          textSelectionTheme: TextSelectionThemeData(
+            selectionColor: Color(0xFFA3A3A3).withOpacity(0.5),
+            selectionHandleColor: Colors.black,
+          ),
         ),
         home: const SplashScreen(),
       ),
