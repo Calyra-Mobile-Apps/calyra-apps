@@ -17,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = <Widget>[
     const HomeScreen(),
-    const TakeSelfieScreen(isInitialFlow: false),
+    const TakeSelfieScreen(),
     const ProfileScreen(),
   ];
 
@@ -33,28 +33,31 @@ class _MainScreenState extends State<MainScreen> {
       extendBody: true,
       body: Stack(
         children: [
+          // Menggunakan IndexedStack untuk menjaga state setiap halaman
           IndexedStack(
             index: _selectedIndex,
             children: _pages,
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: _CustomBottomNavBar(
-                selectedIndex: _selectedIndex,
-                onItemSelected: _onItemTapped,
+          if (_selectedIndex != 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: _CustomBottomNavBar(
+                  selectedIndex: _selectedIndex,
+                  onItemSelected: _onItemTapped,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 }
 
+// Custom Bottom Navigation Bar Widget
 class _CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemSelected;
@@ -64,8 +67,10 @@ class _CustomBottomNavBar extends StatelessWidget {
     required this.onItemSelected,
   });
 
+  // Data untuk navigasi (label, icon, index)
   final List<Map<String, dynamic>> items = const [
     {'label': 'Home', 'icon': Icons.home_outlined, 'activeIcon': Icons.home},
+    // Mengubah label menjadi 'Face Scan' sesuai gambar terbaru
     {
       'label': 'Face Scan',
       'icon': Icons.sentiment_satisfied_outlined,
@@ -80,12 +85,16 @@ class _CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ukuran Ikon standar
     const double iconSize = 24.0;
+    // Padding Lingkaran standar (seharusnya: iconSize + padding * 2 = 48)
     const double circlePadding = 14.0;
 
     return Container(
+      // 1. Floating Effect & Ukuran: Memberikan margin agar 'menggantung'
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -99,6 +108,9 @@ class _CustomBottomNavBar extends StatelessWidget {
         ],
       ),
       child: Row(
+        // Menggunakan MainAxisAlignment.spaceEvenly atau Center
+        // agar tombol-tombol non-aktif (lingkaran) tetap memiliki ruang
+        // dan tombol aktif (pill) bisa mengambil ruang yang dibutuhkan.
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(items.length, (index) {
           final isSelected = index == selectedIndex;
@@ -106,24 +118,36 @@ class _CustomBottomNavBar extends StatelessWidget {
 
           return GestureDetector(
             onTap: () => onItemSelected(index),
+            // Mengganti Padding luar dan Expanded dengan SizedBox.expand
+            // untuk mengontrol lebar item aktif.
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
-              padding: isSelected
-                  ? const EdgeInsets.symmetric(horizontal: 56, vertical: 12)
-                  : const EdgeInsets.all(circlePadding),
+
+              // 2. Kontrol Bentuk & Lebar Adaptif
+              // Lebar ditentukan oleh isSelected:
+              // - Jika terpilih: Padding horizontal lebih besar, menjadi bentuk pill.
+              // - Jika tidak terpilih: Padding sama sisi, menjadi lingkaran.
+        padding: isSelected
+          ? const EdgeInsets.symmetric(horizontal: 56, vertical: 12)
+          : const EdgeInsets.all(circlePadding),
+
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(30),
               ),
+
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize
+                    .min, // Memastikan lebar pill hanya seukuran konten
                 children: [
                   Icon(
                     isSelected ? item['activeIcon'] : item['icon'],
                     color: Colors.white,
                     size: iconSize,
                   ),
+
+                  // 3. Teks hanya muncul jika selected
                   if (isSelected) ...[
                     const SizedBox(width: 8),
                     Text(

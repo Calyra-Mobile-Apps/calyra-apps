@@ -8,45 +8,46 @@ class AnalysisService {
   AnalysisResult analyze(QuizSession session, {DateTime? analysisDate}) {
     final answers = session.answers;
     final undertone = answers[QuizKeys.undertone] ?? 'neutral';
-    final skintone =
-        answers[QuizKeys.skintone] ?? '0'; // Disimpan sebagai string ID
+    final skintone = answers[QuizKeys.skintone] ?? '0';
+    final seasonalChoice = answers[QuizKeys.seasonalColor] ?? 'unknown';
 
-    // Mengambil data season murni (cth: "Spring", "Autumn") dari provider
-    final season = answers[QuizKeys.seasonalColor] ?? 'unknown';
+    // --- PERBAIKAN: Memanggil fungsi _resolveSeason untuk mendapatkan nama lengkap ---
+    final String finalSeasonResult = _resolveSeason(undertone, seasonalChoice);
+    // -------------------------------------------------------------------------
 
-    // Langsung simpan data secara terpisah
     return AnalysisResult(
-      seasonResult: season, // Menyimpan "Spring", "Autumn", etc.
-      undertone: undertone, // Menyimpan "warm" atau "cool"
+      seasonResult: finalSeasonResult, // Sekarang menyimpan nama lengkap (cth: "Warm Spring")
+      undertone: undertone,
       skintone: skintone,
       analysisDate: analysisDate ?? DateTime.now(),
     );
   }
 
-  String _resolveSeason(String undertone, String seasonalResult) {
-    if (seasonalResult == 'unknown' || seasonalResult.isEmpty) {
+  // Fungsi ini sekarang dipanggil untuk menggabungkan undertone dan pilihan musim
+  String _resolveSeason(String undertone, String seasonalChoice) {
+    if (seasonalChoice == 'unknown' || seasonalChoice.isEmpty) {
       if (undertone == 'warm') return 'Warm Autumn'; // Default untuk warm
       if (undertone == 'cool') return 'Cool Winter'; // Default untuk cool
       return 'Neutral';
     }
 
-    // Menggabungkan hasil undertone dengan hasil pilihan mayoritas seasonal.
     if (undertone == 'warm') {
-      if (seasonalResult == 'Spring') {
+      if (seasonalChoice == 'Spring') {
         return 'Warm Spring';
-      } else if (seasonalResult == 'Autumn') {
+      } else if (seasonalChoice == 'Autumn') {
         return 'Warm Autumn';
       }
     }
 
     if (undertone == 'cool') {
-      if (seasonalResult == 'Summer') {
+      if (seasonalChoice == 'Summer') {
         return 'Cool Summer';
-      } else if (seasonalResult == 'Winter') {
+      } else if (seasonalChoice == 'Winter') {
         return 'Cool Winter';
       }
     }
-
-    return seasonalResult;
+    
+    // Fallback jika undertone adalah neutral atau kasus lain
+    return 'Neutral'; 
   }
 }
