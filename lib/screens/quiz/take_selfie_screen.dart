@@ -29,6 +29,9 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
   final double _bottomNavbarHeightPadding =
       100.0;
 
+  final double _fullBottomPadding = 120.0;
+  final double _minimalBottomPadding = 40.0;
+
   @override
   void initState() {
     super.initState();
@@ -143,14 +146,17 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
     final String formattedDate =
         DateFormat('d MMMM yyyy').format(DateTime.now());
 
+    final double currentBottomPadding =
+        widget.isInitialFlow ? _minimalBottomPadding : _fullBottomPadding;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                  24.0, 20.0, 24.0, _bottomNavbarHeightPadding),
+              padding:
+                  EdgeInsets.fromLTRB(24.0, 20.0, 24.0, currentBottomPadding),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                     minHeight: constraints.maxHeight -

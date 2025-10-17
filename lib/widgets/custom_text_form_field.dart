@@ -53,7 +53,8 @@ class CustomTextFormField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: Colors.blue),
+              // PERBAIKAN: Mengganti warna biru ke abu-abu yang diminta (#A3A3A3)
+              borderSide: const BorderSide(color: Color(0xFFA3A3A3)),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.0),
