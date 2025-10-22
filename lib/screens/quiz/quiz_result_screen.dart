@@ -9,7 +9,7 @@ import 'package:calyra/screens/main_screen.dart';
 import 'package:calyra/screens/quiz/recommendations_screen.dart';
 import 'package:calyra/services/analysis_service.dart';
 import 'package:calyra/services/firestore_service.dart';
-import 'package:calyra/widgets/brand_card.dart'; // <-- PERUBAHAN: Menggunakan BrandCard dari widget
+import 'package:calyra/widgets/brand_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -49,12 +49,13 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
 
     final AnalysisResult result = analysisService.analyze(quizProvider.session);
     final saveResponse = await firestoreService.saveAnalysisResult(result);
-    
+
     if (!mounted) return;
     if (!saveResponse.isSuccess && saveResponse.message != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(saveResponse.message!)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(saveResponse.message!)));
     }
-    
+
     setState(() {
       _analysisResult = result;
       _isLoading = false;
@@ -97,47 +98,72 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     }
 
     final String fullSeasonName = _analysisResult!.seasonResult;
-    final seasonData = seasonDetails[fullSeasonName] ?? seasonDetails['Neutral']!;
-    
+    final seasonData =
+        seasonDetails[fullSeasonName] ?? seasonDetails['Neutral']!;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 20),
-          const Text(
-            'You Are a',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 24, color: Colors.grey),
-          ),
-          Text(
-            fullSeasonName,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            seasonData.description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.black54, height: 1.5),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'You Are a',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, color: Colors.grey),
+                ),
+                Text(
+                  fullSeasonName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 36, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  seasonData.description,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 16, color: Colors.black54, height: 1.5),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 30),
-
-          _buildSectionTitle('Color Palettes'),
-          const SizedBox(height: 16),
-          _buildColorPalettes(seasonData.colors),
-          const SizedBox(height: 30),
-
-          _buildSectionTitle('Your Product Recommendations'),
-          const SizedBox(height: 12),
-          const Text(
-            'Explore your recommended products from the following brands:',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-            textAlign: TextAlign.center,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _buildSectionTitle('Color Palettes'),
           ),
-          const SizedBox(height: 24),
-          _buildBrandRecommendations(context),
-          const SizedBox(height: 50),
+          const SizedBox(height: 24.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: _buildColorPalettes(seasonData.colors),
+          ),
+          const SizedBox(height: 30),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _buildSectionTitle('Your Product Recommendations'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                const Text(
+                  'Explore your recommended products from the following brands:',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: 24),
+                _buildBrandRecommendations(context),
+                const SizedBox(height: 50),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -145,16 +171,21 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(1),
+          bottomLeft: Radius.circular(1),
+          topRight: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
       ),
       child: Text(
         title,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -180,7 +211,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     );
   }
 
-  // --- PERUBAHAN: Menggunakan BrandCard agar konsisten dengan Beranda ---
   Widget _buildBrandRecommendations(BuildContext context) {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

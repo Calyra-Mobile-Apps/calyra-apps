@@ -14,13 +14,15 @@ String _capitalize(String s) {
 class RecommendedProduct {
   final Product productInfo;
   final List<Product> recommendedShades;
-  RecommendedProduct({required this.productInfo, required this.recommendedShades});
+  RecommendedProduct(
+      {required this.productInfo, required this.recommendedShades});
 }
 
 class RecommendationsScreen extends StatefulWidget {
   final String brandName;
   final AnalysisResult analysisResult;
-  const RecommendationsScreen({super.key, required this.brandName, required this.analysisResult});
+  const RecommendationsScreen(
+      {super.key, required this.brandName, required this.analysisResult});
 
   @override
   State<RecommendationsScreen> createState() => _RecommendationsScreenState();
@@ -29,16 +31,70 @@ class RecommendationsScreen extends StatefulWidget {
 class _RecommendationsScreenState extends State<RecommendationsScreen> {
   late Future<Map<String, List<RecommendedProduct>>> _categorizedProductsFuture;
 
-  final List<String> complexionTypes = ['Foundation', 'Concealer', 'Cushion', 'Powder', 'Compact Powder', 'Loose Powder', 'BB Cream', 'Tinted Moisturizer', 'Bronzer', 'Contour', 'Liquid Complexion', 'Powder Complexion'];
-  final List<String> colorTypes = ['Lipstick', 'Liptint', 'Lipcream', 'Lip Gloss', 'Blush', 'Eyeshadow', 'Lip Matte', 'Liquid Lipstick'];
-  final List<String> _categoryOrder = ['Best Shade for You', 'Universal Products', 'Liquid Complexion', 'Powder Complexion', 'Cheeks', 'Lips', 'Eyes'];
+  final List<String> complexionTypes = [
+    'Foundation',
+    'Concealer',
+    'Cushion',
+    'Powder',
+    'Compact Powder',
+    'Loose Powder',
+    'BB Cream',
+    'Tinted Moisturizer',
+    'Bronzer',
+    'Contour',
+    'Liquid Complexion',
+    'Powder Complexion'
+  ];
+  final List<String> colorTypes = [
+    'Lipstick',
+    'Liptint',
+    'Lipcream',
+    'Lip Gloss',
+    'Blush',
+    'Eyeshadow',
+    'Lip Matte',
+    'Liquid Lipstick'
+  ];
+  final List<String> _categoryOrder = [
+    'Best Shade for You',
+    'Universal Products',
+    'Liquid Complexion',
+    'Powder Complexion',
+    'Cheeks',
+    'Lips',
+    'Eyes'
+  ];
   final Map<String, List<String>> _displayCategories = {
-    'Best Shade for You': ['Foundation', 'Concealer', 'Cushion', 'BB Cream', 'Tinted Moisturizer'],
+    'Best Shade for You': [
+      'Foundation',
+      'Concealer',
+      'Cushion',
+      'BB Cream',
+      'Tinted Moisturizer'
+    ],
     'Universal Products': [],
-    'Liquid Complexion': ['Foundation', 'Cushion', 'BB Cream', 'Tinted Moisturizer', 'Liquid Complexion'],
-    'Powder Complexion': ['Powder', 'Compact Powder', 'Loose Powder', 'Powder Complexion'],
+    'Liquid Complexion': [
+      'Foundation',
+      'Cushion',
+      'BB Cream',
+      'Tinted Moisturizer',
+      'Liquid Complexion'
+    ],
+    'Powder Complexion': [
+      'Powder',
+      'Compact Powder',
+      'Loose Powder',
+      'Powder Complexion'
+    ],
     'Cheeks': ['Blush'],
-    'Lips': ['Liptint', 'Lipcream', 'Lip Gloss', 'Lipstick', 'Lip Matte', 'Liquid Lipstick'],
+    'Lips': [
+      'Liptint',
+      'Lipcream',
+      'Lip Gloss',
+      'Lipstick',
+      'Lip Matte',
+      'Liquid Lipstick'
+    ],
     'Eyes': ['Eyeshadow'],
   };
 
@@ -48,19 +104,23 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     _categorizedProductsFuture = _fetchAndProcessRecommendations();
   }
 
-  Future<Map<String, List<RecommendedProduct>>> _fetchAndProcessRecommendations() async {
+  Future<Map<String, List<RecommendedProduct>>>
+      _fetchAndProcessRecommendations() async {
     final firestoreService = FirestoreService();
-    final response = await firestoreService.getProductsByBrandName(widget.brandName);
+    final response =
+        await firestoreService.getProductsByBrandName(widget.brandName);
     if (response.isSuccess && response.data != null) {
       final allProducts = response.data!;
       final userUndertone = _capitalize(widget.analysisResult.undertone);
-      final userSeason = _capitalize(widget.analysisResult.seasonResult.split(' ').last);
+      final userSeason =
+          _capitalize(widget.analysisResult.seasonResult.split(' ').last);
       final userSkintoneId = int.tryParse(widget.analysisResult.skintone) ?? 0;
       final isNeutralResult = userUndertone == 'Neutral';
       final List<Product> recommendedShades = [];
       final List<Product> universalShades = [];
       for (final product in allProducts) {
-        final bool isUniversal = product.undertoneName.isEmpty && product.seasonName.isEmpty;
+        final bool isUniversal =
+            product.undertoneName.isEmpty && product.seasonName.isEmpty;
         if (isUniversal) {
           universalShades.add(product);
           continue;
@@ -68,11 +128,13 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         if (!isNeutralResult) {
           bool isMatch = false;
           if (complexionTypes.contains(product.productType)) {
-            if (product.undertoneName == userUndertone && product.skintoneGroupId == userSkintoneId) {
+            if (product.undertoneName == userUndertone &&
+                product.skintoneGroupId == userSkintoneId) {
               isMatch = true;
             }
           } else if (colorTypes.contains(product.productType)) {
-            if (product.undertoneName == userUndertone && product.seasonName == userSeason) {
+            if (product.undertoneName == userUndertone &&
+                product.seasonName == userSeason) {
               isMatch = true;
             }
           }
@@ -86,15 +148,20 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       for (final shade in allRecommendedShades) {
         shadesByProductId.putIfAbsent(shade.productId, () => []).add(shade);
       }
-      final List<RecommendedProduct> finalProducts = shadesByProductId.entries.map((entry) {
-        return RecommendedProduct(productInfo: entry.value.first, recommendedShades: entry.value);
+      final List<RecommendedProduct> finalProducts =
+          shadesByProductId.entries.map((entry) {
+        return RecommendedProduct(
+            productInfo: entry.value.first, recommendedShades: entry.value);
       }).toList();
       final Map<String, List<RecommendedProduct>> groupedForUI = {};
       for (final recProduct in finalProducts) {
         final type = recProduct.productInfo.productType;
-        final isUniversal = recProduct.productInfo.undertoneName.isEmpty && recProduct.productInfo.seasonName.isEmpty;
+        final isUniversal = recProduct.productInfo.undertoneName.isEmpty &&
+            recProduct.productInfo.seasonName.isEmpty;
         if (isUniversal) {
-           groupedForUI.putIfAbsent('Universal Products', () => []).add(recProduct);
+          groupedForUI
+              .putIfAbsent('Universal Products', () => [])
+              .add(recProduct);
         }
         for (final category in _displayCategories.entries) {
           if (category.value.contains(type)) {
@@ -111,10 +178,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final fullSeasonName = '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult.split(' ').last}';
+    final fullSeasonName =
+        '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult.split(' ').last}';
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.brandName} Spotlight', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text('${widget.brandName} Spotlight',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0.5,
       ),
@@ -146,22 +215,28 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '${widget.brandName} for Your\n$fullSeasonName Palette',
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.2),
+                        style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2),
                       ),
                       const SizedBox(height: 8),
-                      const Text('Explore products picked just for you.', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      const Text('Explore products picked just for you.',
+                          style: TextStyle(fontSize: 16, color: Colors.grey)),
                     ],
                   ),
                 ),
                 ..._categoryOrder.map((categoryTitle) {
                   final productsInCategory = categorizedProducts[categoryTitle];
-                  if (productsInCategory == null || productsInCategory.isEmpty) {
+                  if (productsInCategory == null ||
+                      productsInCategory.isEmpty) {
                     return const SizedBox.shrink();
                   }
                   return Column(
@@ -169,13 +244,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     children: [
                       _CategoryPill(title: categoryTitle),
                       SizedBox(
-                        height: 230,
+                        height: 250,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.fromLTRB(20, 0, 5, 10),
                           itemCount: productsInCategory.length,
                           itemBuilder: (context, index) {
-                            return _ProductItem(recommendedProduct: productsInCategory[index]);
+                            return _ProductItem(
+                                recommendedProduct: productsInCategory[index]);
                           },
                         ),
                       ),
@@ -201,8 +277,13 @@ class _CategoryPill extends StatelessWidget {
       padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 16.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(30.0)),
-        child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+        decoration: BoxDecoration(
+            color: Colors.black, borderRadius: BorderRadius.circular(30.0)),
+        child: Text(title,
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16)),
       ),
     );
   }
@@ -217,7 +298,8 @@ class _ProductItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final productInfo = recommendedProduct.productInfo;
     final shadeCount = recommendedProduct.recommendedShades.length;
-    final allShadeNames = recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
+    final allShadeNames =
+        recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
 
     return GestureDetector(
       onTap: () {
@@ -236,36 +318,38 @@ class _ProductItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar Produk di dalam Card
             Card(
               margin: EdgeInsets.zero,
               clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               elevation: 2,
               child: Container(
-                height: 150,
+                height: 140,
                 width: 150,
                 color: Colors.grey.shade100,
                 child: Image.network(
                   productInfo.imageSwatchUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image)),
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: Icon(Icons.broken_image)),
                 ),
               ),
             ),
             const SizedBox(height: 10),
-
-            // Bagian Teks
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(
+                  Text(
                     productInfo.productName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -277,7 +361,10 @@ class _ProductItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '$shadeCount Recommended Shade${shadeCount > 1 ? 's' : ''}',
-                    style: const TextStyle(fontSize: 12, color: Colors.blueGrey, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.blueGrey,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
