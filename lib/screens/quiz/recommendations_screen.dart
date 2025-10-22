@@ -56,7 +56,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Liquid Lipstick'
   ];
   final List<String> _categoryOrder = [
-    'Best Shade for You',
     'Universal Products',
     'Liquid Complexion',
     'Powder Complexion',
@@ -65,16 +64,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Eyes'
   ];
   final Map<String, List<String>> _displayCategories = {
-    'Best Shade for You': [
-      'Foundation',
-      'Concealer',
-      'Cushion',
-      'BB Cream',
-      'Tinted Moisturizer'
-    ],
     'Universal Products': [],
     'Liquid Complexion': [
       'Foundation',
+      'Concealer',
       'Cushion',
       'BB Cream',
       'Tinted Moisturizer',
@@ -128,8 +121,11 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         if (!isNeutralResult) {
           bool isMatch = false;
           if (complexionTypes.contains(product.productType)) {
-            if (product.undertoneName == userUndertone &&
-                product.skintoneGroupId == userSkintoneId) {
+            final bool matchesUndertone =
+                product.undertoneName == userUndertone;
+            final bool matchesSkintone =
+                product.skintoneGroupId == userSkintoneId;
+            if (matchesSkintone || matchesUndertone) {
               isMatch = true;
             }
           } else if (colorTypes.contains(product.productType)) {
@@ -166,7 +162,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         for (final category in _displayCategories.entries) {
           if (category.value.contains(type)) {
             groupedForUI.putIfAbsent(category.key, () => []).add(recProduct);
-            if (category.key != 'Best Shade for You') break;
+            break;
           }
         }
       }
@@ -274,11 +270,18 @@ class _CategoryPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 16.0),
+      padding: const EdgeInsets.only(top: 24.0, bottom: 32.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         decoration: BoxDecoration(
-            color: Colors.black, borderRadius: BorderRadius.circular(30.0)),
+          color: Colors.black,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(1),
+            bottomLeft: Radius.circular(1),
+            topRight: Radius.circular(30),
+            bottomRight: Radius.circular(30),
+          ),
+        ),
         child: Text(title,
             style: const TextStyle(
                 color: Colors.white,
@@ -289,7 +292,6 @@ class _CategoryPill extends StatelessWidget {
   }
 }
 
-// --- PERBAIKAN FINAL ADA DI SINI ---
 class _ProductItem extends StatelessWidget {
   final RecommendedProduct recommendedProduct;
   const _ProductItem({required this.recommendedProduct});
