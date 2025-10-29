@@ -17,6 +17,9 @@ const List<String> availableAvatars = [
   'assets/images/G4.png',
   'assets/images/G5.png',
   'assets/images/G6.png',
+  'assets/images/G7.png',
+  'assets/images/G8.png',
+  'assets/images/G9.png',
 ];
 
 const String defaultAvatarPath = 'assets/images/Logo.png';
