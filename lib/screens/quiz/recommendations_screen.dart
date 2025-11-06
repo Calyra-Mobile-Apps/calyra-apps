@@ -129,8 +129,14 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               isMatch = true;
             }
           } else if (colorTypes.contains(product.productType)) {
-            if (product.undertoneName == userUndertone &&
-                product.seasonName == userSeason) {
+            final List<String> applicableSeasons = product.seasonName
+                .split(',')
+                .map((s) => s.trim())
+                .map(_capitalize)   
+                .toList();
+
+            final bool matchesSeason = applicableSeasons.contains(userSeason);
+            if (product.undertoneName == userUndertone && matchesSeason) {
               isMatch = true;
             }
           }
