@@ -118,7 +118,7 @@ class FirestoreService {
     try {
       final querySnapshot = await _db
           .collection(_productsCollection)
-          .where('season_name', isEqualTo: seasonName)
+          .where('season_name', arrayContains: seasonName)
           .get();
 
       final products = querySnapshot.docs
@@ -137,7 +137,7 @@ class FirestoreService {
       final querySnapshot = await _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          .where('season_name', isEqualTo: seasonName)
+          .where('season_name', arrayContains: seasonName)
           .get();
       final products = querySnapshot.docs
           .map((doc) => Product.fromFirestore(doc.data()))
@@ -149,7 +149,6 @@ class FirestoreService {
     }
   }
 
-  // --- FUNGSI UTAMA YANG DIPERBARUI TOTAL ---
   Future<ServiceResponse<List<Product>>> getRecommendedProducts({
     required String brandName,
     required String undertone,
@@ -159,7 +158,6 @@ class FirestoreService {
     try {
       final skintoneId = int.tryParse(skintoneGroupId) ?? 0;
 
-      // 1. Definisikan tiga query terpisah
       final queryUndertone = _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
@@ -169,7 +167,7 @@ class FirestoreService {
       final querySeason = _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          .where('season_name', isEqualTo: season)
+          .where('season_name', arrayContains: season)
           .get();
 
       final querySkintone = _db
@@ -178,14 +176,12 @@ class FirestoreService {
           .where('skintone_group_id', isEqualTo: skintoneId)
           .get();
 
-      // 2. Jalankan semua query secara bersamaan
       final results = await Future.wait([
         queryUndertone,
         querySeason,
         querySkintone,
       ]);
 
-      // 3. Gabungkan hasilnya dan hapus duplikat
       final Map<String, Product> uniqueProducts = {};
 
       for (final querySnapshot in results) {
