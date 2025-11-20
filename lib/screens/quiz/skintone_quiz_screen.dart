@@ -17,12 +17,18 @@ class SkintoneOption {
 
 final List<SkintoneOption> skintoneOptions = List.generate(20, (index) {
   // Warna-warna ini sama seperti sebelumnya
-  final colors = [
-    const Color(0xFFF1EAE1), const Color(0xFFEADCCF), const Color(0xFFE3CBB8), const Color(0xFFD6B9A1),
-    const Color(0xFFC6A68A), const Color(0xFFB59273), const Color(0xFFA88365), const Color(0xFF9B7658),
-    const Color(0xFF8C684C), const Color(0xFF7D5B41), const Color(0xFF6E4E36), const Color(0xFF5F412B),
-    const Color(0xFFFDE9E4), const Color(0xFFE8C7A7), const Color(0xFFC6A98F), const Color(0xFF9E7C69),
-    const Color(0xFFF7F2EF), const Color(0xFFEFE2DD), const Color(0xFFC7B1A4), const Color(0xFF9E8981),
+final colors = [
+    // Baris 1 (Undertone Kuning/Emas - Terang ke Gelap)
+    const Color(0xFFFBE3BF), const Color(0xFFE2BB99), const Color(0xFFDEA97D), const Color(0xFFE3AF7B), const Color(0xFFD39763),
+    
+    // Baris 2 (Undertone Oranye/Tan - Terang ke Gelap)
+    const Color(0xFFE7B286), const Color(0xFFD99A78), const Color(0xFFCC926D), const Color(0xFFD49778), const Color(0xFF99674C),
+    
+    // Baris 3 (Undertone Merah/Pink - Terang ke Gelap)
+    const Color(0xFFF0B7A3), const Color(0xFFE4A681), const Color(0xFFC5917B), const Color(0xFFB38875), const Color(0xFF845D48),
+    
+    // Baris 4 (Undertone Netral/Pucat - Terang ke Gelap)
+    const Color(0xFFFAD7C2), const Color(0xFFF6CCB6), const Color(0xFFEEC5A7), const Color(0xFFE9AE8D), const Color(0xFFBD967D),
   ];
   return SkintoneOption(color: colors[index], groupId: index + 1);
 });

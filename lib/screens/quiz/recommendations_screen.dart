@@ -31,6 +31,7 @@ class RecommendationsScreen extends StatefulWidget {
 class _RecommendationsScreenState extends State<RecommendationsScreen> {
   late Future<Map<String, List<RecommendedProduct>>> _categorizedProductsFuture;
 
+  // --- DAFTAR TIPE PRODUK ---
   final List<String> complexionTypes = [
     'Foundation',
     'Concealer',
@@ -45,6 +46,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Liquid Complexion',
     'Powder Complexion'
   ];
+  
   final List<String> colorTypes = [
     'Lipstick',
     'Liptint',
@@ -55,6 +57,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Lip Matte',
     'Liquid Lipstick'
   ];
+
   final List<String> _categoryOrder = [
     'Universal Products',
     'Liquid Complexion',
@@ -63,6 +66,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Lips',
     'Eyes'
   ];
+
   final Map<String, List<String>> _displayCategories = {
     'Universal Products': [],
     'Liquid Complexion': [
@@ -102,33 +106,45 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     final firestoreService = FirestoreService();
     final response =
         await firestoreService.getProductsByBrandName(widget.brandName);
+    
     if (response.isSuccess && response.data != null) {
       final allProducts = response.data!;
+      
+      // Ambil data user
       final userUndertone = _capitalize(widget.analysisResult.undertone);
       final userSeason =
           _capitalize(widget.analysisResult.seasonResult.split(' ').last);
+      // Parse Skintone ID (1-20)
       final userSkintoneId = int.tryParse(widget.analysisResult.skintone) ?? 0;
+      
       final isNeutralResult = userUndertone == 'Neutral';
+      
       final List<Product> recommendedShades = [];
       final List<Product> universalShades = [];
+
       for (final product in allProducts) {
+        // 1. Cek Universal Product
         final bool isUniversal =
             product.undertoneName.isEmpty && product.seasonName.isEmpty;
         if (isUniversal) {
           universalShades.add(product);
           continue;
         }
+
         if (!isNeutralResult) {
           bool isMatch = false;
+
+          // --- LOGIKA BARU: PEMISAHAN STRICT UNTUK COMPLEXION ---
           if (complexionTypes.contains(product.productType)) {
-            final bool matchesUndertone =
-                product.undertoneName == userUndertone;
-            final bool matchesSkintone =
-                product.skintoneGroupId == userSkintoneId;
-            if (matchesSkintone || matchesUndertone) {
+            // KHUSUS Complexion (Liquid/Powder):
+            // HANYA cocok jika skintoneGroupId SAMA PERSIS dengan userSkintoneId.
+            // Jika produk tidak punya ID yang sama, jangan rekomendasikan.
+            if (product.skintoneGroupId == userSkintoneId) {
               isMatch = true;
             }
-          } else if (colorTypes.contains(product.productType)) {
+          } 
+          // --- LOGIKA UNTUK WARNA (LIPS, EYES, CHEEKS) ---
+          else if (colorTypes.contains(product.productType)) {
             final List<String> applicableSeasons = product.seasonName
                 .split(',')
                 .map((s) => s.trim())
@@ -136,35 +152,49 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 .toList();
 
             final bool matchesSeason = applicableSeasons.contains(userSeason);
+            
+            // Untuk produk warna, kita cocokkan Undertone DAN Season
             if (product.undertoneName == userUndertone && matchesSeason) {
               isMatch = true;
             }
           }
+
           if (isMatch) {
             recommendedShades.add(product);
           }
         }
       }
+
+      // Gabungkan Universal & Recommended
       final allRecommendedShades = [...recommendedShades, ...universalShades];
+      
+      // Grouping berdasarkan Product ID (untuk varian shade)
       final Map<String, List<Product>> shadesByProductId = {};
       for (final shade in allRecommendedShades) {
         shadesByProductId.putIfAbsent(shade.productId, () => []).add(shade);
       }
+
       final List<RecommendedProduct> finalProducts =
           shadesByProductId.entries.map((entry) {
         return RecommendedProduct(
             productInfo: entry.value.first, recommendedShades: entry.value);
       }).toList();
+
+      // Grouping ke UI Category
       final Map<String, List<RecommendedProduct>> groupedForUI = {};
       for (final recProduct in finalProducts) {
         final type = recProduct.productInfo.productType;
+        
+        // Cek Universal lagi untuk grouping UI
         final isUniversal = recProduct.productInfo.undertoneName.isEmpty &&
             recProduct.productInfo.seasonName.isEmpty;
+            
         if (isUniversal) {
           groupedForUI
               .putIfAbsent('Universal Products', () => [])
               .add(recProduct);
         }
+        
         for (final category in _displayCategories.entries) {
           if (category.value.contains(type)) {
             groupedForUI.putIfAbsent(category.key, () => []).add(recProduct);
@@ -182,6 +212,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   Widget build(BuildContext context) {
     final fullSeasonName =
         '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult.split(' ').last}';
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.brandName} Spotlight',
@@ -211,7 +242,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               ),
             );
           }
+          
           final categorizedProducts = snapshot.data!;
+          
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,12 +268,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     ],
                   ),
                 ),
+                // Loop kategori untuk ditampilkan
                 ..._categoryOrder.map((categoryTitle) {
                   final productsInCategory = categorizedProducts[categoryTitle];
+                  
+                  // JIKA KOSONG (misal: Brand tidak punya produk untuk Skintone ID tersebut)
+                  // Maka section ini tidak akan di-render (SizedBox.shrink)
                   if (productsInCategory == null ||
                       productsInCategory.isEmpty) {
                     return const SizedBox.shrink();
                   }
+                  
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

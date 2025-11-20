@@ -26,7 +26,10 @@ class Product {
   final String colorHex;
   final String undertoneName;
   final String seasonName;
-  final dynamic skintoneGroupId;
+  
+  // UBAH 1: Ganti 'dynamic' jadi 'int' agar logika pencocokan (==) berfungsi
+  final int skintoneGroupId; 
+  
   final String skintoneName;
   final String imageSwatchUrl;
   final String? linkProduct;
@@ -45,7 +48,13 @@ class Product {
       colorHex: data['color_hex'] ?? '',
       undertoneName: data['undertone_name'] ?? '',
       seasonName: data['season_name'] ?? '',
-      skintoneGroupId: data['skintone_group_id'] ?? 0,
+      
+      // UBAH 2: Parsing aman. Jika data string "16" akan diubah jadi int 16.
+      // Jika sudah int, biarkan. Jika null, jadi 0.
+      skintoneGroupId: (data['skintone_group_id'] is int)
+          ? data['skintone_group_id']
+          : int.tryParse(data['skintone_group_id'].toString()) ?? 0,
+          
       skintoneName: data['skintone_name'] ?? '',
       imageSwatchUrl: data['image_swatch_url'] ?? '',
       linkProduct: data['link_product'] as String?,

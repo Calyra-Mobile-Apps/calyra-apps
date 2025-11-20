@@ -25,8 +25,8 @@ const List<Map<String, List<Color>>> warmStepPalettes = [
 
 const List<Map<String, List<Color>>> coolStepPalettes = [
   {
-    'Summer': [Color(0xFFFFFFFF), Color(0xFFB6B5BB), Color(0xFF9E8686), Color(0xFF000000)],
-    'Winter': [Color(0xFFF5F5F5), Color(0xFFA1A0A5), Color(0xFF655555), Color(0xFF000000)],
+    'Summer': [Color(0xFFFFFFFF), Color(0xFFB6B5BB), Color(0xFF9E8686), Color(0xFF333333)],
+    'Winter': [Color(0xFFF5F5F5), Color(0xFFA1A0A5), Color(0xFF655555), Color(0xFF1A1A1A)],
   },
   {
     'Summer': [Color(0xFF6583C9), Color(0xFF62CDED), Color(0xFF6193DD), Color(0xFFAA97E6)],
