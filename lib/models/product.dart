@@ -11,10 +11,13 @@ class Product {
     required this.colorHex,
     required this.undertoneName,
     required this.seasonName,
-    required this.skintoneGroupId,
+    required this.skintoneGroupIds, // List ID
     required this.skintoneName,
     required this.imageSwatchUrl,
     this.linkProduct,
+    this.description = '', 
+    this.price = 0.0,
+    this.purchaseUrl = '',
   });
 
   final String brandName;
@@ -27,17 +30,46 @@ class Product {
   final String undertoneName;
   final String seasonName;
   
-  // UBAH 1: Ganti 'dynamic' jadi 'int' agar logika pencocokan (==) berfungsi
-  final int skintoneGroupId; 
+  final List<int> skintoneGroupIds; 
   
   final String skintoneName;
   final String imageSwatchUrl;
   final String? linkProduct;
+  final String description; 
+  final double price; 
+  final String purchaseUrl;
 
   String get name => productName;
   String get imageUrl => imageSwatchUrl;
 
   factory Product.fromFirestore(Map<String, dynamic> data) {
+    
+    // --- LOGIKA PARSING SKINTONE (DIPERBAIKI) ---
+    var rawSkintone = data['skintone_group_id'];
+    List<int> parsedIds = [];
+
+    if (rawSkintone is List) {
+      // Jika data di Firebase bentuknya Array: [1, 2, 3]
+      parsedIds = rawSkintone.map((e) => int.tryParse(e.toString()) ?? 0).toList();
+    } else if (rawSkintone is int) {
+      // Jika data di Firebase cuma angka: 1
+      parsedIds.add(rawSkintone);
+    } else if (rawSkintone is String) {
+      // Jika data di Firebase string: "1, 2, 3" atau "1"
+      // Kita pecah berdasarkan koma
+      if (rawSkintone.contains(',')) {
+        parsedIds = rawSkintone.split(',')
+            .map((e) => int.tryParse(e.trim()) ?? 0) // Trim spasi & parse
+            .where((e) => e != 0) // Hapus yang gagal parse
+            .toList();
+      } else {
+        // String tunggal "1"
+        int? val = int.tryParse(rawSkintone);
+        if (val != null) parsedIds.add(val);
+      }
+    }
+    // ------------------------------------------
+
     return Product(
       brandName: data['brand_name'] ?? '',
       productType: data['product_type'] ?? '',
@@ -49,15 +81,16 @@ class Product {
       undertoneName: data['undertone_name'] ?? '',
       seasonName: data['season_name'] ?? '',
       
-      // UBAH 2: Parsing aman. Jika data string "16" akan diubah jadi int 16.
-      // Jika sudah int, biarkan. Jika null, jadi 0.
-      skintoneGroupId: (data['skintone_group_id'] is int)
-          ? data['skintone_group_id']
-          : int.tryParse(data['skintone_group_id'].toString()) ?? 0,
+      skintoneGroupIds: parsedIds, // Masukkan hasil parsing
           
       skintoneName: data['skintone_name'] ?? '',
       imageSwatchUrl: data['image_swatch_url'] ?? '',
       linkProduct: data['link_product'] as String?,
+      description: data['description'] ?? '',
+      price: (data['price'] is String)
+          ? double.tryParse(data['price']) ?? 0.0
+          : (data['price'] as num?)?.toDouble() ?? 0.0,
+      purchaseUrl: data['link_product'] ?? '',
     );
   }
 }

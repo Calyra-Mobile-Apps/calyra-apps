@@ -4,7 +4,7 @@ import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/product.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
-import 'package:calyra/widgets/custom_product_image.dart';
+import 'package:calyra/widgets/custom_product_image.dart'; // Pastikan import ini benar
 import 'package:flutter/material.dart';
 
 String _capitalize(String s) {
@@ -77,7 +77,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Highlighter',
     'Lip Gloss',
     'Lip Tint',
-    'Lip Matte',
+    'Lipstick',
     'Lip Care',
     'Eyes',
     'Universal Products'
@@ -104,10 +104,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Blush': ['Blush'],
     'Highlighter': ['Highlighter'],
     
-    // Pecahan Kategori Lips
     'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
     'Lip Tint': ['Liptint', 'Lip Stain'],
-    'Lip Matte': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
+    'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
     'Lip Care': ['Lip Balm'],
     
     'Eyes': ['Eyeshadow'],
@@ -140,24 +139,30 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       final List<Product> universalList = [];
 
       for (final product in allProducts) {
-        // --- LOGIKA 1: UNIVERSAL PRODUCTS ---
-        final bool isUniversalData = product.undertoneName.isEmpty &&
+        // --- LOGIKA 1: UNIVERSAL PRODUCTS (REVISI) ---
+        // Syarat: (Undertone kosong ATAU Neutral) 
+        //         DAN Season kosong 
+        //         DAN (list skintone kosong ATAU isinya cuma 0)
+        final bool isUndertoneNeutralOrEmpty = product.undertoneName.isEmpty || product.undertoneName == 'Neutral';
+        
+        final bool isUniversalData = isUndertoneNeutralOrEmpty &&
             product.seasonName.isEmpty &&
-            product.skintoneGroupId == 0;
+            (product.skintoneGroupIds.isEmpty || (product.skintoneGroupIds.length == 1 && product.skintoneGroupIds.first == 0));
 
         if (isUniversalData) {
           if (universalTypes.contains(product.productType)) {
             universalList.add(product);
           }
-          continue; 
+          continue; // Skip logika selanjutnya
         }
 
         if (!isNeutralResult) {
           bool isMatch = false;
 
-          // --- LOGIKA 2: COMPLEXION ---
+          // --- LOGIKA 2: COMPLEXION (MULTIPLE IDs) ---
           if (complexionTypes.contains(product.productType)) {
-            if (product.skintoneGroupId == userSkintoneId) {
+            // Cek apakah ID User ADA DI DALAM List ID Produk
+            if (product.skintoneGroupIds.contains(userSkintoneId)) {
               isMatch = true;
             }
           }
@@ -403,11 +408,11 @@ class _ProductItem extends StatelessWidget {
                 height: 140,
                 width: 150,
                 color: Colors.grey.shade100,
-                // --- PENGGUNAAN CUSTOM PRODUCT IMAGE (Agar Gambar Muncul) ---
+                // --- PENGGUNAAN CUSTOM PRODUCT IMAGE ---
                 child: CustomProductImage(
                   imageUrl: productInfo.imageSwatchUrl,
                 ),
-                // ------------------------------------------------------------
+                // ---------------------------------------
               ),
             ),
             const SizedBox(height: 10),

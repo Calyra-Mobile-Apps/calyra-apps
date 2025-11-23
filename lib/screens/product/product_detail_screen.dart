@@ -160,8 +160,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   _buildDetailRow('Undertone', currentProduct.undertoneName),
                   _buildDetailRow('Season', currentProduct.seasonName),
                   // Tampilkan Skintone Group ID jika ada dan tidak 0
-                  if (currentProduct.skintoneGroupId != 0)
-                     _buildDetailRow('For Skintone', 'ID ${currentProduct.skintoneGroupId}'),
+                  if (currentProduct.skintoneGroupIds.isNotEmpty && !currentProduct.skintoneGroupIds.contains(0))
+                     _buildDetailRow('For Skintone', 'ID ${currentProduct.skintoneGroupIds.join(", ")}'),
                   
                   // Detail harga (jika ada di model Anda, tambahkan di sini)
                   // Contoh: _buildDetailRow('Price', 'Rp ...'),
