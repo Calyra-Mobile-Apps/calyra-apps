@@ -4,6 +4,7 @@ import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/product.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
+import 'package:calyra/widgets/custom_product_image.dart'; // <-- IMPORT PENTING
 import 'package:flutter/material.dart';
 
 String _capitalize(String s) {
@@ -31,7 +32,8 @@ class RecommendationsScreen extends StatefulWidget {
 class _RecommendationsScreenState extends State<RecommendationsScreen> {
   late Future<Map<String, List<RecommendedProduct>>> _categorizedProductsFuture;
 
-  // --- DAFTAR TIPE PRODUK ---
+  // --- 1. DAFTAR TIPE PRODUK ---
+  
   final List<String> complexionTypes = [
     'Foundation',
     'Concealer',
@@ -46,7 +48,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Liquid Complexion',
     'Powder Complexion'
   ];
-  
+
   final List<String> colorTypes = [
     'Lipstick',
     'Liptint',
@@ -55,20 +57,34 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Blush',
     'Eyeshadow',
     'Lip Matte',
-    'Liquid Lipstick'
+    'Liquid Lipstick',
+    'Lip Balm',
+    'Lip Stain',
+    'Lip Oil',
   ];
 
+  final List<String> universalTypes = [
+    'Eyeliner',
+    'Eyebrow',
+    'Mascara',
+  ];
+
+  // --- 2. URUTAN KATEGORI DI UI ---
   final List<String> _categoryOrder = [
-    'Universal Products',
     'Liquid Complexion',
     'Powder Complexion',
-    'Cheeks',
-    'Lips',
-    'Eyes'
+    'Blush',
+    'Highlighter',
+    'Lip Gloss',
+    'Lip Tint',
+    'Lipstick',
+    'Lip Care',
+    'Eyes',
+    'Universal Products'
   ];
 
+  // --- 3. MAPPING PRODUK KE UI ---
   final Map<String, List<String>> _displayCategories = {
-    'Universal Products': [],
     'Liquid Complexion': [
       'Foundation',
       'Concealer',
@@ -81,18 +97,21 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
       'Powder',
       'Compact Powder',
       'Loose Powder',
-      'Powder Complexion'
+      'Powder Complexion',
+      'Bronzer',
+      'Contour'
     ],
-    'Cheeks': ['Blush'],
-    'Lips': [
-      'Liptint',
-      'Lipcream',
-      'Lip Gloss',
-      'Lipstick',
-      'Lip Matte',
-      'Liquid Lipstick'
-    ],
+    'Blush': ['Blush'],
+    'Highlighter': ['Highlighter'],
+    
+    // Pecahan Kategori Lips
+    'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
+    'Lip Tint': ['Liptint', 'Lip Stain'],
+    'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
+    'Lip Care': ['Lip Balm'],
+    
     'Eyes': ['Eyeshadow'],
+    'Universal Products': ['Eyeliner', 'Eyebrow', 'Mascara'],
   };
 
   @override
@@ -106,54 +125,73 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     final firestoreService = FirestoreService();
     final response =
         await firestoreService.getProductsByBrandName(widget.brandName);
-    
+
     if (response.isSuccess && response.data != null) {
       final allProducts = response.data!;
-      
-      // Ambil data user
+
+      // Data User
       final userUndertone = _capitalize(widget.analysisResult.undertone);
       final userSeason =
           _capitalize(widget.analysisResult.seasonResult.split(' ').last);
-      // Parse Skintone ID (1-20)
       final userSkintoneId = int.tryParse(widget.analysisResult.skintone) ?? 0;
-      
       final isNeutralResult = userUndertone == 'Neutral';
-      
+
       final List<Product> recommendedShades = [];
-      final List<Product> universalShades = [];
+      final List<Product> universalList = [];
 
       for (final product in allProducts) {
-        // 1. Cek Universal Product
-        final bool isUniversal =
-            product.undertoneName.isEmpty && product.seasonName.isEmpty;
-        if (isUniversal) {
-          universalShades.add(product);
-          continue;
+        // --- LOGIKA 1: UNIVERSAL PRODUCTS ---
+        final bool isUniversalData = product.undertoneName.isEmpty &&
+            product.seasonName.isEmpty &&
+            product.skintoneGroupId == 0;
+
+        if (isUniversalData) {
+          if (universalTypes.contains(product.productType)) {
+            universalList.add(product);
+          }
+          continue; 
         }
 
         if (!isNeutralResult) {
           bool isMatch = false;
 
-          // --- LOGIKA BARU: PEMISAHAN STRICT UNTUK COMPLEXION ---
+          // --- LOGIKA 2: COMPLEXION ---
           if (complexionTypes.contains(product.productType)) {
-            // KHUSUS Complexion (Liquid/Powder):
-            // HANYA cocok jika skintoneGroupId SAMA PERSIS dengan userSkintoneId.
-            // Jika produk tidak punya ID yang sama, jangan rekomendasikan.
             if (product.skintoneGroupId == userSkintoneId) {
               isMatch = true;
             }
-          } 
-          // --- LOGIKA UNTUK WARNA (LIPS, EYES, CHEEKS) ---
+          }
+          // --- LOGIKA 3: HIGHLIGHTER ---
+          else if (product.productType == 'Highlighter') {
+            if (product.seasonName.isNotEmpty) {
+               // Ada Season -> Cek Undertone DAN Season
+               final List<String> applicableSeasons = product.seasonName
+                  .split(',')
+                  .map((s) => s.trim())
+                  .map(_capitalize)
+                  .toList();
+               final bool matchesSeason = applicableSeasons.contains(userSeason);
+               
+               if (product.undertoneName == userUndertone && matchesSeason) {
+                 isMatch = true;
+               }
+            } else {
+               // Tidak ada Season -> Cukup cek Undertone
+               if (product.undertoneName == userUndertone) {
+                 isMatch = true;
+               }
+            }
+          }
+          // --- LOGIKA 4: COLOR MAKEUP LAINNYA ---
           else if (colorTypes.contains(product.productType)) {
             final List<String> applicableSeasons = product.seasonName
                 .split(',')
                 .map((s) => s.trim())
-                .map(_capitalize)   
+                .map(_capitalize)
                 .toList();
 
             final bool matchesSeason = applicableSeasons.contains(userSeason);
-            
-            // Untuk produk warna, kita cocokkan Undertone DAN Season
+
             if (product.undertoneName == userUndertone && matchesSeason) {
               isMatch = true;
             }
@@ -165,12 +203,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
         }
       }
 
-      // Gabungkan Universal & Recommended
-      final allRecommendedShades = [...recommendedShades, ...universalShades];
-      
-      // Grouping berdasarkan Product ID (untuk varian shade)
+      // Gabungkan hasil
+      final allToProcess = [...recommendedShades, ...universalList];
+
+      // Grouping by Product ID
       final Map<String, List<Product>> shadesByProductId = {};
-      for (final shade in allRecommendedShades) {
+      for (final shade in allToProcess) {
         shadesByProductId.putIfAbsent(shade.productId, () => []).add(shade);
       }
 
@@ -180,25 +218,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             productInfo: entry.value.first, recommendedShades: entry.value);
       }).toList();
 
-      // Grouping ke UI Category
+      // Grouping ke UI Categories
       final Map<String, List<RecommendedProduct>> groupedForUI = {};
       for (final recProduct in finalProducts) {
         final type = recProduct.productInfo.productType;
-        
-        // Cek Universal lagi untuk grouping UI
-        final isUniversal = recProduct.productInfo.undertoneName.isEmpty &&
-            recProduct.productInfo.seasonName.isEmpty;
-            
-        if (isUniversal) {
-          groupedForUI
-              .putIfAbsent('Universal Products', () => [])
-              .add(recProduct);
-        }
-        
-        for (final category in _displayCategories.entries) {
-          if (category.value.contains(type)) {
-            groupedForUI.putIfAbsent(category.key, () => []).add(recProduct);
-            break;
+
+        for (final categoryEntry in _displayCategories.entries) {
+          if (categoryEntry.value.contains(type)) {
+            groupedForUI
+                .putIfAbsent(categoryEntry.key, () => [])
+                .add(recProduct);
+            break; 
           }
         }
       }
@@ -212,7 +242,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   Widget build(BuildContext context) {
     final fullSeasonName =
         '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult.split(' ').last}';
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.brandName} Spotlight',
@@ -242,9 +272,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               ),
             );
           }
-          
+
           final categorizedProducts = snapshot.data!;
-          
+
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,17 +298,16 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     ],
                   ),
                 ),
-                // Loop kategori untuk ditampilkan
+                
+                // Render Kategori sesuai urutan
                 ..._categoryOrder.map((categoryTitle) {
                   final productsInCategory = categorizedProducts[categoryTitle];
-                  
-                  // JIKA KOSONG (misal: Brand tidak punya produk untuk Skintone ID tersebut)
-                  // Maka section ini tidak akan di-render (SizedBox.shrink)
+
                   if (productsInCategory == null ||
                       productsInCategory.isEmpty) {
                     return const SizedBox.shrink();
                   }
-                  
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -374,12 +403,11 @@ class _ProductItem extends StatelessWidget {
                 height: 140,
                 width: 150,
                 color: Colors.grey.shade100,
-                child: Image.network(
-                  productInfo.imageSwatchUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Icon(Icons.broken_image)),
+                // --- PENGGUNAAN CUSTOM PRODUCT IMAGE (Agar Gambar Muncul) ---
+                child: CustomProductImage(
+                  imageUrl: productInfo.imageSwatchUrl,
                 ),
+                // ------------------------------------------------------------
               ),
             ),
             const SizedBox(height: 10),

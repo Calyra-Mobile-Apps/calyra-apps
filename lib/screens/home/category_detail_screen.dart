@@ -3,8 +3,10 @@
 import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_category.dart';
 import 'package:calyra/services/firestore_service.dart';
+import 'package:calyra/widgets/custom_product_image.dart'; // <-- Pastikan Import ini ada
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
+import 'package:calyra/screens/product/product_detail_screen.dart';
 
 class CategoryDetailScreen extends StatefulWidget {
   const CategoryDetailScreen({super.key, required this.category});
@@ -17,37 +19,73 @@ class CategoryDetailScreen extends StatefulWidget {
 
 class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   late Future<Map<String, List<Product>>> _productsFuture;
+  final FirestoreService _firestoreService = FirestoreService();
+  
+  // State untuk Filter yang dipilih (Default: All)
+  String _selectedFilter = 'All';
+
+  // --- 1. DEFINISI KATEGORI FILTER ---
+  final List<String> _filterKeys = [
+    'All',
+    'Blush',
+    'Highlighter',
+    'Lip Gloss',
+    'Lip Tint',
+    'Lipstick',
+    'Lip Care',
+    'Eyes',
+  ];
+
+  // Mapping produk yang BOLEH tampil di halaman ini
+  final Map<String, List<String>> _filterMapping = {
+    'Blush': ['Blush'],
+    'Highlighter': ['Highlighter'],
+    'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
+    'Lip Tint': ['Liptint', 'Lip Stain'],
+    'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
+    'Lip Care': ['Lip Balm'],
+    'Eyes': ['Eyeshadow'],
+  };
 
   @override
   void initState() {
     super.initState();
-    _productsFuture = _fetchAndGroupProductsBySeason();
+    _loadProducts();
   }
 
-  Future<Map<String, List<Product>>> _fetchAndGroupProductsBySeason() async {
-    final firestoreService = FirestoreService();
-    final response =
-        await firestoreService.getProductsBySeason(widget.category.title);
-    if (response.isSuccess && response.data != null) {
-      final Map<String, List<Product>> groupedProducts = {};
-      for (var product in response.data!) {
-        final key = product.productId;
+  void _loadProducts() {
+    _productsFuture = _fetchAndGroupProducts();
+  }
 
+  Future<Map<String, List<Product>>> _fetchAndGroupProducts() async {
+    // Ambil semua produk season ini
+    final response = await _firestoreService.getProductsBySeason(widget.category.title);
+
+    if (response.isSuccess && response.data != null) {
+      final List<Product> allProducts = response.data!;
+      
+      // Grouping by Product ID
+      final Map<String, List<Product>> groupedProducts = {};
+      
+      for (var product in allProducts) {
+        final key = product.productId;
         if (!groupedProducts.containsKey(key)) {
           groupedProducts[key] = [];
         }
         groupedProducts[key]!.add(product);
       }
-
       return groupedProducts;
     } else {
-      if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? 'Failed to load products')),
-        );
-      }
+      debugPrint('Error loading category products: ${response.message}');
       return {};
     }
+  }
+
+  // --- FUNGSI MEMILIH FILTER ---
+  void _onFilterSelected(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+    });
   }
 
   @override
@@ -58,87 +96,318 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // --- HEADER SECTION ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                  // Tombol Back
                   InkWell(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.arrow_back, size: 24),
-                        SizedBox(width: 8),
-                        Text(
-                          'Back',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.arrow_back, size: 24),
+                          SizedBox(width: 8),
+                          Text(
+                            'Back',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  
+                  // Judul & Icon
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset(
                         widget.category.assetPath,
-                        width: 40,
-                        height: 40,
-                        color: Colors.black,
+                        width: 30, 
+                        height: 30,
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        widget.category.title,
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown, 
+                          child: Text(
+                            widget.category.title,
+                            style: const TextStyle(
+                              fontSize: 24, 
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  
+                  // --- PERBAIKAN DESKRIPSI (Agar tidak kepotong) ---
                   Text(
                     widget.category.description,
                     textAlign: TextAlign.center,
+                    // maxLines: 2, // <-- HAPUS INI agar teks tampil semua
+                    // overflow: TextOverflow.ellipsis, // <-- HAPUS INI juga
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       color: Colors.grey[700],
-                      height: 1.5,
+                      height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(widget.category.paletteImagePath),
+                  // -------------------------------------------------
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Gambar Palet (Tipis)
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.asset(
+                        widget.category.paletteImagePath,
+                        height: 25, 
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => 
+                          const SizedBox(height: 0),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
 
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: FutureBuilder<Map<String, List<Product>>>(
-                  future: _productsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(child: Text('No recommended products found.'));
-                    }
-                    
-                    final List<List<Product>> productGroups = snapshot.data!.values.toList();
+            const SizedBox(height: 16),
 
-                    return ProductGrid(productGroups: productGroups); 
-                  },
+            // --- FILTER BAR (Horizontal Scroll) ---
+            SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _filterKeys.length,
+                itemBuilder: (context, index) {
+                  final filterName = _filterKeys[index];
+                  final isSelected = filterName == _selectedFilter;
+
+                  return GestureDetector(
+                    onTap: () => _onFilterSelected(filterName),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16, 
+                        vertical: 8
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.black : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(20),
+                        border: isSelected 
+                            ? null 
+                            : Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Center(
+                        child: Text(
+                          filterName,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // --- PRODUCT GRID (Filtered) ---
+            Expanded(
+              child: FutureBuilder<Map<String, List<Product>>>(
+                future: _productsFuture,
+                builder: (context, snapshot) {
+                  // 1. Loading
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  // 2. Data Kosong (Fetch gagal)
+                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _buildEmptyState('No products found for ${widget.category.title}');
+                  }
+
+                  // 3. LOGIKA FILTER (Client Side)
+                  final allGroups = snapshot.data!.values.toList();
+                  
+                  // Kumpulkan semua tipe produk yang diizinkan di halaman ini
+                  final allowedTypes = _filterMapping.values.expand((e) => e).toList();
+
+                  final filteredGroups = allGroups.where((group) {
+                    final product = group.first;
+                    
+                    // A. Cek apakah tipe produk ini DIPERBOLEHKAN
+                    if (!allowedTypes.contains(product.productType)) {
+                        return false; 
+                    }
+
+                    // B. Cek filter User
+                    if (_selectedFilter == 'All') return true;
+                    
+                    final currentFilterTypes = _filterMapping[_selectedFilter];
+                    return currentFilterTypes != null && currentFilterTypes.contains(product.productType);
+                  }).toList();
+
+                  // 4. Data Kosong (Setelah Filter)
+                  if (filteredGroups.isEmpty) {
+                    return _buildEmptyState('No $_selectedFilter found.');
+                  }
+
+                  // 5. Tampilkan Grid dengan CustomProductImage (via ProductGrid)
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: ListView.builder( // Ubah ke ListView untuk custom item atau pakai ProductGrid modifikasi
+                      // Disini kita pakai GridView builder manual atau ProductGrid yang sudah support CustomImage
+                      // Agar aman, saya tulis manual builder grid-nya di sini menggunakan _ProductItem local
+                      // yang sudah diupdate pakai CustomProductImage
+                      padding: const EdgeInsets.only(top: 10, bottom: 40),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: (filteredGroups.length / 2).ceil(),
+                      itemBuilder: (context, index) {
+                        final int firstIndex = index * 2;
+                        final int secondIndex = firstIndex + 1;
+                        
+                        return Row(
+                          children: [
+                            Expanded(child: _ProductItem(recommendedProduct: RecommendedProduct(productInfo: filteredGroups[firstIndex].first, recommendedShades: filteredGroups[firstIndex]))),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: secondIndex < filteredGroups.length
+                                  ? _ProductItem(recommendedProduct: RecommendedProduct(productInfo: filteredGroups[secondIndex].first, recommendedShades: filteredGroups[secondIndex]))
+                                  : const SizedBox(),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.filter_alt_off, size: 48, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(color: Colors.grey[500]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- LOCAL WIDGETS ---
+
+class RecommendedProduct {
+  final Product productInfo;
+  final List<Product> recommendedShades;
+  RecommendedProduct({required this.productInfo, required this.recommendedShades});
+}
+
+class _ProductItem extends StatelessWidget {
+  final RecommendedProduct recommendedProduct;
+  const _ProductItem({required this.recommendedProduct});
+
+  @override
+  Widget build(BuildContext context) {
+    final productInfo = recommendedProduct.productInfo;
+    final shadeCount = recommendedProduct.recommendedShades.length;
+    final allShadeNames = recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailScreen(
+              productShades: recommendedProduct.recommendedShades,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Container(
+                height: 140,
+                width: double.infinity,
+                color: Colors.grey.shade50,
+                // --- PAKAI CUSTOM IMAGE AGAR GAMBAR MUNCUL ---
+                child: CustomProductImage(
+                  imageUrl: productInfo.imageSwatchUrl,
                 ),
+                // ---------------------------------------------
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    productInfo.brandName,
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    productInfo.productName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    shadeCount > 1 ? '$shadeCount Shades' : 'Shade: $allShadeNames',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+                  ),
+                ],
               ),
             ),
           ],

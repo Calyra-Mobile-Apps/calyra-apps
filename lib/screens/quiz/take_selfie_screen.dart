@@ -1,13 +1,13 @@
 // Lokasi file: lib/screens/quiz/take_selfie_screen.dart
 
 import 'dart:typed_data';
-
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/main_screen.dart';
 import 'package:calyra/screens/quiz/undertone_quiz_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle, ByteData; // Tambahan import
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -34,9 +34,8 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      _initializeCamera();
-    }
+    // Coba inisialisasi kamera, tapi jangan blokir UI jika gagal
+    _initializeCamera();
   }
 
   @override
@@ -47,45 +46,47 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
 
   Future<void> _initializeCamera() async {
     try {
-      final cameras = await availableCameras();
-      if (!mounted) return;
+      if (kIsWeb) {
+        // Logika inisialisasi kamera Web
+        final cameras = await availableCameras();
+        if (!mounted) return;
 
-      if (cameras.isEmpty) {
+        if (cameras.isEmpty) {
+          setState(() => _cameraError = 'No camera device found.');
+          return;
+        }
+
+        final frontCamera = cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front,
+          orElse: () => cameras.first,
+        );
+
+        final controller = CameraController(
+          frontCamera,
+          ResolutionPreset.medium,
+          enableAudio: false,
+          imageFormatGroup: ImageFormatGroup.jpeg,
+        );
+
+        final initFuture = controller.initialize();
         setState(() {
-          _cameraError = 'No camera device found.';
+          _cameraController = controller;
+          _initializeCameraFuture = initFuture;
+          _cameraError = null;
         });
-        return;
+
+        await initFuture;
+        if (!mounted) return;
+        setState(() {});
+      } else {
+        // Di Mobile kadang tidak butuh inisialisasi controller di awal
+        // jika hanya mengandalkan ImagePicker, tapi kita biarkan kosong/default.
       }
-
-      final frontCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
-      );
-
-      final controller = CameraController(
-        frontCamera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
-      );
-
-      final initFuture = controller.initialize();
-      setState(() {
-        _cameraController = controller;
-        _initializeCameraFuture = initFuture;
-        _cameraError = null;
-      });
-
-      await initFuture;
-      if (!mounted) return;
-      setState(() {});
     } catch (e) {
-      await _cameraController?.dispose();
+      // Jangan dispose jika belum terbentuk, set error saja
       if (!mounted) return;
       setState(() {
-        _cameraController = null;
-        _initializeCameraFuture = null;
-        _cameraError = 'Failed to initialise camera: $e';
+        _cameraError = 'Camera not available (Testing Mode)';
       });
     }
   }
@@ -100,10 +101,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
       final picture = await controller.takePicture();
       final bytes = await picture.readAsBytes();
       if (!mounted) return;
-      setState(() {
-        _imageBytes = bytes;
-      });
-      context.read<QuizProvider>().setSelfieBytes(bytes);
+      _setImage(bytes);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -113,21 +111,50 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
   }
 
   Future<void> _captureMobileImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      preferredCameraDevice: CameraDevice.front,
-      maxWidth: 800,
-      imageQuality: 80,
-    );
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
+        maxWidth: 800,
+        imageQuality: 80,
+      );
 
-    if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
-      if (!mounted) return;
-      setState(() {
-        _imageBytes = bytes;
-      });
-      context.read<QuizProvider>().setSelfieBytes(bytes);
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        if (!mounted) return;
+        _setImage(bytes);
+      }
+    } catch (e) {
+       // Error handling jika kamera gagal dibuka
+       setState(() => _cameraError = 'Camera error: $e');
     }
+  }
+
+  // --- FITUR BARU: Load Gambar Dummy untuk Testing ---
+  Future<void> _loadTestImage() async {
+    try {
+      // Menggunakan Logo.png sebagai gambar dummy pengganti selfie
+      // Pastikan path ini benar ada di assets Anda
+      final ByteData bytesData = await rootBundle.load('assets/images/Logo.png');
+      final Uint8List bytes = bytesData.buffer.asUint8List();
+      
+      if (!mounted) return;
+      _setImage(bytes);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Test image loaded! Press Next.')),
+      );
+    } catch (e) {
+      debugPrint("Error loading test image: $e");
+      setState(() => _cameraError = "Failed to load test image");
+    }
+  }
+
+  void _setImage(Uint8List bytes) {
+    setState(() {
+      _imageBytes = bytes;
+    });
+    context.read<QuizProvider>().setSelfieBytes(bytes);
   }
 
   void _handleSkip(BuildContext context) {
@@ -195,7 +222,10 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                         ),
                       ],
                     ),
+                    
+                    // --- CAPTURE AREA ---
                     _buildCaptureArea(),
+
                     Column(
                       children: [
                         _buildInstruction(
@@ -207,6 +237,8 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                             'Show full face'),
                       ],
                     ),
+                    
+                    // --- TOMBOL CAPTURE WEB ---
                     if (kIsWeb)
                       Column(
                         children: [
@@ -237,9 +269,12 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                           ],
                         ],
                       ),
+
+                    // --- TOMBOL NAVIGASI (Next, Use Test Photo, Skip) ---
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // Tombol NEXT
                         ElevatedButton(
                           onPressed: _imageBytes == null
                               ? null
@@ -247,8 +282,8 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) =>
-                                            const UndertoneQuizMainScreen()),
+                                      builder: (context) =>
+                                          const UndertoneQuizMainScreen()),
                                   );
                                 },
                           style: ElevatedButton.styleFrom(
@@ -262,11 +297,28 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
+                        const SizedBox(height: 12),
+                        
+                        // --- TOMBOL BARU: USE TEST PHOTO ---
+                        if (_imageBytes == null) // Hanya muncul jika belum ada foto
+                          OutlinedButton.icon(
+                            onPressed: _loadTestImage,
+                            icon: const Icon(Icons.image),
+                            label: const Text("Use Test Photo (Skip Camera)"),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(color: Colors.black),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
+                          
                         const SizedBox(height: 8),
                         if (widget.isInitialFlow)
                           TextButton(
                             onPressed: () => _handleSkip(context),
-                            child: Text('Skip',
+                            child: Text('Quit Quiz',
                                 style: TextStyle(
                                     color: Colors.grey[600], fontSize: 16)),
                           ),
@@ -318,6 +370,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
           : null,
     );
 
+    // Jika di Mobile (dan bukan Web), tap area untuk buka kamera
     if (!kIsWeb) {
       return GestureDetector(
         onTap: _captureMobileImage,
@@ -325,10 +378,12 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
       );
     }
 
+    // Jika sudah ada gambar (Web/Mobile), tampilkan preview statis
     if (_imageBytes != null) {
       return preview;
     }
 
+    // Jika Error kamera (Web)
     if (_cameraError != null) {
       return Container(
         width: 240,
@@ -340,10 +395,17 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
         alignment: Alignment.center,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(
-            _cameraError!,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+               const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+               const SizedBox(height: 8),
+               Text(
+                _cameraError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              ),
+            ],
           ),
         ),
       );
@@ -352,6 +414,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
     final controller = _cameraController;
     final initFuture = _initializeCameraFuture;
 
+    // Loading state kamera (Web)
     if (controller == null || initFuture == null) {
       return const SizedBox(
         width: 240,
@@ -360,6 +423,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
       );
     }
 
+    // Preview Kamera (Web)
     return FutureBuilder<void>(
       future: initFuture,
       builder: (context, snapshot) {

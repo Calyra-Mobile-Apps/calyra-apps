@@ -1,4 +1,4 @@
-// lib/services/firestore_service.dart
+// Lokasi file: lib/services/firestore_service.dart
 
 import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/product.dart';
@@ -113,12 +113,15 @@ class FirestoreService {
     }
   }
 
+  // --- REVISI BAGIAN INI AGAR PRODUK SEASON MUNCUL ---
   Future<ServiceResponse<List<Product>>> getProductsBySeason(
       String seasonName) async {
     try {
       final querySnapshot = await _db
           .collection(_productsCollection)
-          .where('season_name', arrayContains: seasonName)
+          // UBAH DARI arrayContains KE isEqualTo
+          // Karena season_name biasanya String ("Spring"), bukan Array.
+          .where('season_name', isEqualTo: seasonName) 
           .get();
 
       final products = querySnapshot.docs
@@ -131,13 +134,34 @@ class FirestoreService {
     }
   }
 
+  // --- FUNGSI BARU: UNTUK MENGAMBIL PRODUK WARM / COOL ---
+  Future<ServiceResponse<List<Product>>> getProductsByUndertone(
+      String undertoneName) async {
+    try {
+      final querySnapshot = await _db
+          .collection(_productsCollection)
+          .where('undertone_name', isEqualTo: undertoneName)
+          .get();
+
+      final products = querySnapshot.docs
+          .map((doc) => Product.fromFirestore(doc.data()))
+          .toList();
+
+      return ServiceResponse.success(products);
+    } catch (e) {
+      return ServiceResponse.failure('Error fetching products by undertone: $e');
+    }
+  }
+  // -------------------------------------------------------
+
   Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
       String brandName, String seasonName) async {
     try {
       final querySnapshot = await _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          .where('season_name', arrayContains: seasonName)
+          // Gunakan isEqualTo juga di sini agar konsisten untuk String
+          .where('season_name', isEqualTo: seasonName) 
           .get();
       final products = querySnapshot.docs
           .map((doc) => Product.fromFirestore(doc.data()))
@@ -167,7 +191,11 @@ class FirestoreService {
       final querySeason = _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          .where('season_name', arrayContains: season)
+          // Sesuaikan logika season di sini (isEqualTo atau arrayContains tergantung data)
+          // Jika data Anda String, gunakan isEqualTo. Jika Array, gunakan arrayContains.
+          // Di sini saya biarkan arrayContains JIKA logic rekomendasi Anda memang mengecek array,
+          // tapi jika single string, sebaiknya isEqualTo.
+          .where('season_name', arrayContains: season) 
           .get();
 
       final querySkintone = _db
