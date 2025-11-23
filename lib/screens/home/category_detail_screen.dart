@@ -31,7 +31,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     'Highlighter',
     'Lip Gloss',
     'Lip Tint',
-    'Lipstick',
+    'Lip Matte',
     'Lip Care',
     'Eyes',
   ];
@@ -42,7 +42,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     'Highlighter': ['Highlighter'],
     'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
     'Lip Tint': ['Liptint', 'Lip Stain'],
-    'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
+    'Lip Matte': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
     'Lip Care': ['Lip Balm'],
     'Eyes': ['Eyeshadow'],
   };

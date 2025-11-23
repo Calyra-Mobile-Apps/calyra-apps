@@ -4,7 +4,7 @@ import 'package:calyra/models/analysis_result.dart';
 import 'package:calyra/models/product.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
-import 'package:calyra/widgets/custom_product_image.dart'; // <-- IMPORT PENTING
+import 'package:calyra/widgets/custom_product_image.dart';
 import 'package:flutter/material.dart';
 
 String _capitalize(String s) {
@@ -77,7 +77,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Highlighter',
     'Lip Gloss',
     'Lip Tint',
-    'Lipstick',
+    'Lip Matte',
     'Lip Care',
     'Eyes',
     'Universal Products'
@@ -107,7 +107,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     // Pecahan Kategori Lips
     'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
     'Lip Tint': ['Liptint', 'Lip Stain'],
-    'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
+    'Lip Matte': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
     'Lip Care': ['Lip Balm'],
     
     'Eyes': ['Eyeshadow'],
