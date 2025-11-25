@@ -74,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
 
-  Future<void> _handleLogout() async {
+Future<void> _handleLogout() async {
     final navigator = Navigator.of(context); // Cache navigator
 
     // Show confirmation dialog
@@ -86,15 +86,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: const Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold)),
           content: const Text('Are you sure you want to log out?'),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           actions: [
+            // Tombol Cancel
             TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.black54)),
-              onPressed: () => Navigator.of(dialogContext).pop(false), // Return false on cancel
+              style: ButtonStyle(
+                // Tulisan abu agak tua (Shade 700) biar kontras
+                foregroundColor: MaterialStateProperty.all(Colors.grey.shade700),
+                // Background hover/tekan: Abu muda (Shade 200)
+                overlayColor: MaterialStateProperty.resolveWith<Color?>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.hovered) || 
+                        states.contains(MaterialState.pressed)) {
+                      return Colors.grey.shade200; 
+                    }
+                    return null;
+                  },
+                ),
+                padding: MaterialStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
             ),
+            
+            // Tombol Log Out
             TextButton(
-              child: const Text('Log Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-              onPressed: () => Navigator.of(dialogContext).pop(true), // Return true on confirm
+              style: ButtonStyle(
+                // Tulisan Merah
+                foregroundColor: MaterialStateProperty.all(Colors.red),
+                // Background hover/tekan: Merah pudar (Shade 100)
+                overlayColor: MaterialStateProperty.resolveWith<Color?>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.hovered) || 
+                        states.contains(MaterialState.pressed)) {
+                      return Colors.red.shade100; 
+                    }
+                    return null;
+                  },
+                ),
+                padding: MaterialStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+              child: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
             ),
           ],
         );
@@ -180,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 120.0), // Padding bawah utk bottom nav bar
+          padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

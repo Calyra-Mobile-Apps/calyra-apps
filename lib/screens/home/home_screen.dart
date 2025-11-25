@@ -26,17 +26,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
-
-  // Future untuk Search (mengambil semua produk)
   late Future<Map<String, List<Product>>> _allProductsFuture;
   bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
-    // Load semua produk untuk keperluan fitur Search
     _allProductsFuture = _fetchAllProducts();
-    
+
     _searchController.addListener(() {
       final bool isSearching = _searchController.text.isNotEmpty;
       if (isSearching != _isSearching) {
@@ -88,26 +85,23 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header berubah dinamis (Search / Welcome)
                   if (_isSearching) _buildSearchHeader() else _buildHeader(),
                   const SizedBox(height: 24),
                   _buildSearchBar(),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 20),
 
             // --- KONTEN UTAMA (SCROLLABLE) ---
             Expanded(
-              child: _isSearching 
+              child: _isSearching
                   ? Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: _buildSearchResults(),
                     )
-                  // Jika tidak search, tampilkan Default Content (Seasonal Picks + Brand)
-                  // Bar Filter (Warm/Cool/dll) SUDAH DIHAPUS DARI SINI
-                  : _buildDefaultContent(), 
+                  : _buildDefaultContent(),
             ),
           ],
         ),
@@ -119,21 +113,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader() {
     final user = FirebaseAuth.instance.currentUser;
 
-    // Jika user belum login -> Tampilkan default
     if (user == null) {
       return _buildWelcomeText('Calyra');
     }
 
-    // Jika login -> Pakai StreamBuilder agar update real-time
     return StreamBuilder<UserModel?>(
-      stream: _firestoreService.getUserStream(user.uid), // Memantau perubahan data
+      stream: _firestoreService.getUserStream(user.uid),
       builder: (context, snapshot) {
         String displayName = 'Calyra';
 
         if (snapshot.hasData && snapshot.data != null) {
           final fullName = snapshot.data!.name;
           if (fullName.isNotEmpty) {
-            displayName = fullName.split(' ').first; // Ambil nama depan
+            displayName = fullName.split(' ').first;
           }
         }
 
@@ -174,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             _searchController.clear();
-            FocusScope.of(context).unfocus(); // Tutup keyboard
+            FocusScope.of(context).unfocus();
           },
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
@@ -222,9 +214,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           _buildSeasonalPicks(context),
-          
+
           const SizedBox(height: 24),
-          
+
           // 2. BRAND MAKEUP
           _buildSectionTitle(
             'Brand Makeup',
@@ -232,8 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
           _buildBrandMakeup(context),
-          
-          const SizedBox(height: 100), // Space bawah
+
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -243,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final String query = _searchController.text.trim().toLowerCase();
 
     return FutureBuilder<Map<String, List<Product>>>(
-      future: _allProductsFuture, 
+      future: _allProductsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -257,9 +249,18 @@ class _HomeScreenState extends State<HomeScreen> {
           return const Center(child: Text('Please enter a search term.'));
         }
 
+        final List<String> keywords =
+            query.split(' ').where((k) => k.isNotEmpty).toList();
+
         final filteredProductGroups = allProductGroupsMap.values.where((group) {
           final mainProduct = group.first;
-          return mainProduct.productName.toLowerCase().contains(query);
+          final String searchableText = [
+            mainProduct.productName,
+            mainProduct.brandName,
+            mainProduct.productType,
+            ...group.map((p) => p.shadeName),
+          ].join(' ').toLowerCase();
+          return keywords.every((keyword) => searchableText.contains(keyword));
         }).toList();
 
         if (filteredProductGroups.isEmpty) {
