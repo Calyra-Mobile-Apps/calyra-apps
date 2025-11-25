@@ -2,6 +2,8 @@
 
 Calyra adalah aplikasi mobile yang dirancang untuk membantu pengguna menemukan produk makeup yang paling sesuai dengan personal color analysis mereka. Dengan memanfaatkan kuis interaktif berbasis foto, aplikasi ini mengidentifikasi undertone, skintone, dan palet warna musiman pengguna untuk memberikan rekomendasi produk yang akurat dan terpersonalisasi.
 
+## Link .apk
+https://drive.google.com/drive/folders/12C3HrC1uFaBC0rQT7xkfoDIZTwP8sJyk?usp=sharing
 
 ## Authors
 
