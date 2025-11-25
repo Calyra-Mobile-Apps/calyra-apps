@@ -3,7 +3,7 @@
 import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_category.dart';
 import 'package:calyra/services/firestore_service.dart';
-import 'package:calyra/widgets/custom_product_image.dart'; // <-- Pastikan Import ini ada
+import 'package:calyra/widgets/custom_product_image.dart'; 
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
@@ -31,7 +31,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     'Highlighter',
     'Lip Gloss',
     'Lip Tint',
-    'Lip Matte',
+    'Lipstick',
     'Lip Care',
     'Eyes',
   ];
@@ -42,7 +42,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     'Highlighter': ['Highlighter'],
     'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
     'Lip Tint': ['Liptint', 'Lip Stain'],
-    'Lip Matte': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
+    'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
     'Lip Care': ['Lip Balm'],
     'Eyes': ['Eyeshadow'],
   };
@@ -58,21 +58,34 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   }
 
   Future<Map<String, List<Product>>> _fetchAndGroupProducts() async {
-    // Ambil semua produk season ini
-    final response = await _firestoreService.getProductsBySeason(widget.category.title);
+    // --- PERBAIKAN UTAMA DI SINI ---
+    // 1. Ambil SEMUA produk dulu (karena kita butuh filter manual string "Spring, Autumn")
+    final response = await _firestoreService.getAllProducts();
 
     if (response.isSuccess && response.data != null) {
       final List<Product> allProducts = response.data!;
-      
-      // Grouping by Product ID
       final Map<String, List<Product>> groupedProducts = {};
       
+      // Target Season (misal: "Spring")
+      final String targetSeason = widget.category.title; 
+
       for (var product in allProducts) {
-        final key = product.productId;
-        if (!groupedProducts.containsKey(key)) {
-          groupedProducts[key] = [];
+        // 2. FILTER MANUAL YANG LEBIH PINTAR
+        // Pecah string season (misal "Spring, Autumn") jadi list
+        List<String> productSeasons = product.seasonName
+            .split(',')
+            .map((e) => e.trim()) // Hapus spasi
+            .toList();
+
+        // Cek apakah season yang kita cari ada di dalam list produk tsb?
+        if (productSeasons.contains(targetSeason)) {
+           // Jika cocok, masukkan ke grup
+           final key = product.productId;
+           if (!groupedProducts.containsKey(key)) {
+             groupedProducts[key] = [];
+           }
+           groupedProducts[key]!.add(product);
         }
-        groupedProducts[key]!.add(product);
       }
       return groupedProducts;
     } else {
@@ -150,20 +163,16 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   
-                  // --- PERBAIKAN DESKRIPSI (Agar tidak kepotong) ---
+                  // Deskripsi
                   Text(
                     widget.category.description,
                     textAlign: TextAlign.center,
-                    // maxLines: 2, // <-- HAPUS INI agar teks tampil semua
-                    // overflow: TextOverflow.ellipsis, // <-- HAPUS INI juga
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
-                  // -------------------------------------------------
-                  
                   const SizedBox(height: 16),
                   
                   // Gambar Palet (Tipis)
@@ -274,10 +283,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                   // 5. Tampilkan Grid dengan CustomProductImage (via ProductGrid)
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: ListView.builder( // Ubah ke ListView untuk custom item atau pakai ProductGrid modifikasi
-                      // Disini kita pakai GridView builder manual atau ProductGrid yang sudah support CustomImage
-                      // Agar aman, saya tulis manual builder grid-nya di sini menggunakan _ProductItem local
-                      // yang sudah diupdate pakai CustomProductImage
+                    child: ListView.builder( 
                       padding: const EdgeInsets.only(top: 10, bottom: 40),
                       physics: const BouncingScrollPhysics(),
                       itemCount: (filteredGroups.length / 2).ceil(),
