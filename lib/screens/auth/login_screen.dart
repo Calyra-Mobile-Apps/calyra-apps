@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 50),
                 // --- English UI Text ---
-                const Text('Welcome back',
+                const Text('Welcome Back!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 28,

@@ -1,3 +1,5 @@
+// Lokasi file: lib/widgets/brand_card.dart
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -38,6 +40,9 @@ class BrandCard extends StatelessWidget {
                 child: Image.asset(
                   logoPath,
                   fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox(); // Hide logo if not found
+                  },
                 ),
               ),
             ),
@@ -56,29 +61,40 @@ class _BackgroundImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // LOGIKA PENTING: Cek apakah ini link internet atau file asset lokal
+    final bool isNetworkImage = imageUrl.startsWith('http');
+
     return ColorFiltered(
       colorFilter: ColorFilter.mode(
-        Colors.black.withValues(alpha: 0.25),
+        Colors.black.withOpacity(0.25), // Gelapkan gambar sedikit agar logo terbaca
         BlendMode.darken,
       ),
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey.shade300,
-            alignment: Alignment.center,
-            child: Text(
-              fallbackLabel,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+      child: isNetworkImage
+          ? Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
+            )
+          : Image.asset(
+              imageUrl, // Memuat dari assets/images/
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
             ),
-          );
-        },
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Container(
+      color: Colors.grey.shade300,
+      alignment: Alignment.center,
+      child: Text(
+        fallbackLabel,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.black54,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -111,7 +127,8 @@ class _GrainPainter extends CustomPainter {
     final minDimension = max(1.0, min(size.width, size.height));
 
     for (final particle in _particles) {
-      paint.color = Colors.white.withValues(alpha: particle.opacity);
+      // Menggunakan withOpacity agar kompatibel
+      paint.color = Colors.white.withOpacity(particle.opacity);
       final offset = Offset(
         particle.position.dx * size.width,
         particle.position.dy * size.height,

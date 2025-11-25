@@ -3,13 +3,11 @@
 import 'package:calyra/controllers/auth_controller.dart';
 import 'package:calyra/models/service_response.dart';
 import 'package:calyra/screens/auth/login_screen.dart';
-import 'package:calyra/screens/quiz/take_selfie_screen.dart';
+import 'package:calyra/screens/auth/welcome_screen.dart'; // <-- Pastikan import ini ada
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-// Import untuk firebase_auth dan cloud_firestore sudah dihapus
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -27,7 +25,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-
   bool _isFormValid = false;
 
   final AuthController _authController = AuthController();
@@ -73,17 +70,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context); // Tutup loading dialog
 
         if (response.isSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Registration successful! Please sign in.')),
-          );
+          // --- REVISI NAVIGASI DI SINI ---
+          // Ke WelcomeScreen, bukan langsung Selfie
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const TakeSelfieScreen()),
+            MaterialPageRoute(
+              builder: (context) => WelcomeScreen(
+                userName: _nameController.text.trim(),
+              ),
+            ),
             (route) => false,
           );
+          // -------------------------------
         } else {
           final message = response.message ??
               'An undefined error occurred. Please try again.';
@@ -210,17 +210,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password confirmation cannot be empty';
-                    }
-                    final passwordError = _passwordController.text.isEmpty
-                        ? 'Password cannot be empty'
-                        : (_passwordController.text.length < 8)
-                            ? 'Password must be at least 8 characters'
-                            : (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)')
-                                    .hasMatch(_passwordController.text))
-                                ? 'Please use a combination of letters and numbers'
-                                : null;
-                    if (passwordError != null) {
-                      return 'Please correct the password above';
                     }
                     if (value != _passwordController.text) {
                       return 'Passwords do not match';
