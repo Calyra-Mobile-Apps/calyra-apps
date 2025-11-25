@@ -5,12 +5,15 @@ import 'package:calyra/data/season_category_data.dart';
 import 'package:calyra/models/brand_info.dart';
 import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_category.dart';
+import 'package:calyra/models/service_response.dart';
+import 'package:calyra/models/user_model.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:calyra/screens/brand/brand_catalog_screen.dart';
 import 'package:calyra/screens/home/category_detail_screen.dart';
 import 'package:calyra/widgets/brand_card.dart';
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:calyra/widgets/seasonal_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,13 +27,16 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
 
+  // Future untuk Search (mengambil semua produk)
   late Future<Map<String, List<Product>>> _allProductsFuture;
   bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchAllProducts();
+    // Load semua produk untuk keperluan fitur Search
+    _allProductsFuture = _fetchAllProducts();
+    
     _searchController.addListener(() {
       final bool isSearching = _searchController.text.isNotEmpty;
       if (isSearching != _isSearching) {
@@ -49,11 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _fetchAllProducts() {
-    _allProductsFuture = _fetchAndGroupProducts();
-  }
-
-  Future<Map<String, List<Product>>> _fetchAndGroupProducts() async {
+  // Fungsi Fetch All Products (Hanya dipakai saat Search)
+  Future<Map<String, List<Product>>> _fetchAllProducts() async {
     final response = await _firestoreService.getAllProducts();
 
     if (response.isSuccess && response.data != null) {
@@ -67,11 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       return groupedProducts;
     } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? 'Failed to load products')),
-        );
-      }
       return {};
     }
   }
@@ -81,22 +79,90 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_isSearching) _buildSearchHeader() else _buildHeader(),
-              const SizedBox(height: 24),
-              _buildSearchBar(),
-              const SizedBox(height: 24),
-              Expanded(
-                child: _isSearching ? _buildSearchResults() : _buildDefaultContent(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- BAGIAN HEADER & SEARCH (FIXED TOP) ---
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header berubah dinamis (Search / Welcome)
+                  if (_isSearching) _buildSearchHeader() else _buildHeader(),
+                  const SizedBox(height: 24),
+                  _buildSearchBar(),
+                ],
               ),
-            ],
-          ),
+            ),
+            
+            const SizedBox(height: 20),
+
+            // --- KONTEN UTAMA (SCROLLABLE) ---
+            Expanded(
+              child: _isSearching 
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildSearchResults(),
+                    )
+                  // Jika tidak search, tampilkan Default Content (Seasonal Picks + Brand)
+                  // Bar Filter (Warm/Cool/dll) SUDAH DIHAPUS DARI SINI
+                  : _buildDefaultContent(), 
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  // --- HEADER DENGAN NAMA USER (REAL-TIME STREAM) ---
+  Widget _buildHeader() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    // Jika user belum login -> Tampilkan default
+    if (user == null) {
+      return _buildWelcomeText('Calyra');
+    }
+
+    // Jika login -> Pakai StreamBuilder agar update real-time
+    return StreamBuilder<UserModel?>(
+      stream: _firestoreService.getUserStream(user.uid), // Memantau perubahan data
+      builder: (context, snapshot) {
+        String displayName = 'Calyra';
+
+        if (snapshot.hasData && snapshot.data != null) {
+          final fullName = snapshot.data!.name;
+          if (fullName.isNotEmpty) {
+            displayName = fullName.split(' ').first; // Ambil nama depan
+          }
+        }
+
+        return _buildWelcomeText(displayName);
+      },
+    );
+  }
+
+  Widget _buildWelcomeText(String name) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Hello $name,',
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0D1B2A),
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          "Let's find your Personal Color Analysis!",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 
@@ -108,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             _searchController.clear();
+            FocusScope.of(context).unfocus(); // Tutup keyboard
           },
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
@@ -119,95 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0D1B2A),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDefaultContent() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle(
-            'Seasonal Picks',
-            'Discover makeup based on your seasonal color',
-          ),
-          const SizedBox(height: 16),
-          _buildSeasonalPicks(context),
-          const SizedBox(height: 24),
-          _buildSectionTitle(
-            'Brand Makeup',
-            'Explore trusted brands for styles that suit you best',
-          ),
-          const SizedBox(height: 16),
-          _buildBrandMakeup(context),
-          const SizedBox(height: 100),
-        ],
-      ),
-    );
-  }
-
-  // --- MODIFIKASI ADA DI SINI ---
-  Widget _buildSearchResults() {
-    final String query = _searchController.text.trim().toLowerCase();
-
-    return FutureBuilder<Map<String, List<Product>>>(
-      future: _allProductsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No products available.'));
-        }
-
-        final allProductGroupsMap = snapshot.data!;
-        if (query.isEmpty) {
-          return const Center(child: Text('Please enter a search term.'));
-        }
-
-        final filteredProductGroups = allProductGroupsMap.values.where((group) {
-          final mainProduct = group.first;
-          return mainProduct.productName.toLowerCase().contains(query);
-        }).toList();
-
-        if (filteredProductGroups.isEmpty) {
-          return Center(child: Text('No products found for "$query"'));
-        }
-
-        // Menambahkan padding di bagian bawah grid hasil pencarian
-        return ProductGrid(
-          productGroups: filteredProductGroups,
-          padding: const EdgeInsets.only(bottom: 100.0),
-        );
-      },
-    );
-  }
-  // ---------------------------------
-
-  Widget _buildHeader() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Hello Calyra,',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0D1B2A),
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          "Let's find your Personal Color Analysis!",
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
           ),
         ),
       ],
@@ -227,6 +205,72 @@ class _HomeScreenState extends State<HomeScreen> {
           borderSide: BorderSide.none,
         ),
       ),
+    );
+  }
+
+  // --- KONTEN DEFAULT (TANPA TAB FILTER) ---
+  Widget _buildDefaultContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. SEASONAL PICKS (Kartu Musim)
+          _buildSectionTitle(
+            'Seasonal Picks',
+            'Discover makeup based on your seasonal color',
+          ),
+          const SizedBox(height: 16),
+          _buildSeasonalPicks(context),
+          
+          const SizedBox(height: 24),
+          
+          // 2. BRAND MAKEUP
+          _buildSectionTitle(
+            'Brand Makeup',
+            'Explore trusted brands for styles that suit you best',
+          ),
+          const SizedBox(height: 16),
+          _buildBrandMakeup(context),
+          
+          const SizedBox(height: 100), // Space bawah
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchResults() {
+    final String query = _searchController.text.trim().toLowerCase();
+
+    return FutureBuilder<Map<String, List<Product>>>(
+      future: _allProductsFuture, 
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No products available.'));
+        }
+
+        final allProductGroupsMap = snapshot.data!;
+        if (query.isEmpty) {
+          return const Center(child: Text('Please enter a search term.'));
+        }
+
+        final filteredProductGroups = allProductGroupsMap.values.where((group) {
+          final mainProduct = group.first;
+          return mainProduct.productName.toLowerCase().contains(query);
+        }).toList();
+
+        if (filteredProductGroups.isEmpty) {
+          return Center(child: Text('No products found for "$query"'));
+        }
+
+        return ProductGrid(
+          productGroups: filteredProductGroups,
+          padding: const EdgeInsets.only(bottom: 100.0),
+        );
+      },
     );
   }
 

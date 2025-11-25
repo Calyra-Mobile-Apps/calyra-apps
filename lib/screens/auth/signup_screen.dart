@@ -139,7 +139,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 20, color: Colors.grey)),
                 const SizedBox(height: 30),
-                Image.asset('assets/images/logo.png', height: 150),
+                Image.asset('assets/images/calyra.png', height: 150),
                 const SizedBox(height: 40),
                 CustomTextFormField(
                     controller: _nameController,

@@ -6,7 +6,7 @@ final List<BrandInfo> featuredBrands = [
   const BrandInfo(
     id: 'BRD001',
     name: 'Wardah',
-    imageUrl: 'assets/images/home-wardah.jpg',
+    imageUrl: 'assets/images/homew.png',
     logoPath: 'assets/images/Logo_wardah.png',
     homeLogoPath: 'assets/images/wardah-white.png',
     products: [],
@@ -14,7 +14,7 @@ final List<BrandInfo> featuredBrands = [
   const BrandInfo(
     id: 'BRD002',
     name: 'Emina',
-    imageUrl: 'assets/images/home-emina.jpg',
+    imageUrl: 'assets/images/homee.png',
     logoPath: 'assets/images/Logo_emina.png',
     homeLogoPath: 'assets/images/emina-white.png',
     products: [],
@@ -22,7 +22,7 @@ final List<BrandInfo> featuredBrands = [
   const BrandInfo(
     id: 'BRD007',
     name: 'Make Over',
-    imageUrl: 'assets/images/home-makeover.jpg',
+    imageUrl: 'assets/images/homem.png',
     logoPath: 'assets/images/Logo_makeover.png',
     homeLogoPath: 'assets/images/makeover-white.png',
     products: [],
@@ -30,7 +30,7 @@ final List<BrandInfo> featuredBrands = [
   const BrandInfo(
     id: 'BRD006',
     name: 'Somethinc',
-    imageUrl: 'assets/images/home-somethinc.jpg',
+    imageUrl: 'assets/images/homes.png',
     logoPath: 'assets/images/Logo_somethinc.png',
     homeLogoPath: 'assets/images/somethinc-white.png',
     products: [],
@@ -38,7 +38,7 @@ final List<BrandInfo> featuredBrands = [
   const BrandInfo(
     id: 'BRD005',
     name: 'OMG Beauty',
-    imageUrl: 'assets/images/home-omg.jpeg',
+    imageUrl: 'assets/images/homeo.png',
     logoPath: 'assets/images/Logo_OMG.png',
     homeLogoPath: 'assets/images/omg-white.png',
     products: [],
@@ -46,7 +46,7 @@ final List<BrandInfo> featuredBrands = [
   const BrandInfo(
     id: 'BRD003',
     name: 'Luxcrime',
-    imageUrl: 'assets/images/home-luxcrime.png',
+    imageUrl: 'assets/images/homel.png',
     logoPath: 'assets/images/Logo_luxcrime.png',
     homeLogoPath: 'assets/images/luxcrime-white.png',
     products: [],

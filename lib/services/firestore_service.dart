@@ -21,6 +21,9 @@ class FirestoreService {
   static const String _analysisHistoryCollection = 'analysisHistory';
   static const String _productsCollection = 'Products';
 
+  // --- USER DATA ---
+
+  // Get User Data (Sekali Panggil)
   Future<ServiceResponse<UserModel>> getUserData(String uid) async {
     try {
       final doc = await _db.collection(_usersCollection).doc(uid).get();
@@ -33,6 +36,37 @@ class FirestoreService {
       return ServiceResponse.failure('Error getting user data: $e');
     }
   }
+
+  // [BARU] Get User Stream (Real-time Update)
+  // Digunakan di HomeScreen agar nama langsung berubah saat diedit
+  Stream<UserModel?> getUserStream(String uid) {
+    return _db.collection(_usersCollection).doc(uid).snapshots().map((doc) {
+      if (doc.exists && doc.data() != null) {
+        return UserModel.fromFirestore(doc.data()!, uid);
+      }
+      return null;
+    });
+  }
+
+  Future<ServiceResponse<void>> updateUserData(UserModel user) async {
+    try {
+      final dataToUpdate = {
+        'name': user.name,
+        'avatarPath': user.avatarPath,
+        'date_of_birth': user.dateOfBirth,
+      };
+
+      await _db.collection(_usersCollection).doc(user.uid).set(
+            dataToUpdate,
+            SetOptions(merge: true),
+          );
+      return ServiceResponse.success();
+    } catch (e) {
+      return ServiceResponse.failure('Error updating user data: $e');
+    }
+  }
+
+  // --- ANALYSIS RESULT ---
 
   Future<ServiceResponse<void>> saveAnalysisResult(
       AnalysisResult result) async {
@@ -77,23 +111,7 @@ class FirestoreService {
     }
   }
 
-  Future<ServiceResponse<void>> updateUserData(UserModel user) async {
-    try {
-      final dataToUpdate = {
-        'name': user.name,
-        'avatarPath': user.avatarPath,
-        'date_of_birth': user.dateOfBirth,
-      };
-
-      await _db.collection(_usersCollection).doc(user.uid).set(
-            dataToUpdate,
-            SetOptions(merge: true),
-          );
-      return ServiceResponse.success();
-    } catch (e) {
-      return ServiceResponse.failure('Error updating user data: $e');
-    }
-  }
+  // --- PRODUCT DATA ---
 
   Future<ServiceResponse<List<Product>>> getProductsByBrandName(
       String brandName) async {
@@ -113,15 +131,14 @@ class FirestoreService {
     }
   }
 
-  // --- REVISI BAGIAN INI AGAR PRODUK SEASON MUNCUL ---
+  // Ambil produk berdasarkan Season (Spring, Summer, etc)
   Future<ServiceResponse<List<Product>>> getProductsBySeason(
       String seasonName) async {
     try {
       final querySnapshot = await _db
           .collection(_productsCollection)
-          // UBAH DARI arrayContains KE isEqualTo
-          // Karena season_name biasanya String ("Spring"), bukan Array.
-          .where('season_name', isEqualTo: seasonName) 
+          // Menggunakan isEqualTo untuk string matching yang tepat
+          .where('season_name', isEqualTo: seasonName)
           .get();
 
       final products = querySnapshot.docs
@@ -134,7 +151,7 @@ class FirestoreService {
     }
   }
 
-  // --- FUNGSI BARU: UNTUK MENGAMBIL PRODUK WARM / COOL ---
+  // Ambil produk berdasarkan Undertone (Warm, Cool)
   Future<ServiceResponse<List<Product>>> getProductsByUndertone(
       String undertoneName) async {
     try {
@@ -152,7 +169,6 @@ class FirestoreService {
       return ServiceResponse.failure('Error fetching products by undertone: $e');
     }
   }
-  // -------------------------------------------------------
 
   Future<ServiceResponse<List<Product>>> getProductsByBrandAndSeason(
       String brandName, String seasonName) async {
@@ -160,8 +176,7 @@ class FirestoreService {
       final querySnapshot = await _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          // Gunakan isEqualTo juga di sini agar konsisten untuk String
-          .where('season_name', isEqualTo: seasonName) 
+          .where('season_name', isEqualTo: seasonName)
           .get();
       final products = querySnapshot.docs
           .map((doc) => Product.fromFirestore(doc.data()))
@@ -191,11 +206,7 @@ class FirestoreService {
       final querySeason = _db
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
-          // Sesuaikan logika season di sini (isEqualTo atau arrayContains tergantung data)
-          // Jika data Anda String, gunakan isEqualTo. Jika Array, gunakan arrayContains.
-          // Di sini saya biarkan arrayContains JIKA logic rekomendasi Anda memang mengecek array,
-          // tapi jika single string, sebaiknya isEqualTo.
-          .where('season_name', arrayContains: season) 
+          .where('season_name', arrayContains: season)
           .get();
 
       final querySkintone = _db

@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 20, color: Colors.grey)),
                 // --- End English UI Text ---
                 const SizedBox(height: 30),
-                Image.asset('assets/images/logo.png', height: 150), // Pastikan logo ada
+                Image.asset('assets/images/calyra.png', height: 150),
                 const SizedBox(height: 40),
                 CustomTextFormField(
                     controller: _emailController,
