@@ -235,6 +235,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                                   color: Colors.redAccent, fontSize: 12),
                             ),
                           ],
+                          const SizedBox(height: 24), // Tambah jarak di sini
                         ],
                       ),
                     Column(
@@ -264,11 +265,27 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                         ),
                         const SizedBox(height: 8),
                         if (widget.isInitialFlow)
-                          TextButton(
-                            onPressed: () => _handleSkip(context),
-                            child: Text('Skip',
-                                style: TextStyle(
-                                    color: Colors.grey[600], fontSize: 16)),
+                          InkWell(
+                            onTap: () => _handleSkip(context),
+                            borderRadius: BorderRadius.circular(30),
+                            splashColor: Colors.grey[300], 
+                            highlightColor: Colors.grey[200], 
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Skip',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                       ],
                     ),
