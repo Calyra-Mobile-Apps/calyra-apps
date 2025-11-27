@@ -129,15 +129,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => Center(
-        // PERBAIKAN DI SINI:
-        // Membungkus konten dengan Material agar teks memiliki style default yang benar
-        // dan tidak "bocor" menjadi teks raksasa tanpa tema.
         child: Material(
-          type: MaterialType.transparency, // Agar background tetap transparan
+          type: MaterialType.transparency,
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7), // Sedikit background hitam transparan di belakang loading
+              color: Colors.black.withOpacity(0.7),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -150,7 +147,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14, // Ukuran font normal
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

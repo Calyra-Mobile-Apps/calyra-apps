@@ -11,7 +11,7 @@ class Product {
     required this.colorHex,
     required this.undertoneName,
     required this.seasonName,
-    required this.skintoneGroupIds, // List ID
+    required this.skintoneGroupIds,
     required this.skintoneName,
     required this.imageSwatchUrl,
     this.linkProduct,

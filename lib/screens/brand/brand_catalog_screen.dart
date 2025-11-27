@@ -1,7 +1,7 @@
 // Lokasi file: lib/screens/brand/brand_catalog_screen.dart
 
 import 'package:calyra/models/product.dart';
-import 'package:calyra/models/season_filter.dart'; // Pastikan import ini ada
+import 'package:calyra/models/season_filter.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
@@ -138,7 +138,6 @@ class _BrandCatalogScreenState extends State<BrandCatalogScreen> {
                         }
                       }
                     }
-
                     return ProductGrid(productGroups: filteredProductGroups);
                   },
                 ),

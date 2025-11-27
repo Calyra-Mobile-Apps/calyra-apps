@@ -58,7 +58,6 @@ class _MainScreenState extends State<MainScreen> {
 class _CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemSelected;
-
   const _CustomBottomNavBar({
     required this.selectedIndex,
     required this.onItemSelected,
@@ -82,7 +81,6 @@ class _CustomBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     const double iconSize = 24.0;
     const double circlePadding = 14.0;
-
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
@@ -103,7 +101,6 @@ class _CustomBottomNavBar extends StatelessWidget {
         children: List.generate(items.length, (index) {
           final isSelected = index == selectedIndex;
           final item = items[index];
-
           return GestureDetector(
             onTap: () => onItemSelected(index),
             child: AnimatedContainer(

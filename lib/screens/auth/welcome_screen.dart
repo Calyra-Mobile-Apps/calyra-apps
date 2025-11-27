@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatelessWidget {
   final String userName;
-
   const WelcomeScreen({super.key, required this.userName});
 
   @override
@@ -15,10 +14,8 @@ class WelcomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Background dengan Header dan Image
             Column(
               children: [
-                // --- HEADER SECTION ---
                 Padding(
                   padding: const EdgeInsets.only(
                     top: 40,
@@ -49,14 +46,11 @@ class WelcomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // --- IMAGE SECTION (Full Width & Height) ---
                 Expanded(
                   child: Image.asset(
                     'assets/images/onboarding_background.png',
-                    fit: BoxFit.cover, 
+                    fit: BoxFit.cover,
                     width: double.infinity,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -74,8 +68,6 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-
-            // --- BUTTON OVERLAY (Di atas gambar) ---
             Positioned(
               bottom: 40,
               left: 24,
@@ -85,7 +77,6 @@ class WelcomeScreen extends StatelessWidget {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Navigasi ke Take Selfie Screen
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -101,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
-                    elevation: 2, // Kasih sedikit shadow biar keliatan overlay
+                    elevation: 2,
                     shadowColor: Colors.black26,
                   ),
                   child: const Text(

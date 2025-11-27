@@ -52,10 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // Fungsi Fetch All Products (Hanya dipakai saat Search)
   Future<Map<String, List<Product>>> _fetchAllProducts() async {
     final response = await _firestoreService.getAllProducts();
-
     if (response.isSuccess && response.data != null) {
       final Map<String, List<Product>> groupedProducts = {};
       for (var product in response.data!) {
@@ -79,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- BAGIAN HEADER & SEARCH (FIXED TOP) ---
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
@@ -91,10 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // --- KONTEN UTAMA (SCROLLABLE) ---
             Expanded(
               child: _isSearching
                   ? Padding(
@@ -109,26 +103,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- HEADER DENGAN NAMA USER (REAL-TIME STREAM) ---
   Widget _buildHeader() {
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) {
       return _buildWelcomeText('Calyra');
     }
-
     return StreamBuilder<UserModel?>(
       stream: _firestoreService.getUserStream(user.uid),
       builder: (context, snapshot) {
         String displayName = 'Calyra';
-
         if (snapshot.hasData && snapshot.data != null) {
           final fullName = snapshot.data!.name;
           if (fullName.isNotEmpty) {
             displayName = fullName.split(' ').first;
           }
         }
-
         return _buildWelcomeText(displayName);
       },
     );
@@ -200,31 +189,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- KONTEN DEFAULT (TANPA TAB FILTER) ---
   Widget _buildDefaultContent() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. SEASONAL PICKS (Kartu Musim)
           _buildSectionTitle(
             'Seasonal Picks',
             'Discover makeup based on your seasonal color',
           ),
           const SizedBox(height: 16),
           _buildSeasonalPicks(context),
-
           const SizedBox(height: 24),
-
-          // 2. BRAND MAKEUP
           _buildSectionTitle(
             'Brand Makeup',
             'Explore trusted brands for styles that suit you best',
           ),
           const SizedBox(height: 16),
           _buildBrandMakeup(context),
-
           const SizedBox(height: 100),
         ],
       ),
@@ -233,7 +216,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSearchResults() {
     final String query = _searchController.text.trim().toLowerCase();
-
     return FutureBuilder<Map<String, List<Product>>>(
       future: _allProductsFuture,
       builder: (context, snapshot) {
@@ -243,15 +225,12 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No products available.'));
         }
-
         final allProductGroupsMap = snapshot.data!;
         if (query.isEmpty) {
           return const Center(child: Text('Please enter a search term.'));
         }
-
         final List<String> keywords =
             query.split(' ').where((k) => k.isNotEmpty).toList();
-
         final filteredProductGroups = allProductGroupsMap.values.where((group) {
           final mainProduct = group.first;
           final String searchableText = [
@@ -262,11 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ].join(' ').toLowerCase();
           return keywords.every((keyword) => searchableText.contains(keyword));
         }).toList();
-
         if (filteredProductGroups.isEmpty) {
           return Center(child: Text('No products found for "$query"'));
         }
-
         return ProductGrid(
           productGroups: filteredProductGroups,
           padding: const EdgeInsets.only(bottom: 100.0),

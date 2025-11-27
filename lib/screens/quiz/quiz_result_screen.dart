@@ -46,21 +46,17 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     final quizProvider = context.read<QuizProvider>();
     final analysisService = AnalysisService();
     final firestoreService = FirestoreService();
-
     final AnalysisResult result = analysisService.analyze(quizProvider.session);
     final saveResponse = await firestoreService.saveAnalysisResult(result);
-
     if (!mounted) return;
     if (!saveResponse.isSuccess && saveResponse.message != null) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(saveResponse.message!)));
     }
-
     setState(() {
       _analysisResult = result;
       _isLoading = false;
     });
-
     quizProvider.resetQuiz();
   }
 

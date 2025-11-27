@@ -38,7 +38,7 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
         ),
       );
     }
-    return []; // Return empty list on failure
+    return [];
   }
 
   void _navigateToDetail(AnalysisResult result) {
@@ -95,7 +95,7 @@ class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/images/empty.png', // Pastikan gambar ini ada
+                              'assets/images/empty.png',
                               width: 150,
                               height: 150,
                             ),

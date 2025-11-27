@@ -20,10 +20,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authController = AuthController();
+  final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
   bool _isFormValid = false;
-  final AuthController _authController = AuthController();
-  final _formKey = GlobalKey<FormState>(); // GlobalKey untuk Form
 
   @override
   void initState() {
@@ -33,9 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _checkFormValidity() {
-    // Validasi sederhana
-    final isValid =
-        _emailController.text.trim().isNotEmpty && _passwordController.text.trim().isNotEmpty;
+    final isValid = _emailController.text.trim().isNotEmpty &&
+        _passwordController.text.trim().isNotEmpty;
     if (isValid != _isFormValid) {
       setState(() {
         _isFormValid = isValid;
@@ -44,32 +43,26 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInUser() async {
-    // Validasi form sebelum sign in
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    // _isFormValid check redundant if form validation passes, but kept for safety
     if (!_isFormValid) return;
-
     _showLoading();
-
     final ServiceResponse<User?> response = await _authController.signIn(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
-
     if (mounted) {
-      Navigator.pop(context); // Dismiss loading dialog
-
+      Navigator.pop(context);
       if (response.isSuccess) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       } else {
-        final message = response.message ??
-            'An unknown error occurred. Please try again.'; // English
+        final message =
+            response.message ?? 'An unknown error occurred. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $message')), // English
+          SnackBar(content: Text('Login failed: $message')),
         );
       }
     }
@@ -79,7 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.black)), // Spinner hitam
+      builder: (context) => const Center(
+          child:
+              CircularProgressIndicator(color: Colors.black)), // Spinner hitam
     );
   }
 
@@ -95,17 +90,16 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background putih
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Form( // Bungkus dengan Form
+          child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 50),
-                // --- English UI Text ---
                 const Text('Welcome Back!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -115,43 +109,45 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Text('Sign In',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 20, color: Colors.grey)),
-                // --- End English UI Text ---
                 const SizedBox(height: 30),
                 Image.asset('assets/images/calyra.png', height: 150),
                 const SizedBox(height: 40),
                 CustomTextFormField(
-                    controller: _emailController,
-                    labelText: 'Email Address', // English
-                    hintText: 'Enter your email address', // English
-                    prefixIcon: Icons.email_outlined,
-                    validator: (value) { // Validator
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Email address cannot be empty';
-                      }
-                      if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())) {
-                         return 'Please enter a valid email format';
-                      }
-                      return null;
-                    },
-                 ),
+                  controller: _emailController,
+                  labelText: 'Email Address',
+                  hintText: 'Enter your email address',
+                  prefixIcon: Icons.email_outlined,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email address cannot be empty';
+                    }
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                        .hasMatch(value.trim())) {
+                      return 'Please enter a valid email format';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 16),
                 CustomTextFormField(
                   controller: _passwordController,
-                  labelText: 'Password', // English
-                  hintText: 'Enter your password', // English
+                  labelText: 'Password',
+                  hintText: 'Enter your password',
                   prefixIcon: Icons.lock_outline,
                   isPassword: !_isPasswordVisible,
                   suffixIcon: IconButton(
-                      icon: Icon(_isPasswordVisible
-                          ? Icons.visibility_off
-                          : Icons.visibility, color: Colors.grey[600]), // Icon abu
+                      icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey[600]),
                       onPressed: () => setState(
                           () => _isPasswordVisible = !_isPasswordVisible)),
-                  validator: (value) { // Validator
+                  validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password cannot be empty';
                     }
-                    if (value.length < 6) { // Firebase default min length
+                    if (value.length < 6) {
                       return 'Password must be at least 6 characters';
                     }
                     return null;
@@ -169,39 +165,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     style: ButtonStyle(
-                      // Tetapkan warna teks dasar
-                      foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
-                      // Hapus overlay color agar tidak ada background saat hover/press
-                      overlayColor: MaterialStateProperty.all<Color>(Colors.transparent),
-                      padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                          const EdgeInsets.symmetric(horizontal: 4, vertical: 4)), // Sesuaikan padding jika perlu
-                      minimumSize: MaterialStateProperty.all<Size>(Size.zero),
+                      foregroundColor:
+                          WidgetStateProperty.all<Color>(Colors.black),
+                      overlayColor:
+                          WidgetStateProperty.all<Color>(Colors.transparent),
+                      padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
+                          const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4)),
+                      minimumSize: WidgetStateProperty.all<Size>(Size.zero),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      // Hapus shape overlay jika ada sebelumnya
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
-                        const RoundedRectangleBorder(borderRadius: BorderRadius.zero), // Bentuk dasar (tidak terlihat)
+                      shape: WidgetStateProperty.all<OutlinedBorder>(
+                        const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero),
                       ),
-                      // Atur text style berdasarkan state
-                      textStyle: MaterialStateProperty.resolveWith<TextStyle>(
-                        (Set<MaterialState> states) {
-                          // Gaya dasar
-                          TextStyle style = const TextStyle(fontWeight: FontWeight.w500);
-                          // Jika di-hover, tambahkan garis bawah
-                          if (states.contains(MaterialState.hovered)) {
-                            return style.copyWith(decoration: TextDecoration.underline);
+                      textStyle: WidgetStateProperty.resolveWith<TextStyle>(
+                        (Set<WidgetState> states) {
+                          TextStyle style =
+                              const TextStyle(fontWeight: FontWeight.w500);
+                          if (states.contains(WidgetState.hovered)) {
+                            return style.copyWith(
+                                decoration: TextDecoration.underline);
                           }
-                          // Jika ditekan (opsional, bisa sama dengan hover atau berbeda)
-                          // if (states.contains(MaterialState.pressed)) {
-                          //   return style.copyWith(decoration: TextDecoration.underline, color: Colors.grey[700]); // Contoh: sedikit lebih gelap saat ditekan
-                          // }
-                          // Default (tidak di-hover)
-                          return style.copyWith(decoration: TextDecoration.none);
+                          return style.copyWith(
+                              decoration: TextDecoration.none);
                         },
                       ),
                     ),
                     child: const Text(
-                      'Forgot Password?', // English
-                      // TextStyle di sini hanya untuk style dasar, state diatur di ButtonStyle
+                      'Forgot Password?',
                     ),
                   ),
                 ),
@@ -209,8 +200,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ElevatedButton(
                   onPressed: _isFormValid ? _signInUser : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isFormValid ? Colors.black : Colors.grey[300],
-                    foregroundColor: _isFormValid ? Colors.white : Colors.grey[600],
+                    backgroundColor:
+                        _isFormValid ? Colors.black : Colors.grey[300],
+                    foregroundColor:
+                        _isFormValid ? Colors.white : Colors.grey[600],
                     disabledBackgroundColor: Colors.grey[300],
                     disabledForegroundColor: Colors.grey[600],
                     minimumSize: const Size(double.infinity, 50),
@@ -220,8 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     elevation: 3,
                     shadowColor: Colors.grey.withOpacity(0.4),
                   ),
-                  child: Text(
-                      'Sign In', // English
+                  child: Text('Sign In',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -240,25 +232,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text.rich(
                     TextSpan(
                         text: "Don't have an account? ", // English
-                        style: const TextStyle(color: Colors.black, fontSize: 15),
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 15),
                         children: [
                           TextSpan(
                             text: 'Sign Up.', // English
                             style: const TextStyle(
                                 color: Colors.red,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 15
-                            ),
+                                fontSize: 15),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
                                 Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => const SignUpScreen()));
+                                    builder: (context) =>
+                                        const SignUpScreen()));
                               },
                           ),
                         ]),
                   ),
                 ),
-                const SizedBox(height: 30), // Padding bawah
+                const SizedBox(height: 30),
               ],
             ),
           ),

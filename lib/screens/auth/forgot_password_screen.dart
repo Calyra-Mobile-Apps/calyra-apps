@@ -2,7 +2,7 @@
 
 import 'package:calyra/controllers/auth_controller.dart';
 import 'package:calyra/models/service_response.dart';
-import 'package:calyra/widgets/custom_text_form_field.dart'; // Ensure this widget exists and is styled appropriately
+import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -15,146 +15,150 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   final AuthController _authController = AuthController();
-  bool _isLoading = false; // State for loading indicator
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
+  bool _isLoading = false;
+  bool _isFormValid = false;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_checkFormValidity);
+  }
+
+  void _checkFormValidity() {
+    final isValid = _emailController.text.trim().isNotEmpty;
+    if (isValid != _isFormValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _emailController.removeListener(_checkFormValidity);
     _emailController.dispose();
     super.dispose();
   }
 
-  // Function to send the standard Firebase password reset link
   Future<void> _passwordReset() async {
-    // Validate the form first
     if (!_formKey.currentState!.validate()) {
-      return; // Don't proceed if email is invalid
+      return;
     }
-    if (_isLoading) return; // Prevent double taps
+
+    if (!_isFormValid || _isLoading) return;
 
     setState(() => _isLoading = true);
-
-    // Call the standard password reset function from AuthController
     final ServiceResponse<void> response =
         await _authController.sendPasswordReset(_emailController.text.trim());
 
     if (mounted) {
       setState(() => _isLoading = false);
-
       if (response.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            // --- English Success Message ---
-            content: Text('Password reset instructions sent to your email. Please check your inbox.'),
-            backgroundColor: Colors.green, // Green for success
+            content: Text(
+                'Password reset instructions sent to your email. Please check your inbox.'),
+            backgroundColor: Colors.green,
           ),
         );
-        // Navigate back to the previous screen (Login Screen) after success
         Navigator.pop(context);
       } else {
-        // --- English Error Message Handling ---
         String errorMessage;
         final rawMessage = response.message ?? 'An unknown error occurred.';
-        // Map common Firebase errors to user-friendly messages
-        if (rawMessage.contains('user-not-found') || rawMessage.contains('invalid-credential')) {
-           errorMessage = 'Email not found or is invalid.';
+        if (rawMessage.contains('user-not-found') ||
+            rawMessage.contains('invalid-credential')) {
+          errorMessage = 'Email not found or is invalid.';
         } else if (rawMessage.contains('network-request-failed')) {
-           errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+              'Network error. Please check your internet connection.';
         } else {
-           errorMessage = 'Failed to send instructions. Please try again.';
+          errorMessage = 'Failed to send instructions. Please try again.';
         }
-
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $errorMessage'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error: $errorMessage'),
+              backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  // Loading dialog is no longer used, indicator is in the button
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white, // White background
-        elevation: 0, // No shadow
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black), // Black back arrow
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        // title: const Text('Forgot Password', style: TextStyle(color: Colors.black)),
-        // centerTitle: true,
       ),
-      backgroundColor: Colors.white, // Ensure scaffold background is white
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Form( // Wrap content in a Form widget
+        child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 30),
-              // --- English UI Text ---
               const Text(
-                'Forgot Password?', // Title
+                'Forgot Password?',
                 style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0D1B2A)), // Dark text color
+                    color: Color(0xFF0D1B2A)),
               ),
               const SizedBox(height: 16),
               const Text(
-                // English instructions
                 "Enter the email associated with your account and we'll send instructions to reset your password.",
-                style: TextStyle(fontSize: 16, color: Colors.grey), // Grey text color
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              // --- End English UI Text ---
               const SizedBox(height: 40),
-              CustomTextFormField( // Use your existing custom widget
+              CustomTextFormField(
                 controller: _emailController,
-                labelText: 'Email Address', // English label
-                hintText: 'Enter your email address', // English hint
-                prefixIcon: Icons.email_outlined, // Email icon
-                validator: (value) { // Email validation
-                   if (value == null || value.trim().isEmpty) {
-                     return 'Email address cannot be empty'; // English error
-                   }
-                   // Basic email format check
-                   if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())) {
-                     return 'Please enter a valid email format'; // English error
-                   }
-                   return null; // Return null if valid
-                 },
-                 // The autovalidateMode parameter is removed as it's not supported by CustomTextFormField
-                 // autovalidateMode: AutovalidateMode.onUserInteraction,
+                labelText: 'Email Address',
+                hintText: 'Enter your email address',
+                prefixIcon: Icons.email_outlined,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Email address cannot be empty';
+                  }
+                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                      .hasMatch(value.trim())) {
+                    return 'Please enter a valid email format';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: _isLoading ? null : _passwordReset, // Call reset function
-                // --- Button Styling (Black + Grey Shadow) ---
+                onPressed:
+                    (_isFormValid && !_isLoading) ? _passwordReset : null,
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50), // Height and full width
-                  backgroundColor: Colors.black, // Black button background
-                  foregroundColor: Colors.white, // White text
-                  disabledBackgroundColor: Colors.grey[300], // Disabled background color
-                  disabledForegroundColor: Colors.grey[600], // Disabled text color
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor:
+                      _isFormValid ? Colors.black : Colors.grey[300],
+                  foregroundColor:
+                      _isFormValid ? Colors.white : Colors.grey[600],
+                  disabledBackgroundColor: Colors.grey[300],
+                  disabledForegroundColor: Colors.grey[600],
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)), // Rounded corners
-                  elevation: 3, // Subtle elevation
-                  shadowColor: Colors.grey.withOpacity(0.4), // Modern grey shadow
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 3,
+                  shadowColor: Colors.grey.withOpacity(0.4),
                 ),
-                // --- End Button Styling ---
                 child: _isLoading
-                    ? const SizedBox( // Show loading indicator inside button
+                    ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white, // White spinner
+                          color: Colors.white,
                         ))
                     : const Text(
-                        // --- English Button Text ---
                         'Send Instructions',
                         style: TextStyle(
                           fontSize: 16,
@@ -162,7 +166,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                       ),
               ),
-              const SizedBox(height: 50), // Bottom padding
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -170,4 +174,3 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
-

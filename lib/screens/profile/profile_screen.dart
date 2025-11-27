@@ -7,8 +7,6 @@ import 'package:calyra/screens/profile/change_password_screen.dart';
 import 'package:calyra/screens/profile/analysis_history_screen.dart';
 import 'package:calyra/screens/profile/legal_content_screen.dart';
 import 'package:calyra/screens/profile/faq_screen.dart';
-// TODO: Buat atau import layar About App jika belum ada
-// import 'package/path/to/about_app_screen.dart';
 import 'package:calyra/services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -57,48 +55,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
       });
     } else {
-      // Fallback if user data doesn't exist in Firestore yet
       setState(() {
         _userModel = UserModel(
           uid: user.uid,
-          name: user.displayName ?? user.email?.split('@').first ?? 'Calyra User', // Use displayName if available
+          name:
+              user.displayName ?? user.email?.split('@').first ?? 'Calyra User',
           email: user.email ?? 'email@example.com',
-          createdAt: Timestamp.now(), // Consider fetching from user.metadata.creationTime
-          avatarPath: user.photoURL ?? defaultAvatarPath, // Use photoURL if available
+          createdAt: Timestamp.now(),
+          avatarPath: user.photoURL ?? defaultAvatarPath,
         );
         _isLoading = false;
       });
-       // Optionally, save this initial data to Firestore if it was missing
-       // _firestoreService.updateUserData(_userModel!);
     }
   }
 
-
-Future<void> _handleLogout() async {
-    final navigator = Navigator.of(context); // Cache navigator
-
-    // Show confirmation dialog
+  Future<void> _handleLogout() async {
+    final navigator = Navigator.of(context);
     final bool? shouldLogout = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: const Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text('Confirm Logout',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: const Text('Are you sure you want to log out?'),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           actions: [
-            // Tombol Cancel
             TextButton(
               style: ButtonStyle(
-                // Tulisan abu agak tua (Shade 700) biar kontras
-                foregroundColor: MaterialStateProperty.all(Colors.grey.shade700),
-                // Background hover/tekan: Abu muda (Shade 200)
+                foregroundColor:
+                    MaterialStateProperty.all(Colors.grey.shade700),
                 overlayColor: MaterialStateProperty.resolveWith<Color?>(
                   (Set<MaterialState> states) {
-                    if (states.contains(MaterialState.hovered) || 
+                    if (states.contains(MaterialState.hovered) ||
                         states.contains(MaterialState.pressed)) {
-                      return Colors.grey.shade200; 
+                      return Colors.grey.shade200;
                     }
                     return null;
                   },
@@ -106,24 +100,22 @@ Future<void> _handleLogout() async {
                 padding: MaterialStateProperty.all(
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                 shape: MaterialStateProperty.all(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                 ),
               ),
-              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Cancel',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () => Navigator.of(dialogContext).pop(false),
             ),
-            
-            // Tombol Log Out
             TextButton(
               style: ButtonStyle(
-                // Tulisan Merah
                 foregroundColor: MaterialStateProperty.all(Colors.red),
-                // Background hover/tekan: Merah pudar (Shade 100)
                 overlayColor: MaterialStateProperty.resolveWith<Color?>(
                   (Set<MaterialState> states) {
-                    if (states.contains(MaterialState.hovered) || 
+                    if (states.contains(MaterialState.hovered) ||
                         states.contains(MaterialState.pressed)) {
-                      return Colors.red.shade100; 
+                      return Colors.red.shade100;
                     }
                     return null;
                   },
@@ -131,10 +123,12 @@ Future<void> _handleLogout() async {
                 padding: MaterialStateProperty.all(
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                 shape: MaterialStateProperty.all(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
                 ),
               ),
-              child: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Log Out',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onPressed: () => Navigator.of(dialogContext).pop(true),
             ),
           ],
@@ -142,11 +136,8 @@ Future<void> _handleLogout() async {
       },
     );
 
-    // Proceed only if user confirmed
     if (shouldLogout == true && mounted) {
       await _authController.signOut();
-
-      // Use the cached navigator, check mounted again just in case
       if (mounted) {
         navigator.pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -156,46 +147,46 @@ Future<void> _handleLogout() async {
     }
   }
 
-
-  // --- Helper function to show About App Dialog ---
   void _showAboutAppDialog() {
-     // You can get app version using package_info_plus package
-     // Example: final appVersion = await PackageInfo.fromPlatform().then((info) => info.version);
-     const appVersion = "1.0.0"; // Placeholder version
-     const buildNumber = "1"; // Placeholder build number
-
+    const appVersion = "1.0.0";
+    const buildNumber = "1";
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           title: const Row(
             children: [
               Icon(Icons.info_outline, color: Colors.black87),
               SizedBox(width: 10),
-              Text('About Calyra', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('About Calyra',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
-          content: const SingleChildScrollView( // Use SingleChildScrollView for long text
+          content: const SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Important for Dialog size
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Calyra helps you discover makeup products that perfectly match your personal color analysis.'),
+                Text(
+                    'Calyra helps you discover makeup products that perfectly match your personal color analysis.'),
                 SizedBox(height: 10),
-                Text('Version: $appVersion ($buildNumber)'), // Display version
+                Text('Version: $appVersion ($buildNumber)'),
                 SizedBox(height: 10),
-                Text('© 2025 Calyra Team. All rights reserved.'), // Copyright
-                 SizedBox(height: 10),
-
+                Text('© 2025 Calyra Team. All rights reserved.'),
+                SizedBox(height: 10),
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           actions: <Widget>[
-             TextButton(
-              child: const Text('Close', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            TextButton(
+              child: const Text('Close',
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -206,12 +197,11 @@ Future<void> _handleLogout() async {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading || _userModel == null) {
       return const Scaffold(
-        backgroundColor: Colors.white, // Ensure background is white during loading
+        backgroundColor: Colors.white,
         body:
             Center(child: CircularProgressIndicator(color: Color(0xFF1B263B))),
       );
@@ -237,7 +227,7 @@ Future<void> _handleLogout() async {
               const SizedBox(height: 32),
               _buildProfileMenu(
                 context,
-                icon: Icons.history_rounded, // Slightly different icon
+                icon: Icons.history_rounded,
                 text: 'History',
                 onTap: () {
                   Navigator.push(
@@ -249,7 +239,7 @@ Future<void> _handleLogout() async {
               ),
               _buildProfileMenu(
                 context,
-                icon: Icons.lock_reset_rounded, // Slightly different icon
+                icon: Icons.lock_reset_rounded,
                 text: 'Change Password',
                 onTap: () {
                   Navigator.push(
@@ -261,7 +251,7 @@ Future<void> _handleLogout() async {
               ),
               _buildProfileMenu(
                 context,
-                icon: Icons.help_outline_rounded, // Slightly different icon
+                icon: Icons.help_outline_rounded,
                 text: 'FAQ',
                 onTap: () {
                   Navigator.push(
@@ -272,7 +262,7 @@ Future<void> _handleLogout() async {
               ),
               _buildProfileMenu(
                 context,
-                icon: Icons.description_outlined, // Standard icon
+                icon: Icons.description_outlined,
                 text: 'Terms & Conditions',
                 onTap: () {
                   Navigator.push(
@@ -288,7 +278,7 @@ Future<void> _handleLogout() async {
               ),
               _buildProfileMenu(
                 context,
-                icon: Icons.privacy_tip_outlined, // Standard icon
+                icon: Icons.privacy_tip_outlined,
                 text: 'Privacy Policy',
                 onTap: () {
                   Navigator.push(
@@ -302,27 +292,23 @@ Future<void> _handleLogout() async {
                   );
                 },
               ),
-              // --- TAMBAHAN MENU ABOUT APP ---
-               _buildProfileMenu(
-                 context,
-                 icon: Icons.info_outline_rounded, // Icon Info
-                 text: 'About App',
-                 onTap: () {
-                    _showAboutAppDialog(); // Panggil dialog
-                    // Jika ingin navigasi ke layar baru:
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => AboutAppScreen()));
-                 },
-               ),
-              // --- AKHIR TAMBAHAN ---
               _buildProfileMenu(
                 context,
-                icon: Icons.logout_rounded, // Slightly different icon
+                icon: Icons.info_outline_rounded,
+                text: 'About App',
+                onTap: () {
+                  _showAboutAppDialog();
+                },
+              ),
+              _buildProfileMenu(
+                context,
+                icon: Icons.logout_rounded,
                 text: 'Logout',
                 textColor: Colors.red,
                 iconColor: Colors.red,
-                onTap: _handleLogout, // Panggil fungsi logout
+                onTap: _handleLogout,
               ),
-              const SizedBox(height: 50), // Extra padding at the bottom if needed
+              const SizedBox(height: 50),
             ],
           ),
         ),
@@ -333,36 +319,34 @@ Future<void> _handleLogout() async {
   Widget _buildUserInfoCard(BuildContext context) {
     final user = _userModel!;
     final avatarPath = user.avatarPath ?? defaultAvatarPath;
-    final isDefaultIcon = avatarPath == defaultAvatarPath || avatarPath.isEmpty || !(avatarPath.startsWith('assets/')); // Check if it's default or invalid asset
+    final isDefaultIcon = avatarPath == defaultAvatarPath ||
+        avatarPath.isEmpty ||
+        !(avatarPath.startsWith('assets/'));
 
-    // Check if avatarPath is a valid asset path before trying to load it
     Widget avatarWidget;
     if (isDefaultIcon) {
-       avatarWidget = const Icon(
-          Icons.person_rounded, // Use rounded person icon
-          size: 40,
-          color: Colors.white,
-        );
+      avatarWidget = const Icon(
+        Icons.person_rounded,
+        size: 40,
+        color: Colors.white,
+      );
     } else {
-        // Assume it's an asset path
-        avatarWidget = Image.asset(
-            avatarPath,
-            width: 80,
-            height: 80,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback if asset fails to load
-              print("Error loading avatar asset: $avatarPath, Error: $error");
-              return const Icon(Icons.person_rounded,
-                  size: 40, color: Colors.white);
-            },
-          );
+      avatarWidget = Image.asset(
+        avatarPath,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print("Error loading avatar asset: $avatarPath, Error: $error");
+          return const Icon(Icons.person_rounded,
+              size: 40, color: Colors.white);
+        },
+      );
     }
 
-
     return Card(
-      elevation: 3, // Slightly reduced elevation
-      shadowColor: Colors.grey.withOpacity(0.3), // Softer shadow
+      elevation: 3,
+      shadowColor: Colors.grey.withOpacity(0.3),
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -372,9 +356,9 @@ Future<void> _handleLogout() async {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundColor: Colors.grey.shade300, // Lighter background
+              backgroundColor: Colors.grey.shade300,
               child: ClipOval(
-                child: avatarWidget, // Use the determined avatar widget
+                child: avatarWidget,
               ),
             ),
             const SizedBox(width: 16),
@@ -394,16 +378,15 @@ Future<void> _handleLogout() async {
                   const SizedBox(height: 4),
                   Text(
                     user.email,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600), // Slightly darker grey
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                     overflow: TextOverflow.ellipsis,
-                     maxLines: 1,
+                    maxLines: 1,
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 35,
                     child: ElevatedButton(
                       onPressed: () async {
-                        // Navigate to EditProfileScreen and wait for result
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -411,14 +394,12 @@ Future<void> _handleLogout() async {
                                 EditProfileScreen(currentUser: user),
                           ),
                         );
-                        // If result is not null (user saved changes) and is UserModel, update UI
                         if (mounted && result != null && result is UserModel) {
                           setState(() {
                             _userModel = result;
                           });
                         } else if (mounted && result == 'refresh') {
-                           // Handle potential refresh signal if needed, e.g., re-fetch from Firestore
-                           _initialiseUser();
+                          _initialiseUser();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -430,7 +411,7 @@ Future<void> _handleLogout() async {
                             horizontal: 20, vertical: 0),
                         textStyle: const TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w600),
-                        minimumSize: Size.zero, // Adjust size to content
+                        minimumSize: Size.zero,
                       ),
                       child: const Text('Edit Profile'),
                     ),
@@ -444,7 +425,6 @@ Future<void> _handleLogout() async {
     );
   }
 
-  // Consistent styling for menu items
   Widget _buildProfileMenu(BuildContext context,
       {required IconData icon,
       required String text,
@@ -452,23 +432,23 @@ Future<void> _handleLogout() async {
       Color? textColor,
       Color? iconColor}) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6), // Slightly reduced margin
-      elevation: 2, // Slightly reduced elevation
-      shadowColor: Colors.grey.withOpacity(0.2), // Softer shadow
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      elevation: 2,
+      shadowColor: Colors.grey.withOpacity(0.2),
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4), // Adjusted padding
-        leading: Icon(icon, color: iconColor ?? Colors.black54, size: 22), // Slightly smaller icon
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Icon(icon, color: iconColor ?? Colors.black54, size: 22),
         title: Text(text,
             style: TextStyle(
                 color: textColor ?? const Color(0xFF0D1B2A),
-                fontWeight: FontWeight.w600, // Consistent weight
+                fontWeight: FontWeight.w600,
                 fontSize: 15)),
-        trailing: Icon(Icons.arrow_forward_ios_rounded, // Different arrow
-            size: 16, color: textColor ?? Colors.grey[400]), // Smaller arrow
+        trailing: Icon(Icons.arrow_forward_ios_rounded,
+            size: 16, color: textColor ?? Colors.grey[400]),
         onTap: onTap,
-        dense: true, // Make ListTile more compact
+        dense: true,
       ),
     );
   }

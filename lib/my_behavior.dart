@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 
-// Kelas ini digunakan untuk menghilangkan efek "glow" saat scrolling
 class MyBehavior extends ScrollBehavior {
   @override
   Widget buildOverscrollIndicator(

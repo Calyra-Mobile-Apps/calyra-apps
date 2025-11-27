@@ -10,20 +10,16 @@ class AnalysisService {
     final undertone = answers[QuizKeys.undertone] ?? 'neutral';
     final skintone = answers[QuizKeys.skintone] ?? '0';
     final seasonalChoice = answers[QuizKeys.seasonalColor] ?? 'unknown';
-
-    // --- PERBAIKAN: Memanggil fungsi _resolveSeason untuk mendapatkan nama lengkap ---
     final String finalSeasonResult = _resolveSeason(undertone, seasonalChoice);
-    // -------------------------------------------------------------------------
 
     return AnalysisResult(
-      seasonResult: finalSeasonResult, // Sekarang menyimpan nama lengkap (cth: "Warm Spring")
+      seasonResult: finalSeasonResult,
       undertone: undertone,
       skintone: skintone,
       analysisDate: analysisDate ?? DateTime.now(),
     );
   }
 
-  // Fungsi ini sekarang dipanggil untuk menggabungkan undertone dan pilihan musim
   String _resolveSeason(String undertone, String seasonalChoice) {
     if (seasonalChoice == 'unknown' || seasonalChoice.isEmpty) {
       if (undertone == 'warm') return 'Warm Autumn'; // Default untuk warm
@@ -46,8 +42,6 @@ class AnalysisService {
         return 'Cool Winter';
       }
     }
-    
-    // Fallback jika undertone adalah neutral atau kasus lain
-    return 'Neutral'; 
+    return 'Neutral';
   }
 }

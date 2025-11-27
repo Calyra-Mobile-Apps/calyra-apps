@@ -1,5 +1,5 @@
 enum SeasonFilter {
-  all('All'), // << TAMBAHKAN INI
+  all('All'),
   summer('Summer'),
   winter('Winter'),
   autumn('Autumn'),

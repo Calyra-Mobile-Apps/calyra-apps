@@ -14,15 +14,17 @@ class LegalContentScreen extends StatelessWidget {
 
   List<Widget> _buildContent(String rawContent) {
     final List<Widget> children = [];
-
     final paragraphs = rawContent.split('\n\n');
-
     for (final paragraph in paragraphs) {
       if (paragraph.trim().isEmpty) continue;
 
-      if (paragraph.trim().length < 60 && 
-          (paragraph.startsWith('A.') || paragraph.startsWith('B.') || paragraph.startsWith('C.') || paragraph.startsWith('D.') || paragraph.startsWith('1.') || paragraph.startsWith('2.'))) {
-        
+      if (paragraph.trim().length < 60 &&
+          (paragraph.startsWith('A.') ||
+              paragraph.startsWith('B.') ||
+              paragraph.startsWith('C.') ||
+              paragraph.startsWith('D.') ||
+              paragraph.startsWith('1.') ||
+              paragraph.startsWith('2.'))) {
         children.add(
           Padding(
             padding: const EdgeInsets.only(top: 16.0, bottom: 4.0),
@@ -36,9 +38,7 @@ class LegalContentScreen extends StatelessWidget {
             ),
           ),
         );
-      } 
-
-      else {
+      } else {
         children.add(
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
@@ -55,9 +55,9 @@ class LegalContentScreen extends StatelessWidget {
         );
       }
     }
-    
+
     children.add(const SizedBox(height: 50));
-    
+
     return children;
   }
 
@@ -66,7 +66,8 @@ class LegalContentScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,

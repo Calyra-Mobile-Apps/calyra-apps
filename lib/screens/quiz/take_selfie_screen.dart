@@ -1,7 +1,6 @@
 // Lokasi file: lib/screens/quiz/take_selfie_screen.dart
 
 import 'dart:typed_data';
-
 import 'package:calyra/providers/quiz_provider.dart';
 import 'package:calyra/screens/main_screen.dart';
 import 'package:calyra/screens/quiz/undertone_quiz_screen.dart';
@@ -27,7 +26,6 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
   Future<void>? _initializeCameraFuture;
   String? _cameraError;
   final double _bottomNavbarHeightPadding = 100.0;
-
   final double _fullBottomPadding = 120.0;
   final double _minimalBottomPadding = 40.0;
 
@@ -95,7 +93,6 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
     if (controller == null || !controller.value.isInitialized) {
       return;
     }
-
     try {
       final picture = await controller.takePicture();
       final bytes = await picture.readAsBytes();
@@ -144,7 +141,6 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
   Widget build(BuildContext context) {
     final String formattedDate =
         DateFormat('d MMMM yyyy').format(DateTime.now());
-
     final double currentBottomPadding =
         widget.isInitialFlow ? _minimalBottomPadding : _fullBottomPadding;
 
@@ -235,7 +231,7 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                                   color: Colors.redAccent, fontSize: 12),
                             ),
                           ],
-                          const SizedBox(height: 24), // Tambah jarak di sini
+                          const SizedBox(height: 24),
                         ],
                       ),
                     Column(
@@ -268,8 +264,8 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
                           InkWell(
                             onTap: () => _handleSkip(context),
                             borderRadius: BorderRadius.circular(30),
-                            splashColor: Colors.grey[300], 
-                            highlightColor: Colors.grey[200], 
+                            splashColor: Colors.grey[300],
+                            highlightColor: Colors.grey[200],
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 24,
@@ -368,7 +364,6 @@ class _TakeSelfieScreenState extends State<TakeSelfieScreen> {
 
     final controller = _cameraController;
     final initFuture = _initializeCameraFuture;
-
     if (controller == null || initFuture == null) {
       return const SizedBox(
         width: 240,

@@ -9,7 +9,6 @@ class BrandInfo {
   final String logoPath;
   final String? homeLogoPath;
   final List<Product> products;
-
   const BrandInfo({
     required this.id,
     required this.name,

@@ -3,7 +3,7 @@
 import 'package:calyra/models/product.dart';
 import 'package:calyra/models/season_category.dart';
 import 'package:calyra/services/firestore_service.dart';
-import 'package:calyra/widgets/custom_product_image.dart'; 
+import 'package:calyra/widgets/custom_product_image.dart';
 import 'package:calyra/widgets/product_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:calyra/screens/product/product_detail_screen.dart';
@@ -20,7 +20,7 @@ class CategoryDetailScreen extends StatefulWidget {
 class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   late Future<Map<String, List<Product>>> _productsFuture;
   final FirestoreService _firestoreService = FirestoreService();
-  
+
   // State untuk Filter yang dipilih (Default: All)
   String _selectedFilter = 'All';
 
@@ -58,33 +58,20 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   }
 
   Future<Map<String, List<Product>>> _fetchAndGroupProducts() async {
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // 1. Ambil SEMUA produk dulu (karena kita butuh filter manual string "Spring, Autumn")
     final response = await _firestoreService.getAllProducts();
-
     if (response.isSuccess && response.data != null) {
       final List<Product> allProducts = response.data!;
       final Map<String, List<Product>> groupedProducts = {};
-      
-      // Target Season (misal: "Spring")
-      final String targetSeason = widget.category.title; 
-
+      final String targetSeason = widget.category.title;
       for (var product in allProducts) {
-        // 2. FILTER MANUAL YANG LEBIH PINTAR
-        // Pecah string season (misal "Spring, Autumn") jadi list
-        List<String> productSeasons = product.seasonName
-            .split(',')
-            .map((e) => e.trim()) // Hapus spasi
-            .toList();
-
-        // Cek apakah season yang kita cari ada di dalam list produk tsb?
+        List<String> productSeasons =
+            product.seasonName.split(',').map((e) => e.trim()).toList();
         if (productSeasons.contains(targetSeason)) {
-           // Jika cocok, masukkan ke grup
-           final key = product.productId;
-           if (!groupedProducts.containsKey(key)) {
-             groupedProducts[key] = [];
-           }
-           groupedProducts[key]!.add(product);
+          final key = product.productId;
+          if (!groupedProducts.containsKey(key)) {
+            groupedProducts[key] = [];
+          }
+          groupedProducts[key]!.add(product);
         }
       }
       return groupedProducts;
@@ -94,7 +81,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     }
   }
 
-  // --- FUNGSI MEMILIH FILTER ---
   void _onFilterSelected(String filter) {
     setState(() {
       _selectedFilter = filter;
@@ -109,13 +95,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- HEADER SECTION ---
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tombol Back
                   InkWell(
                     onTap: () => Navigator.of(context).pop(),
                     child: const Padding(
@@ -136,24 +120,22 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                       ),
                     ),
                   ),
-                  
-                  // Judul & Icon
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset(
                         widget.category.assetPath,
-                        width: 30, 
+                        width: 30,
                         height: 30,
                       ),
                       const SizedBox(width: 10),
                       Flexible(
                         child: FittedBox(
-                          fit: BoxFit.scaleDown, 
+                          fit: BoxFit.scaleDown,
                           child: Text(
                             widget.category.title,
                             style: const TextStyle(
-                              fontSize: 24, 
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -162,8 +144,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  
-                  // Deskripsi
                   Text(
                     widget.category.description,
                     textAlign: TextAlign.center,
@@ -174,28 +154,23 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Gambar Palet (Tipis)
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Image.asset(
                         widget.category.paletteImagePath,
-                        height: 25, 
+                        height: 25,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => 
-                          const SizedBox(height: 0),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox(height: 0),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // --- FILTER BAR (Horizontal Scroll) ---
             SizedBox(
               height: 40,
               child: ListView.builder(
@@ -205,20 +180,17 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                 itemBuilder: (context, index) {
                   final filterName = _filterKeys[index];
                   final isSelected = filterName == _selectedFilter;
-
                   return GestureDetector(
                     onTap: () => _onFilterSelected(filterName),
                     child: Container(
                       margin: const EdgeInsets.only(right: 10),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16, 
-                        vertical: 8
-                      ),
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected ? Colors.black : Colors.grey[100],
                         borderRadius: BorderRadius.circular(20),
-                        border: isSelected 
-                            ? null 
+                        border: isSelected
+                            ? null
                             : Border.all(color: Colors.grey[300]!),
                       ),
                       child: Center(
@@ -236,68 +208,63 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                 },
               ),
             ),
-
             const SizedBox(height: 10),
-
-            // --- PRODUCT GRID (Filtered) ---
             Expanded(
               child: FutureBuilder<Map<String, List<Product>>>(
                 future: _productsFuture,
                 builder: (context, snapshot) {
-                  // 1. Loading
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-
-                  // 2. Data Kosong (Fetch gagal)
-                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                    return _buildEmptyState('No products found for ${widget.category.title}');
+                  if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data!.isEmpty) {
+                    return _buildEmptyState(
+                        'No products found for ${widget.category.title}');
                   }
-
-                  // 3. LOGIKA FILTER (Client Side)
                   final allGroups = snapshot.data!.values.toList();
-                  
-                  // Kumpulkan semua tipe produk yang diizinkan di halaman ini
-                  final allowedTypes = _filterMapping.values.expand((e) => e).toList();
-
+                  final allowedTypes =
+                      _filterMapping.values.expand((e) => e).toList();
                   final filteredGroups = allGroups.where((group) {
                     final product = group.first;
-                    
-                    // A. Cek apakah tipe produk ini DIPERBOLEHKAN
                     if (!allowedTypes.contains(product.productType)) {
-                        return false; 
+                      return false;
                     }
-
-                    // B. Cek filter User
                     if (_selectedFilter == 'All') return true;
-                    
                     final currentFilterTypes = _filterMapping[_selectedFilter];
-                    return currentFilterTypes != null && currentFilterTypes.contains(product.productType);
+                    return currentFilterTypes != null &&
+                        currentFilterTypes.contains(product.productType);
                   }).toList();
-
-                  // 4. Data Kosong (Setelah Filter)
                   if (filteredGroups.isEmpty) {
                     return _buildEmptyState('No $_selectedFilter found.');
                   }
-
-                  // 5. Tampilkan Grid dengan CustomProductImage (via ProductGrid)
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: ListView.builder( 
+                    child: ListView.builder(
                       padding: const EdgeInsets.only(top: 10, bottom: 40),
                       physics: const BouncingScrollPhysics(),
                       itemCount: (filteredGroups.length / 2).ceil(),
                       itemBuilder: (context, index) {
                         final int firstIndex = index * 2;
                         final int secondIndex = firstIndex + 1;
-                        
                         return Row(
                           children: [
-                            Expanded(child: _ProductItem(recommendedProduct: RecommendedProduct(productInfo: filteredGroups[firstIndex].first, recommendedShades: filteredGroups[firstIndex]))),
+                            Expanded(
+                                child: _ProductItem(
+                                    recommendedProduct: RecommendedProduct(
+                                        productInfo:
+                                            filteredGroups[firstIndex].first,
+                                        recommendedShades:
+                                            filteredGroups[firstIndex]))),
                             const SizedBox(width: 16),
                             Expanded(
                               child: secondIndex < filteredGroups.length
-                                  ? _ProductItem(recommendedProduct: RecommendedProduct(productInfo: filteredGroups[secondIndex].first, recommendedShades: filteredGroups[secondIndex]))
+                                  ? _ProductItem(
+                                      recommendedProduct: RecommendedProduct(
+                                          productInfo:
+                                              filteredGroups[secondIndex].first,
+                                          recommendedShades:
+                                              filteredGroups[secondIndex]))
                                   : const SizedBox(),
                             ),
                           ],
@@ -331,12 +298,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   }
 }
 
-// --- LOCAL WIDGETS ---
-
 class RecommendedProduct {
   final Product productInfo;
   final List<Product> recommendedShades;
-  RecommendedProduct({required this.productInfo, required this.recommendedShades});
+  RecommendedProduct(
+      {required this.productInfo, required this.recommendedShades});
 }
 
 class _ProductItem extends StatelessWidget {
@@ -347,8 +313,8 @@ class _ProductItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final productInfo = recommendedProduct.productInfo;
     final shadeCount = recommendedProduct.recommendedShades.length;
-    final allShadeNames = recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
-
+    final allShadeNames =
+        recommendedProduct.recommendedShades.map((s) => s.shadeName).join(', ');
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -378,16 +344,15 @@ class _ProductItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: Container(
                 height: 140,
                 width: double.infinity,
                 color: Colors.grey.shade50,
-                // --- PAKAI CUSTOM IMAGE AGAR GAMBAR MUNCUL ---
                 child: CustomProductImage(
                   imageUrl: productInfo.imageSwatchUrl,
                 ),
-                // ---------------------------------------------
               ),
             ),
             Padding(
@@ -397,18 +362,24 @@ class _ProductItem extends StatelessWidget {
                 children: [
                   Text(
                     productInfo.brandName,
-                    style: TextStyle(fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     productInfo.productName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    shadeCount > 1 ? '$shadeCount Shades' : 'Shade: $allShadeNames',
+                    shadeCount > 1
+                        ? '$shadeCount Shades'
+                        : 'Shade: $allShadeNames',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 11, color: Colors.grey[700]),

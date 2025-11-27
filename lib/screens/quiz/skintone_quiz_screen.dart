@@ -7,32 +7,37 @@ import 'package:calyra/screens/quiz/seasonal_quiz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// --- DATA BARU: Memetakan setiap warna ke skintone_group_id ---
 class SkintoneOption {
   final Color color;
   final int groupId;
-
   const SkintoneOption({required this.color, required this.groupId});
 }
 
 final List<SkintoneOption> skintoneOptions = List.generate(20, (index) {
-  // Warna-warna ini sama seperti sebelumnya
-final colors = [
-    // Baris 1 (Undertone Kuning/Emas - Terang ke Gelap)
-    const Color(0xFFFBE3BF), const Color(0xFFE2BB99), const Color(0xFFDEA97D), const Color(0xFFE3AF7B), const Color(0xFFD39763),
-    
-    // Baris 2 (Undertone Oranye/Tan - Terang ke Gelap)
-    const Color(0xFFE7B286), const Color(0xFFD99A78), const Color(0xFFCC926D), const Color(0xFFD49778), const Color(0xFF99674C),
-    
-    // Baris 3 (Undertone Merah/Pink - Terang ke Gelap)
-    const Color(0xFFF0B7A3), const Color(0xFFE4A681), const Color(0xFFC5917B), const Color(0xFFB38875), const Color(0xFF845D48),
-    
-    // Baris 4 (Undertone Netral/Pucat - Terang ke Gelap)
-    const Color(0xFFFAD7C2), const Color(0xFFF6CCB6), const Color(0xFFEEC5A7), const Color(0xFFE9AE8D), const Color(0xFFBD967D),
+  final colors = [
+    const Color(0xFFFBE3BF),
+    const Color(0xFFE2BB99),
+    const Color(0xFFDEA97D),
+    const Color(0xFFE3AF7B),
+    const Color(0xFFD39763),
+    const Color(0xFFE7B286),
+    const Color(0xFFD99A78),
+    const Color(0xFFCC926D),
+    const Color(0xFFD49778),
+    const Color(0xFF99674C),
+    const Color(0xFFF0B7A3),
+    const Color(0xFFE4A681),
+    const Color(0xFFC5917B),
+    const Color(0xFFB38875),
+    const Color(0xFF845D48),
+    const Color(0xFFFAD7C2),
+    const Color(0xFFF6CCB6),
+    const Color(0xFFEEC5A7),
+    const Color(0xFFE9AE8D),
+    const Color(0xFFBD967D),
   ];
   return SkintoneOption(color: colors[index], groupId: index + 1);
 });
-// -----------------------------------------------------------------
 
 class SkintoneQuizScreen extends StatefulWidget {
   const SkintoneQuizScreen({super.key});
@@ -52,10 +57,9 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
 
   void _onNextPressed(BuildContext context) {
     if (_selectedOption == null) return;
-    
-    // Simpan groupId sebagai string ke provider
-    context.read<QuizProvider>().addAnswer(QuizKeys.skintone, _selectedOption!.groupId.toString());
-
+    context
+        .read<QuizProvider>()
+        .addAnswer(QuizKeys.skintone, _selectedOption!.groupId.toString());
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SeasonalColorQuizScreen()),
@@ -68,9 +72,9 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Uint8List? selfieBytes = context.watch<QuizProvider>().selfieImageBytes;
+    final Uint8List? selfieBytes =
+        context.watch<QuizProvider>().selfieImageBytes;
     final Color backgroundColor = _getBackgroundColor();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Skin Tone'),
@@ -112,9 +116,7 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                         child: _buildSelfieArea(selfieBytes),
                       ),
                     ),
-
                     const SizedBox(height: 30),
-
                     const Text(
                       "Choose your skin tone",
                       textAlign: TextAlign.center,
@@ -122,7 +124,6 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                           TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 20),
-        
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -135,8 +136,8 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                       itemCount: skintoneOptions.length,
                       itemBuilder: (context, index) {
                         final option = skintoneOptions[index];
-                        final isSelected = option.groupId == _selectedOption?.groupId;
-        
+                        final isSelected =
+                            option.groupId == _selectedOption?.groupId;
                         return GestureDetector(
                           onTap: () => _onOptionSelected(option),
                           child: Container(
@@ -158,13 +159,15 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                 ),
               ),
             ),
-            
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: ElevatedButton(
-                onPressed: _selectedOption == null ? null : () => _onNextPressed(context),
+                onPressed: _selectedOption == null
+                    ? null
+                    : () => _onNextPressed(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedOption != null ? Colors.black : Colors.grey[300],
+                  backgroundColor:
+                      _selectedOption != null ? Colors.black : Colors.grey[300],
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30)),
@@ -173,7 +176,9 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _selectedOption != null ? Colors.white : Colors.grey[600],
+                      color: _selectedOption != null
+                          ? Colors.white
+                          : Colors.grey[600],
                     )),
               ),
             ),
@@ -190,7 +195,6 @@ class _SkintoneQuizScreenState extends State<SkintoneQuizScreen> {
             child: Text('Selfie not found',
                 style: TextStyle(color: Colors.grey[600])),
           );
-
     return Container(
       width: 220,
       height: 220,

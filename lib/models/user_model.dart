@@ -16,7 +16,7 @@ class UserModel {
     required this.email,
     required this.createdAt,
     this.avatarPath,
-    this.dateOfBirth, // BARU
+    this.dateOfBirth,
   });
 
   factory UserModel.fromFirestore(Map<String, dynamic> data, String uid) {

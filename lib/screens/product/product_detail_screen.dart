@@ -1,7 +1,7 @@
 // Lokasi file: lib/screens/product/product_detail_screen.dart
 
 import 'package:calyra/models/product.dart';
-import 'package:calyra/widgets/custom_product_image.dart'; // Pastikan widget ini ada
+import 'package:calyra/widgets/custom_product_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,15 +29,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
-  // Fungsi untuk membuka link Shopee
   Future<void> _launchURL(BuildContext context, Product product) async {
-    // Cek apakah linkProduct ada dan tidak kosong
     final String? urlString = product.linkProduct;
-
     if (urlString != null && urlString.isNotEmpty) {
       try {
         final Uri url = Uri.parse(urlString);
-        // Coba launch dengan mode external application (browser/shopee app)
         if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -53,7 +49,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         }
       }
     } else {
-      // Jika link kosong/null
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No product link available')),
@@ -64,9 +59,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Produk yang sedang aktif di slider
     final Product currentProduct = widget.productShades[_currentPage];
-    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -90,16 +83,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  
-                  // Nama Produk
                   Text(
                     currentProduct.productName,
                     style: const TextStyle(
                         fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Slider Gambar Produk (PageView)
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -119,8 +108,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           },
                         ),
                       ),
-
-                      // Tombol Panah (Jika lebih dari 1 shade)
                       if (widget.productShades.length > 1) ...[
                         Align(
                           alignment: Alignment.centerLeft,
@@ -133,10 +120,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ],
                     ],
                   ),
-                  
                   const SizedBox(height: 24),
-
-                  // Nama Shade & Brand
                   Text(
                     currentProduct.shadeName,
                     style: TextStyle(fontSize: 18, color: Colors.grey[600]),
@@ -147,10 +131,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w500),
                   ),
-                  
                   const Divider(height: 32, thickness: 1),
-                  
-                  // Detail Produk
                   const Text(
                     'Shade Details',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -159,27 +140,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   _buildDetailRow('Category', currentProduct.productType),
                   _buildDetailRow('Undertone', currentProduct.undertoneName),
                   _buildDetailRow('Season', currentProduct.seasonName),
-                  // Tampilkan Skintone Group ID jika ada dan tidak 0
-                  if (currentProduct.skintoneGroupIds.isNotEmpty && !currentProduct.skintoneGroupIds.contains(0))
-                     _buildDetailRow('For Skintone', 'ID ${currentProduct.skintoneGroupIds.join(", ")}'),
-                  
-                  // Detail harga (jika ada di model Anda, tambahkan di sini)
-                  // Contoh: _buildDetailRow('Price', 'Rp ...'),
-
+                  if (currentProduct.skintoneGroupIds.isNotEmpty &&
+                      !currentProduct.skintoneGroupIds.contains(0))
+                    _buildDetailRow('For Skintone',
+                        'ID ${currentProduct.skintoneGroupIds.join(", ")}'),
                   const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
-          
-          // Tombol Belanja (Find on Shopee)
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF15A24), // Warna Shopee
+                  backgroundColor: const Color(0xFFF15A24),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -187,11 +163,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
                 onPressed: () => _launchURL(context, currentProduct),
-                icon: const Icon(Icons.shopping_cart_outlined), 
-                label: const Text(
-                  'Find on Shopee', 
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
-                ),
+                icon: const Icon(Icons.shopping_cart_outlined),
+                label: const Text('Find on Shopee',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ),
@@ -200,25 +175,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // Widget Tampilan Gambar (Menggunakan CustomProductImage)
   Widget _buildShadeView(BuildContext context, Product product) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      // --- PERUBAHAN UTAMA: Pakai CustomProductImage agar aman ---
       child: CustomProductImage(
-        imageUrl: product.imageSwatchUrl, // Pastikan nama field ini benar di model Anda
+        imageUrl: product.imageSwatchUrl,
         fit: BoxFit.contain,
       ),
-      // -----------------------------------------------------------
     );
   }
-  
-  // Widget Tombol Panah Kiri/Kanan
+
   Widget _buildArrowButton({required bool isLeft}) {
     final bool isVisible = isLeft
         ? _currentPage > 0
         : _currentPage < widget.productShades.length - 1;
-
     return Visibility(
       visible: isVisible,
       child: Container(
@@ -250,7 +220,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-  
+
   Widget _buildDetailRow(String title, String value) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
 

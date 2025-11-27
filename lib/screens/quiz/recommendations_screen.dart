@@ -32,8 +32,6 @@ class RecommendationsScreen extends StatefulWidget {
 class _RecommendationsScreenState extends State<RecommendationsScreen> {
   late Future<Map<String, List<RecommendedProduct>>> _categorizedProductsFuture;
 
-  // --- 1. DAFTAR TIPE PRODUK ---
-  
   final List<String> complexionTypes = [
     'Foundation',
     'Concealer',
@@ -69,7 +67,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Mascara',
   ];
 
-  // --- 2. URUTAN KATEGORI DI UI ---
   final List<String> _categoryOrder = [
     'Liquid Complexion',
     'Powder Complexion',
@@ -83,7 +80,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     'Universal Products'
   ];
 
-  // --- 3. MAPPING PRODUK KE UI ---
   final Map<String, List<String>> _displayCategories = {
     'Liquid Complexion': [
       'Foundation',
@@ -103,12 +99,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     ],
     'Blush': ['Blush'],
     'Highlighter': ['Highlighter'],
-    
     'Lip Gloss': ['Lip Gloss', 'Lip Oil'],
     'Lip Tint': ['Liptint', 'Lip Stain'],
     'Lipstick': ['Lipstick', 'Lip Matte', 'Lipcream', 'Liquid Lipstick'],
     'Lip Care': ['Lip Balm'],
-    
     'Eyes': ['Eyeshadow'],
     'Universal Products': ['Eyeliner', 'Eyebrow', 'Mascara'],
   };
@@ -124,106 +118,78 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     final firestoreService = FirestoreService();
     final response =
         await firestoreService.getProductsByBrandName(widget.brandName);
-
     if (response.isSuccess && response.data != null) {
       final allProducts = response.data!;
-
-      // Data User
       final userUndertone = _capitalize(widget.analysisResult.undertone);
       final userSeason =
           _capitalize(widget.analysisResult.seasonResult.split(' ').last);
       final userSkintoneId = int.tryParse(widget.analysisResult.skintone) ?? 0;
       final isNeutralResult = userUndertone == 'Neutral';
-
       final List<Product> recommendedShades = [];
       final List<Product> universalList = [];
-
       for (final product in allProducts) {
-        // --- LOGIKA 1: UNIVERSAL PRODUCTS (REVISI) ---
-        // Syarat: (Undertone kosong ATAU Neutral) 
-        //         DAN Season kosong 
-        //         DAN (list skintone kosong ATAU isinya cuma 0)
-        final bool isUndertoneNeutralOrEmpty = product.undertoneName.isEmpty || product.undertoneName == 'Neutral';
-        
+        final bool isUndertoneNeutralOrEmpty =
+            product.undertoneName.isEmpty || product.undertoneName == 'Neutral';
         final bool isUniversalData = isUndertoneNeutralOrEmpty &&
             product.seasonName.isEmpty &&
-            (product.skintoneGroupIds.isEmpty || (product.skintoneGroupIds.length == 1 && product.skintoneGroupIds.first == 0));
-
+            (product.skintoneGroupIds.isEmpty ||
+                (product.skintoneGroupIds.length == 1 &&
+                    product.skintoneGroupIds.first == 0));
         if (isUniversalData) {
           if (universalTypes.contains(product.productType)) {
             universalList.add(product);
           }
-          continue; // Skip logika selanjutnya
+          continue;
         }
-
         if (!isNeutralResult) {
           bool isMatch = false;
-
-          // --- LOGIKA 2: COMPLEXION (MULTIPLE IDs) ---
           if (complexionTypes.contains(product.productType)) {
-            // Cek apakah ID User ADA DI DALAM List ID Produk
             if (product.skintoneGroupIds.contains(userSkintoneId)) {
               isMatch = true;
             }
-          }
-          // --- LOGIKA 3: HIGHLIGHTER ---
-          else if (product.productType == 'Highlighter') {
+          } else if (product.productType == 'Highlighter') {
             if (product.seasonName.isNotEmpty) {
-               // Ada Season -> Cek Undertone DAN Season
-               final List<String> applicableSeasons = product.seasonName
+              final List<String> applicableSeasons = product.seasonName
                   .split(',')
                   .map((s) => s.trim())
                   .map(_capitalize)
                   .toList();
-               final bool matchesSeason = applicableSeasons.contains(userSeason);
-               
-               if (product.undertoneName == userUndertone && matchesSeason) {
-                 isMatch = true;
-               }
+              final bool matchesSeason = applicableSeasons.contains(userSeason);
+              if (product.undertoneName == userUndertone && matchesSeason) {
+                isMatch = true;
+              }
             } else {
-               // Tidak ada Season -> Cukup cek Undertone
-               if (product.undertoneName == userUndertone) {
-                 isMatch = true;
-               }
+              if (product.undertoneName == userUndertone) {
+                isMatch = true;
+              }
             }
-          }
-          // --- LOGIKA 4: COLOR MAKEUP LAINNYA ---
-          else if (colorTypes.contains(product.productType)) {
+          } else if (colorTypes.contains(product.productType)) {
             final List<String> applicableSeasons = product.seasonName
                 .split(',')
                 .map((s) => s.trim())
                 .map(_capitalize)
                 .toList();
-
             final bool matchesSeason = applicableSeasons.contains(userSeason);
-
             if (product.undertoneName == userUndertone && matchesSeason) {
               isMatch = true;
             }
           }
-
           if (isMatch) {
             recommendedShades.add(product);
           }
         }
       }
 
-      // Gabungkan hasil
       final allToProcess = [...recommendedShades, ...universalList];
-
-      // Grouping by Product ID
       final Map<String, List<Product>> shadesByProductId = {};
       for (final shade in allToProcess) {
         shadesByProductId.putIfAbsent(shade.productId, () => []).add(shade);
       }
-
       final List<RecommendedProduct> finalProducts =
           shadesByProductId.entries.map((entry) {
         return RecommendedProduct(
             productInfo: entry.value.first, recommendedShades: entry.value);
       }).toList();
-
-      // Grouping ke UI Categories
       final Map<String, List<RecommendedProduct>> groupedForUI = {};
       for (final recProduct in finalProducts) {
         final type = recProduct.productInfo.productType;
@@ -233,7 +199,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
             groupedForUI
                 .putIfAbsent(categoryEntry.key, () => [])
                 .add(recProduct);
-            break; 
+            break;
           }
         }
       }
@@ -247,7 +213,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   Widget build(BuildContext context) {
     final fullSeasonName =
         '${_capitalize(widget.analysisResult.undertone)} ${widget.analysisResult.seasonResult.split(' ').last}';
-
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.brandName} Spotlight',
@@ -303,8 +268,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     ],
                   ),
                 ),
-                
-                // Render Kategori sesuai urutan
                 ..._categoryOrder.map((categoryTitle) {
                   final productsInCategory = categorizedProducts[categoryTitle];
 
@@ -312,7 +275,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       productsInCategory.isEmpty) {
                     return const SizedBox.shrink();
                   }
-
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -408,11 +370,9 @@ class _ProductItem extends StatelessWidget {
                 height: 140,
                 width: 150,
                 color: Colors.grey.shade100,
-                // --- PENGGUNAAN CUSTOM PRODUCT IMAGE ---
                 child: CustomProductImage(
                   imageUrl: productInfo.imageSwatchUrl,
                 ),
-                // ---------------------------------------
               ),
             ),
             const SizedBox(height: 10),

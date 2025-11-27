@@ -21,9 +21,6 @@ class FirestoreService {
   static const String _analysisHistoryCollection = 'analysisHistory';
   static const String _productsCollection = 'Products';
 
-  // --- USER DATA ---
-
-  // Get User Data (Sekali Panggil)
   Future<ServiceResponse<UserModel>> getUserData(String uid) async {
     try {
       final doc = await _db.collection(_usersCollection).doc(uid).get();
@@ -37,8 +34,6 @@ class FirestoreService {
     }
   }
 
-  // [BARU] Get User Stream (Real-time Update)
-  // Digunakan di HomeScreen agar nama langsung berubah saat diedit
   Stream<UserModel?> getUserStream(String uid) {
     return _db.collection(_usersCollection).doc(uid).snapshots().map((doc) {
       if (doc.exists && doc.data() != null) {
@@ -66,15 +61,12 @@ class FirestoreService {
     }
   }
 
-  // --- ANALYSIS RESULT ---
-
   Future<ServiceResponse<void>> saveAnalysisResult(
       AnalysisResult result) async {
     final User? user = _auth.currentUser;
     if (user == null) {
       return ServiceResponse.failure('User is not logged in.');
     }
-
     try {
       await _db
           .collection(_usersCollection)
@@ -92,7 +84,6 @@ class FirestoreService {
     if (user == null) {
       return ServiceResponse.failure('User is not logged in.');
     }
-
     try {
       final querySnapshot = await _db
           .collection(_usersCollection)
@@ -104,14 +95,11 @@ class FirestoreService {
       final history = querySnapshot.docs
           .map((doc) => AnalysisResult.fromFirestore(doc.data()))
           .toList();
-
       return ServiceResponse.success(history);
     } catch (e) {
       return ServiceResponse.failure('Error fetching analysis history: $e');
     }
   }
-
-  // --- PRODUCT DATA ---
 
   Future<ServiceResponse<List<Product>>> getProductsByBrandName(
       String brandName) async {
@@ -120,38 +108,31 @@ class FirestoreService {
           .collection(_productsCollection)
           .where('brand_name', isEqualTo: brandName)
           .get();
-
       final products = querySnapshot.docs
           .map((doc) => Product.fromFirestore(doc.data()))
           .toList();
-
       return ServiceResponse.success(products);
     } catch (e) {
       return ServiceResponse.failure('Error fetching products: $e');
     }
   }
 
-  // Ambil produk berdasarkan Season (Spring, Summer, etc)
   Future<ServiceResponse<List<Product>>> getProductsBySeason(
       String seasonName) async {
     try {
       final querySnapshot = await _db
           .collection(_productsCollection)
-          // Menggunakan isEqualTo untuk string matching yang tepat
           .where('season_name', isEqualTo: seasonName)
           .get();
-
       final products = querySnapshot.docs
           .map((doc) => Product.fromFirestore(doc.data()))
           .toList();
-
       return ServiceResponse.success(products);
     } catch (e) {
       return ServiceResponse.failure('Error fetching products by season: $e');
     }
   }
 
-  // Ambil produk berdasarkan Undertone (Warm, Cool)
   Future<ServiceResponse<List<Product>>> getProductsByUndertone(
       String undertoneName) async {
     try {
@@ -159,14 +140,13 @@ class FirestoreService {
           .collection(_productsCollection)
           .where('undertone_name', isEqualTo: undertoneName)
           .get();
-
       final products = querySnapshot.docs
           .map((doc) => Product.fromFirestore(doc.data()))
           .toList();
-
       return ServiceResponse.success(products);
     } catch (e) {
-      return ServiceResponse.failure('Error fetching products by undertone: $e');
+      return ServiceResponse.failure(
+          'Error fetching products by undertone: $e');
     }
   }
 
@@ -226,15 +206,13 @@ class FirestoreService {
       for (final querySnapshot in results) {
         for (final doc in querySnapshot.docs) {
           final product = Product.fromFirestore(doc.data());
-          // Menggunakan product_id sebagai kunci untuk memastikan keunikan
           uniqueProducts[product.productId] = product;
         }
       }
 
       return ServiceResponse.success(uniqueProducts.values.toList());
     } catch (e) {
-      return ServiceResponse.failure(
-          'Error fetching recommended products: $e');
+      return ServiceResponse.failure('Error fetching recommended products: $e');
     }
   }
 

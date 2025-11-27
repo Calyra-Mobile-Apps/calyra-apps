@@ -3,7 +3,7 @@
 import 'package:calyra/controllers/auth_controller.dart';
 import 'package:calyra/models/service_response.dart';
 import 'package:calyra/screens/auth/login_screen.dart';
-import 'package:calyra/screens/auth/welcome_screen.dart'; // <-- Pastikan import ini ada
+import 'package:calyra/screens/auth/welcome_screen.dart';
 import 'package:calyra/widgets/custom_text_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +22,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
+  final AuthController _authController = AuthController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isFormValid = false;
-
-  final AuthController _authController = AuthController();
 
   @override
   void initState() {
@@ -43,10 +41,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final emailValid = _emailController.text.isNotEmpty;
     final passwordValid = _passwordController.text.isNotEmpty;
     final confirmValid = _confirmPasswordController.text.isNotEmpty;
-
     final passwordsMatch =
         _passwordController.text == _confirmPasswordController.text;
-
     final isValid = nameValid &&
         emailValid &&
         passwordValid &&
@@ -62,19 +58,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _signUpUser() async {
     if (_formKey.currentState!.validate()) {
       _showLoading();
-
       final ServiceResponse<User?> response = await _authController.signUp(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-
       if (mounted) {
-        Navigator.pop(context); // Tutup loading dialog
-
+        Navigator.pop(context);
         if (response.isSuccess) {
-          // --- REVISI NAVIGASI DI SINI ---
-          // Ke WelcomeScreen, bukan langsung Selfie
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => WelcomeScreen(
@@ -83,7 +74,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             (route) => false,
           );
-          // -------------------------------
         } else {
           final message = response.message ??
               'An undefined error occurred. Please try again.';
